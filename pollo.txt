@@ -1,0 +1,3 @@
+canvas größe festlegen 480 x 720px
+schwarzes canvas erstellen
+Bild immer wieder einfügen um Bewegung zu simulieren
