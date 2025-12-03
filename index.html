@@ -5,17 +5,36 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon/icons8-screaming-rooster-32.png">
     <title>El Pollo Loco</title>
-    <script src="models/movable-object.class.js"></script>
-    <script src="models/background-object.class.js"></script>
-    <script src="models/cloud.class.js"></script>
-    <script src="models/character.class.js"></script>
-    <script src="models/chicken.class.js"></script>
-    
-    <script src="models/keyboard.class.js"></script>
-    <script src="models/world.class.js"></script>
-    
-    <script src="js/game.js"></script>
+
+<!-- Utils -->
+<script defer src="utils/aabb.js"></script>
+
+<!-- Basisklassen -->
+<script defer src="models/movable-object.class.js"></script>
+
+<!-- Rendering/Background -->
+<script defer src="models/background-object.class.js"></script>
+<script defer src="models/cloud.class.js"></script>
+
+<!-- Entities & Items -->
+<script defer src="models/collectibles.class.js"></script>
+<script defer src="models/projectile.class.js"></script>
+<script defer src="models/character.class.js"></script>
+<script defer src="models/chicken.class.js"></script>
+<script defer src="models/endboss.class.js"></script> 
+
+<!-- Level & World -->
+<script defer src="models/level.class.js"></script>
+<script defer src="models/hud.class.js"></script>
+<script defer src="audio/sound.manager.js"></script>
+<script defer src="models/world.class.js"></script>
+<script defer src="models/keyboard.class.js"></script>
+
+<!-- Entry point (init, Key-Handling, SFX preload) -->
+<script defer src="js/game.js"></script>
+
 </head>
 <body onload="init()">
 

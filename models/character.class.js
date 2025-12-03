@@ -2,10 +2,10 @@
 class Character extends MovableObject {
   constructor() {
     super();
-
     this.x = 120;
     this.width = 160;
     this.height = 320;
+    this.footOffset = 16; 
 
     this.IMAGES_WALKING = [
       'img/2_character_pepe/2_walk/W-21.png',

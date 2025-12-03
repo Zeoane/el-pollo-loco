@@ -1,52 +1,93 @@
 // background-object.class.js
 class BackgroundObject extends MovableObject {
-  constructor(path, x=0, y=0, width=null, height=null, flowSpeed=0, parallax=0) {
-    super();
-    this.x = x; this.y = y;
-    this.width = width; this.height = height;
-    this.flowSpeed = flowSpeed;     // Eigen-Flow (optional)
-    this.parallax  = parallax;      // 0=weit weg, 1=vorn
-    this._flow = 0;                 // akkumulierte Eigenverschiebung
-    this.loadImage(path);
+  constructor(folder, y=0, h=null, flow=0, parallax=0) {
+    super(); this.x=0; this.y=y; this.height=h;
+    this.flowSpeed=flow; this.parallax=parallax; this._flow=0;
+    this.tiles=[]; this.fallback=new Image(); this._loadTiles(folder);
+  }
+
+  _loadTiles(folder) {
+    ['1.png','2.png'].forEach(n=>{
+      const img=new Image();
+      img.onload=()=>img._ok=true; img.onerror=()=>{};
+      img.src=`${folder}/${n}`; this.tiles.push(img);
+    });
+    this.fallback.onload=()=>this.fallback._ok=true;
+    this.fallback.onerror=()=>{}; this.fallback.src=`${folder}/full.png`;
   }
 
   update(cameraX, canvas, dtMs=16, moving=false) {
-    // Nur wenn du Eigen-Flow NUR bei Bewegung willst:
     if (moving && this.flowSpeed) this._flow -= this.flowSpeed;
-    // Falls Flow immer leicht laufen soll: _flow -= this.flowSpeed; ohne Bedingung
   }
 
   draw(ctx, cameraX=0) {
-    if (!this.imageLoaded || !this.img) return;
-    const cvs = ctx.canvas;
+    const A=this._activeA(), B=this._activeB(A);
+    if (!A) return;
+    const {w,h}=this._dims(ctx, A); const px=this._snap(cameraX*(1-this.parallax));
+    let x=this._startX(w)-w, i=0; ctx.save(); ctx.translate(px,0);
+    for(; x<ctx.canvas.width + 2*w; x+=w) this._blit(ctx, (i++%2?B:A), x, w, h);
+    ctx.restore();
+  }
 
-    // Zielhöhe = Canvas-Höhe, Breite proportional
-    const destH = this.height ?? cvs.height;
-    const scale = destH / this.img.naturalHeight;
-    const destW = this.width  ?? (this.img.naturalWidth * scale);
+  _activeA(){ return this.tiles.find(t=>t._ok&&t.naturalWidth>0) || (this.fallback._ok?this.fallback:null); }
+  _activeB(A){ const b=this.tiles.find(t=>t!==A && t._ok&&t.naturalWidth>0); return b||A; }
 
-    // Pixel-Snapping (HiDPI-freundlich)
-    const dpr = window.devicePixelRatio || 1;
-    const snap = (v) => Math.round(v * dpr) / dpr;
+  _dims(ctx, img) {
+    const h = this.height ?? ctx.canvas.height, s = h / img.naturalHeight;
+    return { w: img.naturalWidth * s, h };
+  }
 
-    ctx.save();
+  _startX(w) {
+    const mod = ((this._flow % w) + w) % w;         
+    let s = this.x + mod; return s>0 ? s-w : s;
+  }
 
-     const px = snap(cameraX * (1 - this.parallax));
-    ctx.translate(px, 0);
+  _blit(ctx, img, x, w, h) {
+    const o=0.5, sx=this._snap(x);
+    ctx.drawImage(img, sx-o, this.y, w+o*2, h);
+  }
 
-     let startX = this.x + (this._flow % destW);
-    if (startX > 0) startX -= destW;
+  _snap(v) { const d=window.devicePixelRatio||1; return Math.round(v*d)/d; }
+}
 
-    const overlap = 0.5;
-
-       for (let x = startX - destW; x < cvs.width + destW; x += destW) {
-      const sx = snap(x);
-      ctx.drawImage(this.img, sx - overlap, this.y, destW + overlap*2, destH);
-    }
-
+class SkyLayer extends MovableObject {
+  constructor(path, parallax=0.0, y=0, h=null){ super(); this.y=y; this.h=h; this.parallax=parallax; this.loadImage(path); }
+  update() {}
+  draw(ctx, cameraX=0){
+    if(!this.imageLoaded) return;
+    const h=this.h ?? ctx.canvas.height, s=h/this.img.naturalHeight, w=this.img.naturalWidth*s;
+    const px = ((window.devicePixelRatio||1) * (cameraX*(1-this.parallax)))|0 / (window.devicePixelRatio||1);
+    let x=-w; ctx.save(); ctx.translate(px,0);
+    for(; x<ctx.canvas.width+w; x+=w) ctx.drawImage(this.img, x-0.5, this.y, w+1, h);
     ctx.restore();
   }
 }
+class CloudLayer extends BackgroundObject {
+  constructor(folder='img/5_background/layers/4_clouds', y=0, h=null, flow=0.02, parallax=0.05){
+    super(folder, y, h, flow, parallax);
+  }
+  update(cameraX, canvas, dtMs=16, moving=false){
+    const k = (dtMs || 16) / 16;          
+    this._flow -= (this.flowSpeed || 0) * k; 
+  }
+}
+
+const BackgroundLayers = {
+  make(folder, flow, parallax, y=0, h=null) {
+    return new BackgroundObject(`img/5_background/layers/${folder}`, y, h, flow, parallax);
+  },
+  defaultSet() {
+    return [
+      new SkyLayer('img/5_background/layers/air.png', 0.00),
+      new CloudLayer('img/5_background/layers/4_clouds', 0, null, 0.02, 0.05), // ← zieht immer
+      this.make('3_third_layer', 0.05, 0.15),
+      this.make('2_second_layer',0.08, 0.30),
+      this.make('1_first_layer', 0.12, 0.60),
+    ];
+  }
+};
+
+
 
 
 
