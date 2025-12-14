@@ -36,25 +36,48 @@ class MovableObject {
     }
   }
 
-  loadImage(path){
-    this.img = new Image();
-    this.img.onload = () => { this.imageLoaded = true; };
-    this.img.onerror = (e) => { console.error('Fehler beim Laden des Bildes:', path, e); };
-    this.img.src = path;
-  }
+loadImage(path){
+  this.img = new Image();
+  this.loadFailed = false;
+  this.img.onload  = () => { this.imageLoaded = true; };
+  this.img.onerror = () => { this.loadFailed = true; };
+  this.img.src = path;
+}
 
-  loadImageFromCandidates(paths = []){
-    if (!paths.length) return;
-    let i = 0;
-    const tryNext = () => {
-      if (i >= paths.length){ console.error('Kein Bildpfad gültig:', paths); return; }
-      const p = paths[i++], img = new Image();
-      img.onload = () => { this.img = img; this.imageLoaded = true; };
-      img.onerror = () => { console.warn('Pfad ungültig, versuche nächsten:', p); tryNext(); };
-      img.src = p;
-    };
-    tryNext();
-  }
+loadImageFromCandidates(paths=[]){
+  if (!paths.length) return;
+  let i = 0;
+  const tryNext = () => {
+    if (i >= paths.length){ this.loadFailed = true; return; }
+    const p = paths[i++], im = new Image();
+    this.loadFailed = false;
+    im.onload  = () => { this.img = im; this.imageLoaded = true; };
+    im.onerror = tryNext;
+    im.src = p;
+  };
+  tryNext();
+}
+
+
+// Hitbox setzen (optional kleiner als Sprite)
+setHitbox(ox=0, oy=0, w=null, h=null){ 
+  this.hb = { ox, oy, w, h }; 
+  return this; 
+}
+
+// Korrigierte Bounds für AABB
+getBounds(){ 
+  const hb = this.hb || {};
+  const w = hb.w ?? this.width, h = hb.h ?? this.height;
+  return { x: this.x + (hb.ox||0), y: this.y + (hb.oy||0), width: w, height: h };
+}
+
+// Kollisions-Test gegen anderes Objekt (nutzt utils/AABB)
+intersects(other){ 
+  if(!other || !window.AABB) return false;
+  return AABB(this.getBounds(), other.getBounds?.() || other); 
+}
+
 
   // mehrere Bilder cachen
   loadImages(paths = []){

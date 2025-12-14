@@ -15,7 +15,7 @@ class World {
     this.backgroundObjects = L.backgroundObjects; this.opponents = L.opponents; this.clouds = L.clouds;
 
     this.initOpponents(); this.spawnChickens(); this.spawnPickups();
-    this.hud = new HUD();
+    this.hud = window.HUD ? new HUD() : null;
 
     this.startBgMusic();          
     this.animate();
@@ -147,30 +147,34 @@ checkPickups() {
     this.addToMap(this.character); this.opponents.forEach(o=>this.addToMap(o));
     this.projectiles.forEach(p=>this.addToMap(p)); ctx.restore();
     this.clouds.forEach(cl => cl.draw?.(ctx));
-    this.hud.draw(this.ctx, this);
+    this.hud?.draw(this.ctx, this);
   }
 
-  placeOnGround(obj) { obj.y = this.groundY - obj.height + (obj.footOffset||0); }
+  placeOnGround(obj) {
+    obj.y = this.groundY - obj.height + (obj.footOffset || 0);
+  }
 
-  addToMap(mo) {
-    if (!mo) return; const ctx = this.ctx;
-    mo.drawGroundShadow?.(ctx, this.groundY, { alpha: 0.12, ryFactor: 0.10 });
-    if (!mo.img) return; const flip = mo.facing === -1 || mo.otherDirection === true;
-    if (flip) { ctx.save(); ctx.translate(mo.x + mo.width, mo.y); ctx.scale(-1, 1);
-      ctx.drawImage(mo.img, 0, 0, mo.width, mo.height); ctx.restore(); }
-    else ctx.drawImage(mo.img, mo.x, mo.y, mo.width, mo.height);
+addToMap(mo){
+  if (!mo) return;
+  const img = mo.img;
+  const ready = img && img.naturalWidth > 0;
+  if (!ready){
+    if (mo.loadFailed && !mo._warned){
+      console.warn('Skip broken image:', mo.constructor?.name, img?.src);
+      mo._warned = true;
+    }
+    return; // “still loading” → einfach überspringen, nicht warnen
+  }
+  const ctx = this.ctx;
+  mo.drawGroundShadow?.(ctx, this.groundY, { alpha: 0.12, ryFactor: 0.10 });
+  const flip = mo.facing === -1 || mo.otherDirection === true;
+  if (flip){ ctx.save(); ctx.translate(mo.x+mo.width, mo.y); ctx.scale(-1,1);
+    ctx.drawImage(img, 0,0, mo.width, mo.height); ctx.restore();
+  } else {
+    ctx.drawImage(img, mo.x, mo.y, mo.width, mo.height);
   }
 }
+} 
+
 window.World = World;
-
-
-
-
-
-
-
-
-
-
-
 

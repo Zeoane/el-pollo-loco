@@ -53,25 +53,36 @@ window.addEventListener('keyup', (e) => {
 // --- Audio preload / settings ---
 window.addEventListener('DOMContentLoaded', async () => {
   SFX.unlockOnGesture();
-  await SFX.loadAll({
-    coin:  'audio/coin.wav',
-    bottle:'audio/bottle_pick.wav',
-    throw: 'audio/throw.wav',
-    jump:  'audio/jump.wav',
-    hit:   'audio/hit.wav',
-    boss:  'audio/boss_theme.mp3',
-    bg:    'audio/loop_bg.mp3'
-  });
-  SFX.initFromStorage?.();
-  if (localStorage.getItem(SFX.key) == null) SFX.setVolume?.(0.6);
 
-  // Volume/Mute (optional)
+  await SFX.loadAll({
+    bg:           'audio/sounds/carnival-game-theme-loop.wav',
+    coin:         'audio/sounds/coin-ca-ching.mp3',
+    bottle_pick:  'audio/sounds/open-treasure-chest-8-bit.wav',
+    bottle_throw: 'audio/sounds/open_bottle_gas_1.wav',
+    bottle_hit:   'audio/sounds/bottle-hit-3.wav',
+    jump:         'audio/sounds/jump_extra-life-8-bit.wav',
+    hit:          'audio/sounds/death-song-8-bit.wav',
+    chicken:      'audio/sounds/chickens.wav',
+    rooster:      'audio/sounds/rooster1.wav'
+  });
+
+  // Musik nach erstem User-Input starten (Keyboard ODER Klick/Touch)
+  const startBg = () => {
+    SFX.loop('bg', 'music', { vol: 0.35 });
+    window.removeEventListener('keydown', startBg);
+    window.removeEventListener('pointerdown', startBg);
+  };
+  window.addEventListener('keydown', startBg);
+  window.addEventListener('pointerdown', startBg);
+
+  // Optional: Lautstärke/Mute Shortcuts
   window.addEventListener('keydown', e => {
-    if (e.code === 'KeyM') SFX.toggleMute?.();
-    if (e.code === 'BracketLeft')  SFX.setVolume?.(Math.max(0, SFX.vol - 0.1));
-    if (e.code === 'BracketRight') SFX.setVolume?.(Math.min(1, SFX.vol + 0.1));
+    if (e.code === 'KeyM') SFX.setMuted(!SFX.muted);
+    if (e.code === 'BracketLeft')  SFX.setVolume(Math.max(0, SFX.vol - 0.1));
+    if (e.code === 'BracketRight') SFX.setVolume(Math.min(1, SFX.vol + 0.1));
   });
 });
+
 
 
 

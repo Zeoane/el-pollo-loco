@@ -1,11 +1,19 @@
-// character.class.js
+// models/character.class.js
 class Character extends MovableObject {
-  constructor() {
+  // --- Lebenswerte + Helper ---
+  hpMax = 100;
+  hp    = this.hpMax;
+  hpPercent(){ return Math.max(0, Math.min(100, (100*this.hp)/this.hpMax)); }
+  takeDamage(n=10){ this.hp = Math.max(0, this.hp - n); }
+  heal(n=10){ this.hp = Math.min(this.hpMax, this.hp + n); }
+
+  constructor(){
     super();
     this.x = 120;
-    this.width = 160;
-    this.height = 320;
-    this.footOffset = 16; 
+    this.setSize(160,320);
+    this.footOffset = 16;
+    this.setHitbox(10,6, this.width-20, this.height-12);
+    this.vx = 0; this.vy = 0; this.onGround = false; this.facing = 1;
 
     this.IMAGES_WALKING = [
       'img/2_character_pepe/2_walk/W-21.png',
@@ -15,46 +23,22 @@ class Character extends MovableObject {
       'img/2_character_pepe/2_walk/W-25.png',
       'img/2_character_pepe/2_walk/W-26.png',
     ];
-
-    this.frames = this.loadImages(this.IMAGES_WALKING);
-    this.frameIndex = 0;
-    this.frameElapsedMs = 0;
-    this.frameDurationMs = 90; 
-
-    this.img = this.frames[0];
-    this.imageLoaded = true;
-
-    this.vx = 0;
-    this.vy = 0;
-    this.onGround = false;
+    this.IMAGES_JUMPING = [
+      'img/2_character_pepe/3_jump/J-31.png','img/2_character_pepe/3_jump/J-32.png',
+      'img/2_character_pepe/3_jump/J-33.png','img/2_character_pepe/3_jump/J-34.png',
+      'img/2_character_pepe/3_jump/J-35.png','img/2_character_pepe/3_jump/J-36.png',
+      'img/2_character_pepe/3_jump/J-37.png','img/2_character_pepe/3_jump/J-38.png',
+      'img/2_character_pepe/3_jump/J-39.png',
+    ];
+    this.setWalkFrames(this.IMAGES_WALKING, 90);
   }
 
-
-  updateAnimation(dtMs, moving) {
-    if (!this.frames?.length) return;
-
-    if (!moving) {
-      this.frameIndex = 0;
-      this.img = this.frames[0];
-      this.frameElapsedMs = 0;
-      return;
+  updateAnimation(dtMs, moving){
+    if (!this.onGround && this.IMAGES_JUMPING?.length){
+      if (!this._jumpFrames) this._jumpFrames = this.loadImages(this.IMAGES_JUMPING);
+      this.img = this._jumpFrames[0]; return;
     }
-
-    this.frameElapsedMs += dtMs;
-    if (this.frameElapsedMs >= this.frameDurationMs) {
-      this.frameElapsedMs = 0;
-      this.frameIndex = (this.frameIndex + 1) % this.frames.length;
-      this.img = this.frames[this.frameIndex];
-    }
-  }
-
-  draw(ctx) {
-    if (this.img) {
-      ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
-    } else {
-      ctx.fillStyle = 'red';
-      ctx.fillRect(this.x, this.y, this.width, this.height);
-    }
+    this.updateWalkAnimation(dtMs, !!moving);
   }
 }
 

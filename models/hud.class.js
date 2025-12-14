@@ -1,50 +1,50 @@
 // models/hud.class.js
+class StatusBar {
+  constructor(base, icon, x, y, w=228, h=28){
+    this.x=x; this.y=y; this.w=w; this.h=h; this.p=0;
+    this.icon = new Image(); this.icon.src = icon;
+    this.cache={}; ['0','20','40','60','80','100'].forEach(n=>{
+      const im=new Image(); im.src=`${base}/${n}.png`; this.cache[n]=im;
+    });
+  }
+  set(p){ this.p=Math.max(0,Math.min(100,p|0)); }
+  _img(){ const s=['0','20','40','60','80','100']; return this.cache[s[Math.round(this.p/20)]]; }
+  draw(ctx){
+    const im=this._img(); if(im?.complete) ctx.drawImage(im,this.x,this.y,this.w,this.h);
+    if(this.icon?.complete) ctx.drawImage(this.icon,this.x-34,this.y-2,30,30);
+  }
+}
+
 class HUD {
   constructor(){
-    this.coin = new Image();   this.coin.src = 'img/6_coins/coin.png';
-    this.bottle = new Image(); this.bottle.src = 'img/7_bottles/bottle.png';
-    this.heart = new Image();  this.heart.src = 'img/ui/heart.png'; // fallback unten
-    this.pad = 10; this.icon = 26;
+    const base='img/7_statusbars/1_statusbar/1_statusbar_coin/green';
+    this.left=16; this.top=34; this.gap=52; this.font='700 16px system-ui,sans-serif';
+    this.coinBar   = new StatusBar(base,'img/7_statusbars/3_icons/icon_coin.png',0,0);
+    this.bottleBar = new StatusBar(base,'img/7_statusbars/3_icons/icon_salsa_bottle.png',0,0);
+    this.healthBar = new StatusBar(base,'img/7_statusbars/3_icons/icon_health.png',0,0);
+    this.counts={coins:0,bottles:0};
   }
-
-  draw(ctx, world){
-    const y = this.pad, x0 = this.pad;
-    this.drawBadge(ctx, this.coin,   world.inventory?.coins||0, x0, y);
-    this.drawBadge(ctx, this.bottle, world.inventory?.bottles||0, x0+100, y);
-    const hp = world.character?.hp ?? (world.cfg?.player?.health ?? 3);
-    this.drawHearts(ctx, hp, x0+200, y);
+  layout(){
+    this.bottleBar.x=this.left; this.bottleBar.y=this.top;
+    this.healthBar.x=this.left; this.healthBar.y=this.top+this.gap;
+    this.coinBar.x  =this.left; this.coinBar.y  =this.top+2*this.gap;
   }
-
-  drawBadge(ctx, img, count, x, y){
-    this.drawPanel(ctx, x, y, 86, this.icon+8);
-    this.drawIcon(ctx, img, x+6, y+6, this.icon, this.icon);
-    this.drawLabel(ctx, '× ' + count, x+40, y+25);
+  sync(world){
+    const inv=world.inventory||{}, cfg=world.cfg||{}, hp=world.character?.hpPercent?.()??100;
+    this.coinBar.set(100*(inv.coins||0)/((cfg.items?.coins)||10));
+    this.bottleBar.set(100*(inv.bottles||0)/((cfg.items?.bottles)||5));
+    this.healthBar.set(hp);
+    this.counts={coins:inv.coins||0,bottles:inv.bottles||0};
   }
-
-  drawHearts(ctx, n, x, y){
-    this.drawPanel(ctx, x, y, 120, this.icon+8);
-    const w = this.icon, gap = 6, y2 = y+6;
-    for(let i=0;i<Math.max(0,n)&&i<4;i++) this.drawIcon(ctx, this.heart, x+6+i*(w+gap), y2, w, w);
+  draw(ctx,world){
+    this.layout(); this.sync(world);
+    [this.bottleBar,this.healthBar,this.coinBar].forEach(b=>{ b.draw(ctx); this._label(ctx,b); });
   }
-
-  drawPanel(ctx, x, y, w, h){
-    ctx.save();
-    ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(x, y, w, h);
-    ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.strokeRect(x+0.5, y+0.5, w-1, h-1);
-    ctx.restore();
-  }
-
-  drawIcon(ctx, img, x, y, w, h){
-    if (img && img.complete && img.naturalWidth>0) ctx.drawImage(img, x, y, w, h);
-    else { ctx.save(); ctx.fillStyle='#ccc'; ctx.fillRect(x,y,w,h); ctx.restore(); }
-  }
-
-  drawLabel(ctx, text, x, y){
-    ctx.save();
-    ctx.font = '700 18px system-ui, sans-serif';
-    ctx.fillStyle = '#000'; ctx.fillText(text, x+1, y+1);
-    ctx.fillStyle = '#fff'; ctx.fillText(text, x, y);
-    ctx.restore();
+  _label(ctx,b){
+    const n = (b===this.coinBar)? this.counts.coins : (b===this.bottleBar? this.counts.bottles : null);
+    if(n==null) return;
+    ctx.save(); ctx.font=this.font; ctx.fillStyle='#000';
+    ctx.fillText('×'+n, b.x+b.w+12, b.y+20); ctx.restore();
   }
 }
 window.HUD = HUD;
