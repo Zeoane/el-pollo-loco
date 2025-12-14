@@ -51,14 +51,41 @@ class BackgroundObject extends MovableObject {
 }
 
 class SkyLayer extends MovableObject {
-  constructor(path, parallax=0.0, y=0, h=null){ super(); this.y=y; this.h=h; this.parallax=parallax; this.loadImage(path); }
+  constructor(path, parallax = 0.0, y = 0, h = null) {
+    super();
+    this.y = y;
+    this.h = h;
+    this.parallax = parallax;
+
+    // eigenes Bild-Loading (keine Abhängigkeit von loadImage)
+    this.img = new Image();
+    this.imageLoaded = false;
+    this.img.onload = () => { this.imageLoaded = true; };
+    this.img.onerror = (e) => {
+      console.error('[SkyLayer] failed to load:', path, e);
+      this.img._broken = true;
+    };
+    this.img.src = path;
+  }
+
   update() {}
-  draw(ctx, cameraX=0){
-    if(!this.imageLoaded) return;
-    const h=this.h ?? ctx.canvas.height, s=h/this.img.naturalHeight, w=this.img.naturalWidth*s;
-    const px = ((window.devicePixelRatio||1) * (cameraX*(1-this.parallax)))|0 / (window.devicePixelRatio||1);
-    let x=-w; ctx.save(); ctx.translate(px,0);
-    for(; x<ctx.canvas.width+w; x+=w) ctx.drawImage(this.img, x-0.5, this.y, w+1, h);
+
+  draw(ctx, cameraX = 0) {
+    if (!this.imageLoaded) return;
+    const h = this.h ?? ctx.canvas.height;
+    const s = h / this.img.naturalHeight;
+    const w = this.img.naturalWidth * s;
+
+    // pixel-snapping bei Parallax
+    const dpr = window.devicePixelRatio || 1;
+    const px  = ((dpr * (cameraX * (1 - this.parallax))) | 0) / dpr;
+
+    let x = -w;
+    ctx.save();
+    ctx.translate(px, 0);
+    for (; x < ctx.canvas.width + w; x += w) {
+      ctx.drawImage(this.img, x - 0.5, this.y, w + 1, h);
+    }
     ctx.restore();
   }
 }

@@ -1,12 +1,8 @@
 // models/keyboard.class.js
-(function (global) {
-  if (global.GameKeyboard) return; // Guard gegen Doppelladen
-  class GameKeyboard {
-    constructor(){
-      this.LEFT=false; this.RIGHT=false; this.UP=false; this.DOWN=false;
-      this.SPACE=false; this.F=false;
-    }
+class GameKeyboard {
+  constructor() {
+    this.LEFT = this.RIGHT = this.UP = this.DOWN = this.SPACE = this.F = false;
   }
-  global.GameKeyboard = GameKeyboard;
-})(window);
+}
+window.GameKeyboard = GameKeyboard;   // global verfügbar
 

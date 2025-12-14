@@ -23,6 +23,7 @@
 <script defer src="models/collectibles.class.js"></script>
 <script defer src="models/projectile.class.js"></script>
 <script defer src="models/character.class.js"></script>
+<script defer src="models/smallchicken.class.js"></script>
 <script defer src="models/chicken.class.js"></script>
 <script defer src="models/endboss.class.js"></script> 
 
@@ -39,12 +40,15 @@
 
 </head>
 <body onload="init()">
-
+<canvas id="bg" aria-hidden="true">
     <h1>El pollo loco</h1>
-    
+    </canvas>
+    <div id="game">
     <canvas id="canvas" width="720" height="480" style="border:1px solid #000000;">
         
     </canvas>
-  
+    <button id="btnMute" class="hud-btn" aria-pressed="false" title="Mute (M)">🔊</button>
+</div>
+
 </body>
 </html>

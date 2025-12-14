@@ -34,5 +34,7 @@ class SoundManager {
   setVolume(v){ this.vol=Math.max(0,Math.min(1,v)); }
 
   setMuted(m){ this.muted=!!m; if(m) Object.keys(this.loops).forEach(k=>this.stop(k)); }
+  toggleMute(){ this.setMuted(!this.muted); }
 }
+
 window.SFX = new SoundManager();
