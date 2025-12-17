@@ -81,7 +81,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // Musik erst nach User-Input starten (Key oder Pointer)
   const startBg = () => {
-    SFX.loop("bg", "bg", { vol: 0.35 });
+    SFX.loop("bg", "bg", { vol: 0.15 });
     window.removeEventListener("keydown", startBg);
     window.removeEventListener("pointerdown", startBg);
   };
@@ -107,12 +107,31 @@ window.addEventListener("DOMContentLoaded", async () => {
   if (savedMuted) SFX.setMuted(true);
   setMuteUI(savedMuted);
 
-  // Shortcuts für Mute/Volume
-  window.addEventListener("keydown", (e) => {
-    if (e.code === "KeyM") toggleMute();
-    if (e.code === "BracketLeft") SFX.setVolume(Math.max(0, SFX.vol - 0.1));
-    if (e.code === "BracketRight") SFX.setVolume(Math.min(1, SFX.vol + 0.1));
-  });
+const $ = (id)=>document.getElementById(id);
+const btnPause   = $('btnPause');
+const btnStop    = $('btnStop');
+const btnRestart = $('btnRestart');
+
+btnPause?.addEventListener('click', ()=> world?.pause());
+btnStop?.addEventListener('click',  ()=> world?.stop());
+btnRestart?.addEventListener('click', ()=>{
+  world?.dispose?.();
+  const canvas = document.getElementById('canvas');
+  const level1 = createLevel1();
+  world = new World(canvas, keyboard, level1);
+});
+
+// Tastenkürzel: P=Pause, Esc=Stop, R=Restart
+window.addEventListener('keydown', (e)=>{
+  if (e.code==='KeyP') world?.pause();
+  if (e.code==='Escape') world?.stop();
+  if (e.code==='KeyR') { 
+    world?.dispose?.();
+    const canvas = document.getElementById('canvas');
+    const level1 = createLevel1();
+    world = new World(canvas, keyboard, level1);
+  }
+});
 
   // --- Vollflächiger Hintergrund (DPR-scharf) ---
   const drawBg = () => {

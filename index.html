@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" sizes="32x32" href="img/favicon/icons8-screaming-rooster-32.png">
+    <link rel="preload" as="image" href="img/5_background/desert-landscape.jpg" fetchpriority="high">
+
     <title>El Pollo Loco</title>
 
 <!-- Utils -->
@@ -40,14 +42,20 @@
 
 </head>
 <body onload="init()">
-<canvas id="bg" aria-hidden="true">
+<div id="bg" aria-hidden="false">
     <h1>El pollo loco</h1>
-    </canvas>
+    <div id="hudTopRight" class="hud-bar" role="toolbar" aria-label="Game controls">
+    <button id="btnMute"    class="hud-btn" aria-pressed="false" title="Mute (M)">🔊</button>
+    <button id="btnPause"   class="hud-btn" aria-pressed="false" title="Pause / Resume (P)">⏸</button>
+    <button id="btnStop"    class="hud-btn" title="Stop (Esc)">■</button>
+    <button id="btnRestart" class="hud-btn" title="Restart (R)">⟲</button>
+  </div>
+    </div>
+    
     <div id="game">
-    <canvas id="canvas" width="720" height="480" style="border:1px solid #000000;">
-        
+    <canvas id="canvas" width="720" height="480">
     </canvas>
-    <button id="btnMute" class="hud-btn" aria-pressed="false" title="Mute (M)">🔊</button>
+    
 </div>
 
 </body>

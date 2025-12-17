@@ -21,6 +21,9 @@ class World {
   projectiles = [];
   inventory = { coins: 0, bottles: 0 };
   cfg = {};
+  paused = false;
+  stopped = false;
+  _raf = 0;
 
   constructor(canvas, keyboard, level) {
     this.canvas = canvas;
@@ -56,13 +59,30 @@ class World {
     );
   }
 
-  animate = (now = performance.now()) => {
-    const dtMs = Math.min(50, now - this.lastTime);
-    this.lastTime = now;
-    this.update(dtMs);
+animate = (now = performance.now()) => {
+  const dtMs = Math.min(50, now - this.lastTime);
+  this.lastTime = now;
+  if (!this.stopped) {
+    if (!this.paused) this.update(dtMs);
     this.draw();
-    requestAnimationFrame(this.animate);
-  };
+    this._raf = requestAnimationFrame(this.animate);
+  }
+};
+
+pause(v){ this.paused = (v===undefined) ? !this.paused : !!v; }
+
+stop(){
+  this.stopped = true;
+  if (this._raf) { cancelAnimationFrame(this._raf); this._raf = 0; }
+}
+
+resume(){ if (!this.stopped) this.paused = false; }
+
+dispose(){
+  this.stop();
+
+}
+
 
   update(dtMs) {
     this.tSinceStartMs += dtMs;
@@ -214,8 +234,7 @@ class World {
     this.opponents = this.opponents.filter((o) => !o._dead);
   }
 
-  // <= 14 Zeilen
-  checkCharEnemyCollisions(dtMs) {
+checkCharEnemyCollisions(dtMs) {
     const c = this.character;
     c.invT = Math.max(0, (c.invT || 0) - dtMs);
     if (c.invT) return;
