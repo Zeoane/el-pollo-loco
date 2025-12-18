@@ -41,7 +41,7 @@ h1 {
   display: block;
   background: transparent;
   border: none;
-  border-radius: inherit;
+ 
 }
 
 #game {
@@ -50,8 +50,8 @@ h1 {
   transform: scale(1.12);
   transform-origin: center;
   border-radius: 18px;
-  height: min(72svh, 520px); /
-  aspect-ratio: 3 / 2;
+  height: min(72svh, 520px);
+  /aspect-ratio: 3 / 2;
   overflow: hidden;
   box-shadow: 0 12px 40px rgba(44, 36, 36, 0.45),
     0 2px 8px rgba(61, 34, 34, 0.35);
@@ -89,7 +89,74 @@ h1 {
   outline: 2px solid #fff3;
 }
 
-#btnPause, #btnStop {
+#btnPause,
+#btnStop {
   padding-bottom: 6px;
 }
 
+#hud {
+  --bar-w: 200px; 
+  --bar-h: 28px; 
+  --icon: 30px; 
+  --gap: 10px;
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  right: auto;
+  z-index: 10;
+  display: grid;
+  gap: 10px;
+  pointer-events: none; 
+}
+
+#hud .hud-row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-columns: var(--icon) var(--bar-w) auto;
+  align-items: center;
+  gap: var(--gap);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+  padding: 6px 10px;
+  pointer-events: none;
+}
+
+#hud .icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+#hud .track {
+  height: var(--bar-h);
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+#hud .fill {
+  height: 100%;
+  width: var(--p, 0%);
+  background: #22c55e;
+  transition: width 120ms linear;
+}
+
+#hud .label {
+  color: #fff;
+  font: 700 16px system-ui, sans-serif;
+  white-space: nowrap;
+  padding-left: 4px;
+}
+
+@media (max-width: 520px) {
+  #hud {
+    --bar-w: 200px;
+    --icon: 28px;
+    --bar-h: 28px;
+    gap: 8px;
+  }
+  #hud .hud-row {
+    grid-template-columns: var(--icon) 1fr auto;
+  }
+}

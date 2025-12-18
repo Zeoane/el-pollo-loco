@@ -19,6 +19,7 @@ class World {
   coins = [];
   bottles = [];
   projectiles = [];
+  throwState = { charging: false, holdMs: 0, maxMs: 800 };
   inventory = { coins: 0, bottles: 0 };
   cfg = {};
   paused = false;
@@ -49,7 +50,7 @@ class World {
     this.initOpponents();
     this.spawnSmallChickens();
     this.spawnPickups();
-    this.hud = window.HUD ? new HUD() : null;
+    this.hud = window.USE_CANVAS_HUD && window.HUD ? new HUD() : null;
     this.animate();
   }
 
@@ -59,30 +60,35 @@ class World {
     );
   }
 
-animate = (now = performance.now()) => {
-  const dtMs = Math.min(50, now - this.lastTime);
-  this.lastTime = now;
-  if (!this.stopped) {
-    if (!this.paused) this.update(dtMs);
-    this.draw();
-    this._raf = requestAnimationFrame(this.animate);
+  animate = (now = performance.now()) => {
+    const dtMs = Math.min(50, now - this.lastTime);
+    this.lastTime = now;
+    if (!this.stopped) {
+      if (!this.paused) this.update(dtMs);
+      this.draw();
+      this._raf = requestAnimationFrame(this.animate);
+    }
+  };
+
+  pause(v) {
+    this.paused = v === undefined ? !this.paused : !!v;
   }
-};
 
-pause(v){ this.paused = (v===undefined) ? !this.paused : !!v; }
+  stop() {
+    this.stopped = true;
+    if (this._raf) {
+      cancelAnimationFrame(this._raf);
+      this._raf = 0;
+    }
+  }
 
-stop(){
-  this.stopped = true;
-  if (this._raf) { cancelAnimationFrame(this._raf); this._raf = 0; }
-}
+  resume() {
+    if (!this.stopped) this.paused = false;
+  }
 
-resume(){ if (!this.stopped) this.paused = false; }
-
-dispose(){
-  this.stop();
-
-}
-
+  dispose() {
+    this.stop();
+  }
 
   update(dtMs) {
     this.tSinceStartMs += dtMs;
@@ -107,6 +113,11 @@ dispose(){
     this.updateProjectiles(dtMs);
     this.checkPickups();
     this.handleThrow();
+
+    this.updateThrow(dtMs);
+    this.updateProjectiles(dtMs);
+    this.checkPickups();
+    this.maybeSpawnBoss();
   }
 
   managePhases() {
@@ -234,7 +245,9 @@ dispose(){
     this.opponents = this.opponents.filter((o) => !o._dead);
   }
 
-checkCharEnemyCollisions(dtMs) {
+
+
+  checkCharEnemyCollisions(dtMs) {
     const c = this.character;
     c.invT = Math.max(0, (c.invT || 0) - dtMs);
     if (c.invT) return;
@@ -272,6 +285,57 @@ checkCharEnemyCollisions(dtMs) {
     }
     if (!this.keyboard?.F) this.throwLock = false;
   }
+
+  updateThrow(dtMs){
+  const F = !!this.keyboard?.F, ts = this.throwState;
+  if (F && !ts.charging){ ts.charging = true; ts.holdMs = 0; }
+  if (F &&  ts.charging){ ts.holdMs = Math.min(ts.holdMs + dtMs, ts.maxMs); }
+
+  if (!F && ts.charging){
+    ts.charging = false;
+    if ((this.inventory.bottles||0) > 0){
+      const pow = 1 + (ts.holdMs / ts.maxMs) * 1.5; // 1.0..2.5
+      const dir = (this.character.facing===-1) ? -1 : 1;
+      const p = new Projectile(
+        this.character.x + this.character.width/2,
+        this.character.y + 20,
+        dir,
+        { speedMul: pow }
+      );
+      this.projectiles.push(p);
+      this.inventory.bottles--;
+      SFX.play?.('bottle_throw',{vol:0.8});
+    }
+  }
+}
+
+updateProjectiles(dtMs){
+  const gY = this.groundY;
+
+  // bewegen + Bodencheck
+  this.projectiles.forEach(p=>{
+    p.update(dtMs);
+    if (p.state === 'fly' && p.y + p.height >= gY){
+      p.hitAndSplash(gY); // Splash auf Boden
+    }
+  });
+
+  // Gegner-Treffer → Splash & Schaden
+  this.projectiles.forEach(p=>{
+    if (p.state !== 'fly') return;
+    const hit = this.opponents.find(o => AABB(p, o));
+    if (hit){
+      hit.hp = (hit.hp||3) - 1;
+      if (hit.hp <= 0) hit._dead = true;
+      p.hitAndSplash();
+    }
+  });
+
+  // Aufräumen
+  this.projectiles = this.projectiles.filter(p => !p._dead);
+  this.opponents   = this.opponents.filter(o => !o._dead);
+}
+
 
   updateProjectiles(dtMs) {
     this.projectiles.forEach((p) => p.update(dtMs / 16));
@@ -341,27 +405,21 @@ checkCharEnemyCollisions(dtMs) {
     }
   }
 
-  draw() {
-    const { ctx, canvas } = this;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+draw(){
+  const {ctx,canvas}=this;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    ctx.save();
-    ctx.translate(-this.cameraX, 0);
-    this.backgroundObjects.forEach((bo) => bo.draw(ctx, this.cameraX));
-    this.addToMap(this.character);
-    this.opponents.forEach((o) => this.addToMap(o));
-    // Pickups im Welt-Koordinatensystem
-    this.coins.forEach((c) => this.addToMap(c));
-    this.bottles.forEach((b) => this.addToMap(b));
-    // Wurfgeschosse
-    this.projectiles.forEach((p) => this.addToMap(p));
-    ctx.restore();
+  ctx.save();
+  ctx.translate(-this.cameraX,0);
+  this.backgroundObjects.forEach(bo=>bo.draw(ctx,this.cameraX));
+  this.addToMap(this.character);
+  this.opponents.forEach(o=>this.addToMap(o));
+  this.projectiles.forEach(p=>this.addToMap(p)); 
+  ctx.restore();
 
-    // Wolken oben drüber
-    this.clouds.forEach((c) => c.draw?.(ctx));
-    // HUD zuletzt
-    this.hud?.draw(ctx, this);
-  }
+  this.clouds.forEach(c=>c.draw?.(ctx));
+  this.hud?.draw(ctx, this);
+}
 
   placeOnGround(obj) {
     obj.y = this.groundY - obj.height + (obj.footOffset || 0);
@@ -405,3 +463,56 @@ checkCharEnemyCollisions(dtMs) {
 }
 
 window.World = World;
+
+// HUD DOM helper
+class HUDOverlay {
+  constructor(root) {
+    this.root = root;
+    this.el = {
+      bottleRow: root.querySelector('.hud-row[data-kind="bottle"]'),
+      healthRow: root.querySelector('.hud-row[data-kind="health"]'),
+      coinRow: root.querySelector('.hud-row[data-kind="coin"]'),
+      bottleFill: root.querySelector('.hud-row[data-kind="bottle"] .fill'),
+      healthFill: root.querySelector('.hud-row[data-kind="health"] .fill'),
+      coinFill: root.querySelector('.hud-row[data-kind="coin"] .fill'),
+      lblBottle: document.getElementById("lbl-bottle"),
+      lblHealth: document.getElementById("lbl-health"),
+      lblCoin: document.getElementById("lbl-coin"),
+    };
+  }
+  _pct(num, den) {
+    return Math.max(0, Math.min(100, den ? (num * 100) / den : 0));
+  }
+  _setFill(el, pct) {
+    if (el) el.style.setProperty("--p", pct.toFixed(0) + "%");
+  }
+  sync(world) {
+    const inv = world?.inventory || {},
+      cfg = world?.cfg || {};
+    const coins = inv.coins || 0,
+      coinsMax = cfg.items?.coins || 10;
+    const bottles = inv.bottles || 0,
+      bottlesMax = cfg.items?.bottles || 5;
+    const hpPct = world?.character?.hpPercent?.() ?? 100;
+
+    this._setFill(this.el.coinFill, this._pct(coins, coinsMax));
+    this._setFill(this.el.bottleFill, this._pct(bottles, bottlesMax));
+    this._setFill(this.el.healthFill, hpPct);
+
+    if (this.el.lblCoin) this.el.lblCoin.textContent = "×" + coins;
+    if (this.el.lblBottle) this.el.lblBottle.textContent = "×" + bottles;
+    if (this.el.lblHealth)
+      this.el.lblHealth.textContent = hpPct.toFixed(0) + "%";
+  }
+}
+
+window.addEventListener("load", () => {
+  const root = document.getElementById("hud");
+  if (!root) return;
+  window.hudDOM = new HUDOverlay(root);
+  const tick = () => {
+    if (window.world) window.hudDOM.sync(window.world);
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+});

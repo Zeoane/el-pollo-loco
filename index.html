@@ -31,7 +31,7 @@
 
 <!-- Level & World -->
 <script defer src="models/level.class.js"></script>
-<script defer src="models/statusbar.class.js"></script>
+
 <script defer src="models/hud.class.js"></script>
 <script defer src="audio/sound.manager.js"></script>
 <script defer src="models/world.class.js"></script>
@@ -55,6 +55,27 @@
     <div id="game">
     <canvas id="canvas" width="720" height="480">
     </canvas>
+
+      <div id="hud" aria-hidden="false">
+    <div class="hud-row" data-kind="bottle">
+      <img class="icon" src="img/7_statusbars/3_icons/icon_salsa_bottle.png" alt="">
+      <div class="track"><div class="fill" style="--p:0%"></div></div>
+      <span class="label" id="lbl-bottle">×0</span>
+    </div>
+
+    <div class="hud-row" data-kind="health">
+      <img class="icon" src="img/7_statusbars/3_icons/icon_health.png" alt="">
+      <div class="track"><div class="fill" style="--p:100%"></div></div>
+      <span class="label" id="lbl-health">100%</span>
+    </div>
+
+    <div class="hud-row" data-kind="coin">
+      <img class="icon" src="img/7_statusbars/3_icons/icon_coin.png" alt="">
+      <div class="track"><div class="fill" style="--p:0%"></div></div>
+      <span class="label" id="lbl-coin">×0</span>
+    </div>
+  </div>
+</div>
     
 </div>
 
