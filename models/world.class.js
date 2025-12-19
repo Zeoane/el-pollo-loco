@@ -1,4 +1,4 @@
-// world.class.js
+// world.class.js//
 class World {
   canvas;
   ctx;
@@ -37,12 +37,15 @@ class World {
       .setGround?.(this.groundY)
       .placeOnGround?.();
 
+    this.character.setSpeed?.(this.cfg.player?.speed ?? 3.4);
+
     const L = level ||
       createLevel1?.() || {
         backgroundObjects: BackgroundLayers.defaultSet(),
         opponents: [],
         clouds: [],
       };
+      
     this.backgroundObjects = L.backgroundObjects;
     this.opponents = L.opponents;
     this.clouds = L.clouds;
@@ -52,6 +55,11 @@ class World {
     this.spawnPickups();
     this.hud = window.USE_CANVAS_HUD && window.HUD ? new HUD() : null;
     this.animate();
+    this.elapsedMs = 0;
+    this.phase = "small";
+    this.phase2AtMs = this.cfg.phase2AtMs ?? 90000;
+    this.maxSmall = this.cfg.maxSmall ?? 5;
+    this.maxBig = this.cfg.maxBig ?? 5;
   }
 
   initOpponents() {
@@ -91,6 +99,7 @@ class World {
   }
 
   update(dtMs) {
+    this.elapsedMs = (this.elapsedMs || 0) + dtMs;
     this.tSinceStartMs += dtMs;
     this.managePhases();
     this.handleInput(dtMs);
@@ -99,6 +108,8 @@ class World {
     this.applyPhysics();
     this.handleGround();
     this.checkCharEnemyCollisions(dtMs);
+    this.coins.forEach((c) => c.update?.(dtMs));
+    this.bottles.forEach((b) => b.update?.(dtMs));
 
     const moving = !!(this.keyboard?.LEFT || this.keyboard?.RIGHT);
     this.character.updateWalkAnimation?.(dtMs, moving);
@@ -106,30 +117,88 @@ class World {
     this.updateCamera(moving);
     this.updateClouds();
     this.updateBackgrounds(dtMs, moving);
-    this.updateOpponents();
+    this.updateOpponents(dtMs);
 
     this.distanceX = Math.max(this.distanceX, this.character.x);
 
-    this.updateProjectiles(dtMs);
-    this.checkPickups();
     this.handleThrow();
-
     this.updateThrow(dtMs);
     this.updateProjectiles(dtMs);
     this.checkPickups();
     this.maybeSpawnBoss();
+    this.maintainEnemies();
+  }
+
+  checkPickups() {
+    const cbb = this.character.getBounds?.() || this.character;
+
+    this.coins = this.coins.filter((c) => {
+      const hit = AABB(cbb, c.getBounds?.() || c);
+      if (hit) {
+        this.inventory.coins++;
+        SFX.play?.("coin", { vol: 0.8 });
+        return false;
+      }
+      return true;
+    });
+
+    this.bottles = this.bottles.filter((b) => {
+      const hit = AABB(cbb, b.getBounds?.() || b);
+      if (hit) {
+        this.inventory.bottles++;
+        SFX.play?.("bottle_pick", { vol: 0.8 });
+        return false;
+      }
+      return true;
+    });
   }
 
   managePhases() {
-    const t = this.tSinceStartMs;
-    if (this.phase === 0 && t >= 120000) {
-      this.spawnRegularChickens();
-      this.phase = 1;
+    const t = this.elapsedMs | 0;
+    if (this.phase === "small" && t >= this.phase2AtMs) {
+      this.phase = "big";
+        this.opponents = this.opponents.filter(
+        (o) => !(o instanceof SmallChicken)
+      );
     }
-    if (this.phase <= 1 && t >= 240000 && !this.bossSpawned) {
+
+    const bossAtMs = this.cfg.bossAtMs ?? this.phase2AtMs + 60000; 
+    if (!this.bossSpawned && t >= bossAtMs) {
       this.spawnBoss();
-      this.phase = 2;
     }
+  }
+
+maintainEnemies() {
+  const count = (Cls) => this.opponents.filter(o => o instanceof Cls).length;
+
+  if (this.phase === 'small') {
+    while (count(SmallChicken) < this.maxSmall) this.spawnEnemy('small');
+
+    this.opponents = this.opponents.filter(o => !(o instanceof Chicken));
+  } else if (this.phase === 'big') {
+    while (count(Chicken) < this.maxBig) this.spawnEnemy('big');
+    this.opponents = this.opponents.filter(o => !(o instanceof SmallChicken));
+  }
+}
+
+
+  spawnEnemy(kind = "small") {
+    const Klass = kind === "small" ? SmallChicken : Chicken;
+    const e = new Klass().setGround?.(this.groundY).placeOnGround?.();
+
+    if (kind === "small") {
+      e.speed = 1.2 + Math.random() * 0.7; 
+    } else {
+      e.speed = 1.6 + Math.random() * 0.9; 
+    }
+
+    const left = this.cameraX - 150;
+    const ahead = this.cameraX + this.canvas.width + 220;
+    const far = Math.max(0, ...this.opponents.map((op) => op.x || 0));
+    const gap = 260 + Math.random() * 460;
+    e.x = Math.max(ahead, far + gap);
+
+    this.opponents.push(e);
   }
 
   spawnSmallChickens() {
@@ -176,6 +245,9 @@ class World {
   }
 
   handleInput(dtMs) {
+    const run = this.cfg.player?.speed ?? 3.4;
+    this.character.speed = run;
+
     if (this.keyboard?.RIGHT) {
       this.character.stepRight?.(dtMs);
       this.character.facing = 1;
@@ -184,6 +256,7 @@ class World {
       this.character.stepLeft?.(dtMs);
       this.character.facing = -1;
     }
+
     if (
       !this.jumpLock &&
       (this.keyboard?.SPACE || this.keyboard?.UP) &&
@@ -228,25 +301,32 @@ class World {
     );
   }
 
+  // in World.updateOpponents(dtMs)
   updateOpponents(dtMs) {
-    const left = this.cameraX - 150,
-      ahead = this.cameraX + this.canvas.width + 200;
+    const left = this.cameraX - 150;
+    const ahead = this.cameraX + this.canvas.width + 200;
     const far = Math.max(0, ...this.opponents.map((op) => op.x || 0));
+
     this.opponents.forEach((o) => {
-      o.updateWalkAnimation?.(dtMs, true);
+      if (o.updateBoss) {
+        // Endboss steuert sich selbst
+        o.updateBoss(this, dtMs);
+        return;
+      }
+      // normales Hühner-Verhalten
       o.x -= o.speed ?? 0;
       this.placeOnGround(o);
       if (o.x + o.width < left) {
-        const g = 260 + Math.random() * 460;
-        o.x = Math.max(ahead, far + g);
+        const gap = 260 + Math.random() * 460;
+        o.x = Math.max(ahead, far + gap);
         o.speed = 1.6 + Math.random() * 0.8;
       }
     });
+
     this.opponents = this.opponents.filter((o) => !o._dead);
   }
 
-
-
+  // <= 14 Zeilen
   checkCharEnemyCollisions(dtMs) {
     const c = this.character;
     c.invT = Math.max(0, (c.invT || 0) - dtMs);
@@ -257,11 +337,19 @@ class World {
       const eb = e.getBounds?.() || e;
       if (!AABB(cb, eb)) continue;
 
-      c.hp = Math.max(0, (c.hp ?? 100) - (e.dmg ?? 20));
-      c.invT = 600; // 0,6s Unverwundbarkeit
-      c.vy = -6; // Knock-up
-      c.vx = c.facing === 1 ? -2 : 2; // Knock-back
-      SFX.play?.("hit", { vol: 0.9 });
+      const stomp = c.prevY + c.height <= e.y + 8 && c.vy > 0;
+      if (stomp) {
+        e._dead = true;
+        SFX.play?.("hit", { vol: 0.9 });
+        c.vy = -8;
+      } else {
+        c.hp = Math.max(0, (c.hp ?? 100) - (e.dmg ?? 20));
+        c.invT = 600;
+
+        c.vx = c.facing === 1 ? -2.5 : 2.5;
+
+        SFX.play?.("hit", { vol: 0.9 });
+      }
       break;
     }
   }
@@ -286,89 +374,63 @@ class World {
     if (!this.keyboard?.F) this.throwLock = false;
   }
 
-  updateThrow(dtMs){
-  const F = !!this.keyboard?.F, ts = this.throwState;
-  if (F && !ts.charging){ ts.charging = true; ts.holdMs = 0; }
-  if (F &&  ts.charging){ ts.holdMs = Math.min(ts.holdMs + dtMs, ts.maxMs); }
+  updateThrow(dtMs) {
+    const F = !!this.keyboard?.F,
+      ts = this.throwState;
+    if (F && !ts.charging) {
+      ts.charging = true;
+      ts.holdMs = 0;
+    }
+    if (F && ts.charging) {
+      ts.holdMs = Math.min(ts.holdMs + dtMs, ts.maxMs);
+    }
 
-  if (!F && ts.charging){
-    ts.charging = false;
-    if ((this.inventory.bottles||0) > 0){
-      const pow = 1 + (ts.holdMs / ts.maxMs) * 1.5; // 1.0..2.5
-      const dir = (this.character.facing===-1) ? -1 : 1;
-      const p = new Projectile(
-        this.character.x + this.character.width/2,
-        this.character.y + 20,
-        dir,
-        { speedMul: pow }
-      );
-      this.projectiles.push(p);
-      this.inventory.bottles--;
-      SFX.play?.('bottle_throw',{vol:0.8});
+    if (!F && ts.charging) {
+      ts.charging = false;
+      if ((this.inventory.bottles || 0) > 0) {
+        const pow = 1 + (ts.holdMs / ts.maxMs) * 1.5; // 1.0..2.5
+        const dir = this.character.facing === -1 ? -1 : 1;
+        const p = new Projectile(
+          this.character.x + this.character.width / 2,
+          this.character.y + 20,
+          dir,
+          { speedMul: pow }
+        );
+        this.projectiles.push(p);
+        this.inventory.bottles--;
+        SFX.play?.("bottle_throw", { vol: 0.8 });
+      }
     }
   }
-}
-
-updateProjectiles(dtMs){
-  const gY = this.groundY;
-
-  // bewegen + Bodencheck
-  this.projectiles.forEach(p=>{
-    p.update(dtMs);
-    if (p.state === 'fly' && p.y + p.height >= gY){
-      p.hitAndSplash(gY); // Splash auf Boden
-    }
-  });
-
-  // Gegner-Treffer → Splash & Schaden
-  this.projectiles.forEach(p=>{
-    if (p.state !== 'fly') return;
-    const hit = this.opponents.find(o => AABB(p, o));
-    if (hit){
-      hit.hp = (hit.hp||3) - 1;
-      if (hit.hp <= 0) hit._dead = true;
-      p.hitAndSplash();
-    }
-  });
-
-  // Aufräumen
-  this.projectiles = this.projectiles.filter(p => !p._dead);
-  this.opponents   = this.opponents.filter(o => !o._dead);
-}
-
 
   updateProjectiles(dtMs) {
-    this.projectiles.forEach((p) => p.update(dtMs / 16));
-    this.projectiles = this.projectiles.filter((p) => {
-      const hit = this.opponents.find((o) => AABB(p, o));
-      if (hit) {
-        hit.hp = (hit.hp || 3) - 1;
-        SFX.play?.("hit", { vol: 0.9 });
-        if (hit.hp <= 0) hit._dead = true;
-        return false;
-      }
-      return p.y < this.canvas.height;
-    });
-    this.opponents = this.opponents.filter((o) => !o._dead);
-  }
+    const gY = this.groundY;
 
-  checkPickups() {
-    this.coins = this.coins.filter((c) => {
-      if (AABB(this.character, c)) {
-        this.inventory.coins++;
-        SFX.play?.("coin", { vol: 0.8 });
-        return false;
+    this.projectiles.forEach((p) => {
+      p.update(dtMs);
+      if (p.state === "fly" && p.y + p.height >= gY) {
+        p.hitAndSplash(gY);
       }
-      return true;
     });
-    this.bottles = this.bottles.filter((b) => {
-      if (AABB(this.character, b)) {
-        this.inventory.bottles++;
-        SFX.play?.("bottle", { vol: 0.8 });
-        return false;
+
+    this.projectiles.forEach((p) => {
+      if (p.state !== "fly") return;
+      const hit = this.opponents.find((o) => AABB(p, o));
+      if (!hit) return;
+
+      if (typeof hit.onHit === "function") {
+        hit.onHit(25);
+      } else {
+        hit.hp = (hit.hp || 3) - 1;
+        if (hit.hp <= 0) hit._dead = true;
+        SFX.play?.("hit", { vol: 0.9 });
       }
-      return true;
+
+      p.hitAndSplash();
     });
+
+    this.projectiles = this.projectiles.filter((p) => !p._dead);
+    this.opponents = this.opponents.filter((o) => !o._dead);
   }
 
   spawnChickens() {
@@ -399,27 +461,36 @@ updateProjectiles(dtMs){
     const at = this.cfg.bossAtPx ?? 3800;
     if (this.distanceX >= at) {
       const b = new Endboss().setGround?.(this.groundY).placeOnGround?.();
-      b.x = at + 400;
+      b.x = at + 420;
       this.opponents.push(b);
       this.bossSpawned = true;
+      // Optional: Musik wechseln
+      // SFX.stop?.('bg'); SFX.loop?.('boss','bg',{vol:0.35});
     }
   }
 
-draw(){
-  const {ctx,canvas}=this;
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+  draw() {
+    const { ctx, canvas } = this;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  ctx.save();
-  ctx.translate(-this.cameraX,0);
-  this.backgroundObjects.forEach(bo=>bo.draw(ctx,this.cameraX));
-  this.addToMap(this.character);
-  this.opponents.forEach(o=>this.addToMap(o));
-  this.projectiles.forEach(p=>this.addToMap(p)); 
-  ctx.restore();
+    ctx.save();
+    ctx.translate(-this.cameraX, 0);
 
-  this.clouds.forEach(c=>c.draw?.(ctx));
-  this.hud?.draw(ctx, this);
-}
+    this.backgroundObjects.forEach((bo) => bo.draw(ctx, this.cameraX));
+
+    this.coins.forEach((c) => this.addToMap(c));
+    this.bottles.forEach((b) => this.addToMap(b));
+
+    this.addToMap(this.character);
+    this.opponents.forEach((o) => this.addToMap(o));
+    this.projectiles.forEach((p) => this.addToMap(p));
+
+    ctx.restore();
+
+    this.clouds.forEach((c) => c.draw?.(ctx));
+
+    this.hud?.draw(ctx, this);
+  }
 
   placeOnGround(obj) {
     obj.y = this.groundY - obj.height + (obj.footOffset || 0);
@@ -435,7 +506,7 @@ draw(){
         console.warn("Broken image:", mo.constructor?.name, img?.src);
         mo._warned = true;
       }
-      // Sichtbarer Platzhalter nur für den Character, damit du ihn siehst
+
       if (mo === this.character) {
         const ctx = this.ctx;
         ctx.save();

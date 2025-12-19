@@ -1,83 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon/icons8-screaming-rooster-32.png">
-    <link rel="preload" as="image" href="img/5_background/desert-landscape.jpg" fetchpriority="high">
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/png" sizes="32x32" href="img/favicon/icons8-screaming-rooster-32.png">
+  <link rel="preload" as="image" href="img/5_background/desert-landscape.jpg" fetchpriority="high">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rye&display=swap" rel="stylesheet">
 
-    <title>El Pollo Loco</title>
+  <title>El Pollo Loco</title>
 
-<!-- Utils -->
-<script defer src="utils/aabb.js"></script>
+  <!-- Utils -->
+  <script defer src="utils/aabb.js"></script>
 
-<!-- Basisklassen -->
-<script defer src="models/movable-object.class.js"></script>
+  <!-- Basisklassen -->
+  <script defer src="models/movable-object.class.js"></script>
 
-<!-- Rendering/Background -->
-<script defer src="models/background-object.class.js"></script>
-<script defer src="models/cloud.class.js"></script>
+  <!-- Rendering/Background -->
+  <script defer src="models/background-object.class.js"></script>
+  <script defer src="models/cloud.class.js"></script>
 
-<!-- Entities & Items -->
+  <!-- Entities & Items -->
+  <script defer src="models/collectibles.class.js"></script>
+  <script defer src="models/projectile.class.js"></script>
+  <script defer src="models/character.class.js"></script>
+  <script defer src="models/smallchicken.class.js"></script>
+  <script defer src="models/chicken.class.js"></script>
+  <script defer src="models/endboss.class.js"></script>
 
-<script defer src="models/collectibles.class.js"></script>
-<script defer src="models/projectile.class.js"></script>
-<script defer src="models/character.class.js"></script>
-<script defer src="models/smallchicken.class.js"></script>
-<script defer src="models/chicken.class.js"></script>
-<script defer src="models/endboss.class.js"></script> 
+  <!-- Level & World -->
+  <script defer src="models/level.class.js"></script>
+  <script defer src="models/hud.class.js"></script>
+  <script defer src="audio/sound.manager.js"></script>
+  <script defer src="models/world.class.js"></script>
+  <script defer src="models/keyboard.class.js"></script>
 
-<!-- Level & World -->
-<script defer src="models/level.class.js"></script>
-
-<script defer src="models/hud.class.js"></script>
-<script defer src="audio/sound.manager.js"></script>
-<script defer src="models/world.class.js"></script>
-<script defer src="models/keyboard.class.js"></script>
-
-<!-- Entry point (init, Key-Handling, SFX preload) -->
-<script defer src="js/game.js"></script>
+  <script defer src="js/game.js"></script>
 
 </head>
+
 <body onload="init()">
-<div id="bg" aria-hidden="false">
+  <div id="bg" aria-hidden="false">
     <h1>El pollo loco</h1>
     <div id="hudTopRight" class="hud-bar" role="toolbar" aria-label="Game controls">
-    <button id="btnMute"    class="hud-btn" aria-pressed="false" title="Mute (M)">🔊</button>
-    <button id="btnPause"   class="hud-btn" aria-pressed="false" title="Pause / Resume (P)">⏸</button>
-    <button id="btnStop"    class="hud-btn" title="Stop (Esc)">■</button>
-    <button id="btnRestart" class="hud-btn" title="Restart (R)">⟲</button>
-  </div>
+      <button id="btnMute" class="hud-btn" aria-pressed="false" title="Mute (M)">🔊</button>
+      <button id="btnPause" class="hud-btn" aria-pressed="false" title="Pause / Resume (P)">⏸</button>
+      <button id="btnStop" class="hud-btn" title="Stop (Esc)">■</button>
+      <button id="btnRestart" class="hud-btn" title="Restart (R)">⟲</button>
     </div>
-    
-    <div id="game">
+  </div>
+
+  <div id="game">
     <canvas id="canvas" width="720" height="480">
     </canvas>
 
-      <div id="hud" aria-hidden="false">
-    <div class="hud-row" data-kind="bottle">
-      <img class="icon" src="img/7_statusbars/3_icons/icon_salsa_bottle.png" alt="">
-      <div class="track"><div class="fill" style="--p:0%"></div></div>
-      <span class="label" id="lbl-bottle">×0</span>
-    </div>
+    <div id="hud" aria-hidden="false">
+      <div class="hud-row" data-kind="bottle">
+        <img class="icon" src="img/7_statusbars/3_icons/icon_salsa_bottle.png" alt="">
+        <div class="track">
+          <div class="fill" style="--p:0%"></div>
+        </div>
+        <span class="label" id="lbl-bottle">×0</span>
+      </div>
 
-    <div class="hud-row" data-kind="health">
-      <img class="icon" src="img/7_statusbars/3_icons/icon_health.png" alt="">
-      <div class="track"><div class="fill" style="--p:100%"></div></div>
-      <span class="label" id="lbl-health">100%</span>
-    </div>
+      <div class="hud-row" data-kind="health">
+        <img class="icon" src="img/7_statusbars/3_icons/icon_health.png" alt="">
+        <div class="track">
+          <div class="fill" style="--p:100%"></div>
+        </div>
+        <span class="label" id="lbl-health">100%</span>
+      </div>
 
-    <div class="hud-row" data-kind="coin">
-      <img class="icon" src="img/7_statusbars/3_icons/icon_coin.png" alt="">
-      <div class="track"><div class="fill" style="--p:0%"></div></div>
-      <span class="label" id="lbl-coin">×0</span>
+      <div class="hud-row" data-kind="coin">
+        <img class="icon" src="img/7_statusbars/3_icons/icon_coin.png" alt="">
+        <div class="track">
+          <div class="fill" style="--p:0%"></div>
+        </div>
+        <span class="label" id="lbl-coin">×0</span>
+      </div>
     </div>
   </div>
-</div>
-    
-</div>
+
+  </div>
 
 </body>
+
 </html>

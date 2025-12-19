@@ -11,11 +11,16 @@ body {
   background-color: black;
 }
 
+.rye-regular {
+  font-family: "Rye", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
 #bg {
   position: fixed;
   inset: 0;
   z-index: 0;
-
   pointer-events: none;
   background-image: url("img/5_background/desert-landscape.jpg");
   filter: contrast(1.05) brightness(0.9);
@@ -35,6 +40,7 @@ h1 {
   text-align: center;
   font-size: 48px;
   color: black;
+  font: 700 48px "Rye", serif;
 }
 
 #canvas {
@@ -123,9 +129,11 @@ h1 {
 }
 
 #hud .icon {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
+  width: 42px;
+  height: 42px;
+  padding: 0px;
+  margin: 0px;
+  display: flex;
 }
 
 #hud .track {

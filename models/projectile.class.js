@@ -4,6 +4,7 @@ class Projectile extends MovableObject {
     super();
     this.setSize(24, 24);
     this.x = x; this.y = y;
+
     const mul = opt.speedMul || 1;
     this.vx = 6 * dir * mul;
     this.vy = -4 * mul;
@@ -25,14 +26,12 @@ class Projectile extends MovableObject {
       'img/6_salsa_bottle/bottle_rotation/bottle_splash/6_bottle_splash.png',
     ]);
 
-    this.state = 'fly'; // 'fly' | 'splash' | 'dead'
+    this.state = 'fly';              // 'fly' | 'splash' | 'dead'
     this.frameIndex = 0;
     this.frameElapsedMs = 0;
-    // schnellere Rotation bei Power-Wurf:
     this.flyFrameMs = Math.max(40, 90 / mul);
     this.splashFrameMs = 60;
 
-    // erstes Bild setzen
     this.img = this.framesFly[0];
     this.imageLoaded = true;
   }
@@ -51,12 +50,10 @@ class Projectile extends MovableObject {
     const k = dtMs / 16;
 
     if (this.state === 'fly') {
-      // Physik
       this.vy += this.gravity * k;
       this.x  += this.vx * k;
       this.y  += this.vy * k;
 
-      // Animation: Rotation
       this.frameElapsedMs += dtMs;
       if (this.frameElapsedMs >= this.flyFrameMs) {
         this.frameElapsedMs = 0;
@@ -65,7 +62,6 @@ class Projectile extends MovableObject {
       }
 
     } else if (this.state === 'splash') {
-      // Einmalige Splash-Sequenz
       this.frameElapsedMs += dtMs;
       if (this.frameElapsedMs >= this.splashFrameMs) {
         this.frameElapsedMs = 0;
@@ -81,20 +77,3 @@ class Projectile extends MovableObject {
   }
 }
 window.Projectile = Projectile;
-
-
-class Bottle extends MovableObject {
-  constructor(x,y){ 
-    super(); this.x=x; this.y=y; this.setSize(36,54);
-    this.loadImageFromCandidates([
-      'img/6_salsa_bottle/1_salsa_bottle_on_ground.png',
-      'img/6_salsa_bottle/2_salsa_bottle_on_ground.png',
-      // Fallbacks:
-      'img/7_statusbars/3_icons/icon_salsa_bottle.png'
-    ]);
-  }
-  static rand(w){ 
-    const x = 600 + Math.random()*((w.cfg.lengthPx||5000)-800);
-    return new Bottle(x, w.groundY - 60);
-  }
-}
