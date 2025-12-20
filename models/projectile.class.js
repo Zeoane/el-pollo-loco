@@ -2,7 +2,8 @@
 class Projectile extends MovableObject {
   constructor(x, y, dir, opt = {}) {
     super();
-    this.setSize(24, 24);
+     this.setSize(44, 44);              
+    this.setHitbox(6, 6, 32, 32);  
     this.x = x; this.y = y;
 
     const mul = opt.speedMul || 1;
@@ -26,7 +27,7 @@ class Projectile extends MovableObject {
       'img/6_salsa_bottle/bottle_rotation/bottle_splash/6_bottle_splash.png',
     ]);
 
-    this.state = 'fly';              // 'fly' | 'splash' | 'dead'
+    this.state = 'fly';              
     this.frameIndex = 0;
     this.frameElapsedMs = 0;
     this.flyFrameMs = Math.max(40, 90 / mul);

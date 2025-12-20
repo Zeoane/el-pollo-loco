@@ -45,7 +45,7 @@ class World {
         opponents: [],
         clouds: [],
       };
-      
+
     this.backgroundObjects = L.backgroundObjects;
     this.opponents = L.opponents;
     this.clouds = L.clouds;
@@ -60,6 +60,10 @@ class World {
     this.phase2AtMs = this.cfg.phase2AtMs ?? 90000;
     this.maxSmall = this.cfg.maxSmall ?? 5;
     this.maxBig = this.cfg.maxBig ?? 5;
+
+    this.healCfg = { coinCost: 3, hpPct: 20, cdMs: 1000 }; // <—
+    this._healLock = false;
+    this._healCdMs = 0;
   }
 
   initOpponents() {
@@ -105,14 +109,14 @@ class World {
     this.handleInput(dtMs);
     this.character.prevY = this.character.y;
 
-    this.applyPhysics();
+    this.applyPhysics(dtMs);
     this.handleGround();
     this.checkCharEnemyCollisions(dtMs);
     this.coins.forEach((c) => c.update?.(dtMs));
     this.bottles.forEach((b) => b.update?.(dtMs));
 
     const moving = !!(this.keyboard?.LEFT || this.keyboard?.RIGHT);
-    this.character.updateWalkAnimation?.(dtMs, moving);
+    this.character.updateAnimation?.(dtMs, moving);
 
     this.updateCamera(moving);
     this.updateClouds();
@@ -123,8 +127,10 @@ class World {
 
     this.handleThrow();
     this.updateThrow(dtMs);
+    this.handleHeal(dtMs);
     this.updateProjectiles(dtMs);
     this.checkPickups();
+    this.maintainBottlesAhead(6);
     this.maybeSpawnBoss();
     this.maintainEnemies();
   }
@@ -157,39 +163,54 @@ class World {
     const t = this.elapsedMs | 0;
     if (this.phase === "small" && t >= this.phase2AtMs) {
       this.phase = "big";
-        this.opponents = this.opponents.filter(
+      this.opponents = this.opponents.filter(
         (o) => !(o instanceof SmallChicken)
       );
     }
 
-    const bossAtMs = this.cfg.bossAtMs ?? this.phase2AtMs + 60000; 
+    const bossAtMs = this.cfg.bossAtMs ?? this.phase2AtMs + 60000;
     if (!this.bossSpawned && t >= bossAtMs) {
       this.spawnBoss();
     }
   }
 
-maintainEnemies() {
-  const count = (Cls) => this.opponents.filter(o => o instanceof Cls).length;
+  maintainBottlesAhead(minAhead = 6) {
+    const aheadFrom = this.cameraX + this.canvas.width * 0.6;
+    const aheadTo = aheadFrom + 1200;
 
-  if (this.phase === 'small') {
-    while (count(SmallChicken) < this.maxSmall) this.spawnEnemy('small');
+    const countAhead = this.bottles.filter(
+      (b) => b.x >= aheadFrom && b.x <= aheadTo
+    ).length;
 
-    this.opponents = this.opponents.filter(o => !(o instanceof Chicken));
-  } else if (this.phase === 'big') {
-    while (count(Chicken) < this.maxBig) this.spawnEnemy('big');
-    this.opponents = this.opponents.filter(o => !(o instanceof SmallChicken));
+    if (countAhead < minAhead) {
+      this.spawnBottleCluster(aheadTo - 200 + Math.random() * 300);
+    }
   }
-}
 
+  maintainEnemies() {
+    const count = (Cls) =>
+      this.opponents.filter((o) => o instanceof Cls).length;
+
+    if (this.phase === "small") {
+      while (count(SmallChicken) < this.maxSmall) this.spawnEnemy("small");
+
+      this.opponents = this.opponents.filter((o) => !(o instanceof Chicken));
+    } else if (this.phase === "big") {
+      while (count(Chicken) < this.maxBig) this.spawnEnemy("big");
+      this.opponents = this.opponents.filter(
+        (o) => !(o instanceof SmallChicken)
+      );
+    }
+  }
 
   spawnEnemy(kind = "small") {
     const Klass = kind === "small" ? SmallChicken : Chicken;
     const e = new Klass().setGround?.(this.groundY).placeOnGround?.();
 
     if (kind === "small") {
-      e.speed = 1.2 + Math.random() * 0.7; 
+      e.speed = 1.2 + Math.random() * 0.7;
     } else {
-      e.speed = 1.6 + Math.random() * 0.9; 
+      e.speed = 1.6 + Math.random() * 0.9;
     }
 
     const left = this.cameraX - 150;
@@ -269,11 +290,27 @@ maintainEnemies() {
     if (!this.keyboard?.SPACE && !this.keyboard?.UP) this.jumpLock = false;
   }
 
-  applyPhysics() {
-    this.character.vy += this.gravity;
-    this.character.x += this.character.vx || 0;
-    this.character.y += this.character.vy || 0;
+applyPhysics(dtMs) {
+  const c = this.character;
+  const k = dtMs / 16;             
+
+  c.vy += this.gravity * k;
+
+  if (c.hurtT > 0) c.knockT = Math.max(c.knockT || 0, 250);
+
+  if ((c.knockT || 0) > 0) {
+    c.knockT -= dtMs;
+    c.vx *= Math.pow(0.90, k);
+    if (Math.abs(c.vx) < 0.02) c.vx = 0;
+  } else {
+
+    c.vx = 0;
   }
+
+  c.x += c.vx;   
+  c.y += c.vy * k;     
+}
+
 
   handleGround() {
     if (this.character.y + this.character.height >= this.groundY) {
@@ -345,12 +382,35 @@ maintainEnemies() {
       } else {
         c.hp = Math.max(0, (c.hp ?? 100) - (e.dmg ?? 20));
         c.invT = 600;
-
+        c.hurtT = 400;
         c.vx = c.facing === 1 ? -2.5 : 2.5;
 
         SFX.play?.("hit", { vol: 0.9 });
       }
       break;
+    }
+  }
+
+  spawnBottleCluster(baseX) {
+    const cnt = 1 + Math.floor(Math.random() * 3);
+    const dx = 26 + Math.floor(Math.random() * 12);
+    const firstX = baseX + (Math.random() * 80 - 40);
+
+    for (let i = 0; i < cnt; i++) {
+      const v = Math.random() < 0.5 ? 1 : 2;
+      const b = new Bottle(firstX + i * dx, this.groundY - 60, v);
+      this.bottles.push(b);
+    }
+  }
+
+  spawnBottleClusters(totalClusters = 6) {
+    const len = this.cfg.lengthPx || 5000;
+    const minX = (this.character.x || 0) + 500;
+    const maxX = Math.max(minX + 800, len - 600);
+
+    for (let i = 0; i < totalClusters; i++) {
+      const baseX = minX + Math.random() * Math.max(300, maxX - minX);
+      this.spawnBottleCluster(baseX);
     }
   }
 
@@ -403,6 +463,28 @@ maintainEnemies() {
     }
   }
 
+  handleHeal(dtMs) {
+    this._healCdMs = Math.max(0, (this._healCdMs || 0) - dtMs);
+    if (!this.keyboard?.HEAL) this._healLock = false;
+    if (!this.keyboard?.HEAL) return;
+    if (this._healLock) return;
+    if (this._healCdMs > 0) return;
+    const max = this.character.hpMax ?? 100;
+    const hp = this.character.hp ?? max;
+    if (hp >= max) return;
+
+    const cost = this.healCfg.coinCost;
+    if ((this.inventory.coins || 0) < cost) return;
+    const gain = Math.round(max * (this.healCfg.hpPct / 100));
+    this.inventory.coins -= cost;
+    this.character.hp = Math.min(max, hp + gain);
+
+    SFX.play?.("bottle_pick", { vol: 0.8 });
+
+    this._healLock = true;
+    this._healCdMs = this.healCfg.cdMs;
+  }
+
   updateProjectiles(dtMs) {
     const gY = this.groundY;
 
@@ -451,9 +533,12 @@ maintainEnemies() {
 
   spawnPickups() {
     const it = this.cfg.items || {};
-    for (let i = 0; i < (it.coins || 0); i++) this.coins.push(Coin.rand(this));
-    for (let i = 0; i < (it.bottles || 0); i++)
-      this.bottles.push(Bottle.rand(this));
+    for (let i = 0; i < (it.coins || 0); i++) {
+      this.coins.push(Coin.rand(this));
+    }
+
+    const clusters = it.bottleClusters ?? Math.ceil((it.bottles || 12) / 2);
+    this.spawnBottleClusters(clusters);
   }
 
   maybeSpawnBoss() {

@@ -8,32 +8,39 @@ const KB = (window.GameKeyboard ? new GameKeyboard() : {});
 window.keyboard = KB;
 window.world = null;
 
-const isGameKey = (code) =>
-  code === "ArrowLeft" || code === "ArrowRight" ||
-  code === "ArrowUp"   || code === "ArrowDown" ||
-  code === "Space"     || code === "KeyF";
+// Welche Tasten zählen als "Game Keys"
+const isGameKey = (code) => (
+  ["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Space","KeyF","KeyH"].includes(code)
+);
 
+// Keydown
 addEventListener("keydown", (e) => {
   if (!isGameKey(e.code)) return;
   e.preventDefault(); e.stopPropagation();
+
   if (e.code === "ArrowLeft")  KB.LEFT  = true;
   if (e.code === "ArrowRight") KB.RIGHT = true;
   if (e.code === "ArrowUp")    KB.UP    = true;
   if (e.code === "ArrowDown")  KB.DOWN  = true;
   if (e.code === "Space")      KB.SPACE = true;
   if (e.code === "KeyF")       KB.F     = true;
+  if (e.code === "KeyH")       KB.HEAL  = true;    
 }, true);
 
+// Keyup
 addEventListener("keyup", (e) => {
   if (!isGameKey(e.code)) return;
   e.preventDefault(); e.stopPropagation();
+
   if (e.code === "ArrowLeft")  KB.LEFT  = false;
   if (e.code === "ArrowRight") KB.RIGHT = false;
   if (e.code === "ArrowUp")    KB.UP    = false;
   if (e.code === "ArrowDown")  KB.DOWN  = false;
   if (e.code === "Space")      KB.SPACE = false;
   if (e.code === "KeyF")       KB.F     = false;
+  if (e.code === "KeyH")       KB.HEAL  = false;  
 }, true);
+
 
 /* -----------------------
    Init (body onload)
