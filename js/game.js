@@ -4,43 +4,59 @@ console.log("[GAME] game.js loaded");
 /* -----------------------
    Globals & Keyboard
 ----------------------- */
-const KB = (window.GameKeyboard ? new GameKeyboard() : {});
+const KB = window.GameKeyboard ? new GameKeyboard() : {};
 window.keyboard = KB;
 window.world = null;
 
 // Welche Tasten zählen als "Game Keys"
-const isGameKey = (code) => (
-  ["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Space","KeyF","KeyH"].includes(code)
-);
+const isGameKey = (code) =>
+  [
+    "ArrowLeft",
+    "ArrowRight",
+    "ArrowUp",
+    "ArrowDown",
+    "Space",
+    "KeyF",
+    "KeyH",
+  ].includes(code);
 
 // Keydown
-addEventListener("keydown", (e) => {
-  if (!isGameKey(e.code)) return;
-  e.preventDefault(); e.stopPropagation();
+addEventListener(
+  "keydown",
+  (e) => {
+    if (!isGameKey(e.code)) return;
+    e.preventDefault();
+    e.stopPropagation();
 
-  if (e.code === "ArrowLeft")  KB.LEFT  = true;
-  if (e.code === "ArrowRight") KB.RIGHT = true;
-  if (e.code === "ArrowUp")    KB.UP    = true;
-  if (e.code === "ArrowDown")  KB.DOWN  = true;
-  if (e.code === "Space")      KB.SPACE = true;
-  if (e.code === "KeyF")       KB.F     = true;
-  if (e.code === "KeyH")       KB.HEAL  = true;    
-}, true);
+    if (e.code === "ArrowLeft") KB.LEFT = true;
+    if (e.code === "ArrowRight") KB.RIGHT = true;
+    if (e.code === "ArrowUp") KB.UP = true;
+    if (e.code === "ArrowDown") KB.DOWN = true;
+    if (e.code === "Space") KB.SPACE = true;
+    if (e.code === "KeyF") KB.F = true;
+    if (e.code === "KeyH") KB.HEAL = true;
+  },
+  true
+);
 
 // Keyup
-addEventListener("keyup", (e) => {
-  if (!isGameKey(e.code)) return;
-  e.preventDefault(); e.stopPropagation();
+addEventListener(
+  "keyup",
+  (e) => {
+    if (!isGameKey(e.code)) return;
+    e.preventDefault();
+    e.stopPropagation();
 
-  if (e.code === "ArrowLeft")  KB.LEFT  = false;
-  if (e.code === "ArrowRight") KB.RIGHT = false;
-  if (e.code === "ArrowUp")    KB.UP    = false;
-  if (e.code === "ArrowDown")  KB.DOWN  = false;
-  if (e.code === "Space")      KB.SPACE = false;
-  if (e.code === "KeyF")       KB.F     = false;
-  if (e.code === "KeyH")       KB.HEAL  = false;  
-}, true);
-
+    if (e.code === "ArrowLeft") KB.LEFT = false;
+    if (e.code === "ArrowRight") KB.RIGHT = false;
+    if (e.code === "ArrowUp") KB.UP = false;
+    if (e.code === "ArrowDown") KB.DOWN = false;
+    if (e.code === "Space") KB.SPACE = false;
+    if (e.code === "KeyF") KB.F = false;
+    if (e.code === "KeyH") KB.HEAL = false;
+  },
+  true
+);
 
 /* -----------------------
    Init (body onload)
@@ -64,21 +80,20 @@ window.init = function () {
    Audio + BG (DIV) + UI
 ----------------------- */
 window.addEventListener("DOMContentLoaded", async () => {
-
-  applyDivBackground('img/5_background/desert-landscape.jpg');
+  applyDivBackground("img/5_background/desert-landscape.jpg");
 
   // Audio vorbereiten
   SFX.unlockOnGesture();
   await SFX.loadAll({
-    bg:           "audio/sounds/carnival-game-theme-loop.wav",
-    coin:         "audio/sounds/coin-ca-ching.mp3",
-    bottle_pick:  "audio/sounds/open-treasure-chest-8-bit.wav",
+    bg: "audio/sounds/carnival-game-theme-loop.wav",
+    coin: "audio/sounds/coin-ca-ching.mp3",
+    bottle_pick: "audio/sounds/open-treasure-chest-8-bit.wav",
     bottle_throw: "audio/sounds/open_bottle_gas_1.wav",
-    bottle_hit:   "audio/sounds/bottle-hit-3.wav",
-    jump:         "audio/sounds/jump_extra-life-8-bit.wav",
-    hit:          "audio/sounds/death-song-8-bit.wav",
-    chicken:      "audio/sounds/chickens.wav",
-    rooster:      "audio/sounds/rooster1.wav",
+    bottle_hit: "audio/sounds/bottle-hit-3.wav",
+    jump: "audio/sounds/jump_extra-life-8-bit.wav",
+    hit: "audio/sounds/death-song-8-bit.wav",
+    chicken: "audio/sounds/chickens.wav",
+    rooster: "audio/sounds/rooster1.wav",
   });
 
   // Musik erst nach User-Input
@@ -97,35 +112,72 @@ window.addEventListener("DOMContentLoaded", async () => {
    Toolbar (Mute/Pause/Stop/Restart)
 ----------------------- */
 function wireToolbar() {
-  const btnMute    = document.getElementById("btnMute");
-  const btnPause   = document.getElementById("btnPause");
-  const btnStop    = document.getElementById("btnStop");
+  const btnMute = document.getElementById("btnMute");
+  const btnPause = document.getElementById("btnPause");
+  const btnStop = document.getElementById("btnStop");
   const btnRestart = document.getElementById("btnRestart");
+  const volSlider = document.getElementById("volSlider");
+  const volPct = document.getElementById("volPct");
 
-  const setMuteUI = (muted) => {
-    if (!btnMute) return;
-    btnMute.textContent = muted ? "🔇" : "🔊";
-    btnMute.setAttribute("aria-pressed", muted ? "true" : "false");
-    btnMute.title = (muted ? "Unmute" : "Mute") + " (M)";
+ const updateMuteIcon = () => {
+    let icon = "🔊";
+    const v = SFX.vol ?? 1;
+    if (SFX.muted || v <= 0) icon = "🔇";
+    else if (v <= 0.33) icon = "🔈";
+    else if (v <= 0.66) icon = "🔉";
+    if (btnMute) {
+      btnMute.textContent = icon;
+      btnMute.setAttribute("aria-pressed", SFX.muted ? "true" : "false");
+      btnMute.title = (SFX.muted ? "Unmute" : "Mute") + " (M)";
+    }
+  };
+
+  const setSliderFromVol = () => {
+    const val = Math.round((SFX.vol ?? 1) * 100);
+    if (volSlider) volSlider.value = String(val);
+    if (volPct) volPct.textContent = val + "%";
+  };
+
+  const applyVolume = (val) => {
+    const v = Math.max(0, Math.min(100, val)) / 100;
+    SFX.setVolume?.(v);
+    if (SFX.muted && v > 0) SFX.setMuted?.(false);
+    localStorage.setItem("audio.vol", String(Math.round(v * 100)));
+    setSliderFromVol();
+    updateMuteIcon();
   };
 
   const toggleMute = () => {
     SFX.toggleMute?.();
     localStorage.setItem("audio.muted", SFX.muted ? "1" : "0");
-    setMuteUI(SFX.muted);
+    updateMuteIcon();
   };
 
-  // Restore mute state
   const savedMuted = localStorage.getItem("audio.muted") === "1";
+  const savedVol   = Math.max(0, Math.min(100, parseInt(localStorage.getItem("audio.vol") || "60", 10)));
+
+  SFX.setVolume?.(savedVol / 100);
   if (savedMuted) SFX.setMuted(true);
-  setMuteUI(savedMuted);
+
+  setSliderFromVol();
+  updateMuteIcon();
 
   btnMute?.addEventListener("click", toggleMute);
 
-  // Pause/Stop/Restart – nutzt world-Methoden
+  volSlider?.addEventListener("input", (e) => {
+    applyVolume(parseInt(e.target.value, 10) || 0);
+  });
+
+  volSlider?.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const step = e.deltaY > 0 ? -2 : 2;
+    const next = Math.max(0, Math.min(100, (parseInt(volSlider.value, 10) || 0) + step));
+    applyVolume(next);
+  }, { passive:false });
+
   btnPause?.addEventListener("click", () => {
     if (!world) return;
-    world.pause?.(); 
+    world.pause?.();
     const paused = !!world.paused;
     btnPause.textContent = paused ? "▶" : "⏸";
     btnPause.setAttribute("aria-pressed", paused ? "true" : "false");
@@ -138,14 +190,13 @@ function wireToolbar() {
     const canvas = document.getElementById("canvas");
     const level1 = createLevel1();
     world = new World(canvas, keyboard, level1);
-    startHudRAF(); 
+    startHudRAF();
     if (btnPause) {
       btnPause.textContent = "⏸";
       btnPause.setAttribute("aria-pressed", "false");
     }
   });
 
-  // Shortcuts: M / P / Esc / R
   addEventListener("keydown", (e) => {
     if (e.code === "KeyM") { toggleMute(); return; }
     if (e.code === "KeyP") world?.pause?.();
@@ -161,8 +212,8 @@ function applyDivBackground(url) {
   const bg = document.getElementById("bg");
   if (!bg) return;
 
-  if (getComputedStyle(bg).pointerEvents === 'none') {
-    bg.style.pointerEvents = 'auto';
+  if (getComputedStyle(bg).pointerEvents === "none") {
+    bg.style.pointerEvents = "auto";
   }
 
   const img = new Image();
@@ -191,8 +242,8 @@ let _hudRAF = 0;
 function setFill(kind, pct) {
   const el = document.querySelector(`.hud-row[data-kind="${kind}"] .fill`);
   if (!el) return;
-  const v = Math.max(0, Math.min(100, pct|0));
-  el.style.setProperty('--p', `${v}%`);
+  const v = Math.max(0, Math.min(100, pct | 0));
+  el.style.setProperty("--p", `${v}%`);
 }
 
 function setText(id, text) {
@@ -201,27 +252,29 @@ function setText(id, text) {
 }
 
 function syncDomHud() {
-  const w = window.world; if (!w) return;
+  const w = window.world;
+  if (!w) return;
   const inv = w.inventory || {};
   const cfg = w.cfg || {};
   const hpPct = Math.max(0, Math.min(100, w.character?.hpPercent?.() ?? 100));
 
-  const coinPct   = ((inv.coins   || 0) / ((cfg.items?.coins)   || 10)) * 100;
-  const bottlePct = ((inv.bottles || 0) / ((cfg.items?.bottles) || 5 )) * 100;
+  const coinPct = ((inv.coins || 0) / (cfg.items?.coins || 10)) * 100;
+  const bottlePct = ((inv.bottles || 0) / (cfg.items?.bottles || 5)) * 100;
 
-  setFill('health',  hpPct);
-  setFill('coin',    coinPct);
-  setFill('bottle',  bottlePct);
+  setFill("health", hpPct);
+  setFill("coin", coinPct);
+  setFill("bottle", bottlePct);
 
-  setText('lbl-health', `${Math.round(hpPct)}%`);
-  setText('lbl-coin',   `×${inv.coins||0}`);
-  setText('lbl-bottle', `×${inv.bottles||0}`);
+  setText("lbl-health", `${Math.round(hpPct)}%`);
+  setText("lbl-coin", `×${inv.coins || 0}`);
+  setText("lbl-bottle", `×${inv.bottles || 0}`);
 }
 
 function startHudRAF() {
   cancelAnimationFrame(_hudRAF);
-  const loop = () => { syncDomHud(); _hudRAF = requestAnimationFrame(loop); };
+  const loop = () => {
+    syncDomHud();
+    _hudRAF = requestAnimationFrame(loop);
+  };
   loop();
 }
-
-

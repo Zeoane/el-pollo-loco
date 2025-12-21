@@ -37,13 +37,12 @@ function createLevel1() {
   return new Level(buildBackground(), buildOpponents(), buildCloudSprites());
 }
 
-// level.config.js
 const LEVEL1 = {
-  lengthPx: 5200,          // Gesamtdistanz der Stage
-  bossAtPx: 3800,          // Boss taucht hier auf
+  lengthPx: 5200,          
+  bossAtPx: 3800,         
   player: { speed: 3.0, jumpVy: -12, health: 3, bottlesMax: 6 },
   enemies: { chickens: 6, gapMin: 260, gapMax: 520, speedMin: 1.4, speedMax: 2.4 },
-  items: { coins: 20, bottles: 6 },   // Spawns
+  items: { coins: 20, bottles: 6 }, 
   cloudsFlow: 0.4,
 };
 window.LEVEL1 = LEVEL1;

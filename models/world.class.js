@@ -338,7 +338,7 @@ applyPhysics(dtMs) {
     );
   }
 
-  // in World.updateOpponents(dtMs)
+
   updateOpponents(dtMs) {
     const left = this.cameraX - 150;
     const ahead = this.cameraX + this.canvas.width + 200;
@@ -346,11 +346,10 @@ applyPhysics(dtMs) {
 
     this.opponents.forEach((o) => {
       if (o.updateBoss) {
-        // Endboss steuert sich selbst
         o.updateBoss(this, dtMs);
         return;
       }
-      // normales Hühner-Verhalten
+
       o.x -= o.speed ?? 0;
       this.placeOnGround(o);
       if (o.x + o.width < left) {
@@ -363,7 +362,6 @@ applyPhysics(dtMs) {
     this.opponents = this.opponents.filter((o) => !o._dead);
   }
 
-  // <= 14 Zeilen
   checkCharEnemyCollisions(dtMs) {
     const c = this.character;
     c.invT = Math.max(0, (c.invT || 0) - dtMs);
@@ -448,7 +446,7 @@ applyPhysics(dtMs) {
     if (!F && ts.charging) {
       ts.charging = false;
       if ((this.inventory.bottles || 0) > 0) {
-        const pow = 1 + (ts.holdMs / ts.maxMs) * 1.5; // 1.0..2.5
+        const pow = 1 + (ts.holdMs / ts.maxMs) * 1.5; 
         const dir = this.character.facing === -1 ? -1 : 1;
         const p = new Projectile(
           this.character.x + this.character.width / 2,

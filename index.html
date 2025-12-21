@@ -47,7 +47,16 @@
   <div id="bg" aria-hidden="false">
     <h1>El pollo loco</h1>
     <div id="hudTopRight" class="hud-bar" role="toolbar" aria-label="Game controls">
-      <button id="btnMute" class="hud-btn" aria-pressed="false" title="Mute (M)">🔊</button>
+      <div class="hud-volume">
+        <button id="btnMute" class="hud-btn" aria-pressed="false" title="Mute (M)">🔊</button>
+        <div class="vol-panel" role="group" aria-label="Volume">
+          <div class="slider-wrap">
+            <input id="volSlider" type="range" min="0" max="100" step="1" value="60" aria-label="Volume"
+              aria-orientation="vertical">
+          </div>
+          <div id="volPct">60%</div>
+        </div>
+      </div>
       <button id="btnPause" class="hud-btn" aria-pressed="false" title="Pause / Resume (P)">⏸</button>
       <button id="btnStop" class="hud-btn" title="Stop (Esc)">■</button>
       <button id="btnRestart" class="hud-btn" title="Restart (R)">⟲</button>

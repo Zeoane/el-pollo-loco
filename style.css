@@ -47,7 +47,6 @@ h1 {
   display: block;
   background: transparent;
   border: none;
- 
 }
 
 #game {
@@ -101,9 +100,9 @@ h1 {
 }
 
 #hud {
-  --bar-w: 200px; 
-  --bar-h: 28px; 
-  --icon: 30px; 
+  --bar-w: 200px;
+  --bar-h: 28px;
+  --icon: 30px;
   --gap: 10px;
   position: absolute;
   top: 14px;
@@ -112,7 +111,7 @@ h1 {
   z-index: 10;
   display: grid;
   gap: 10px;
-  pointer-events: none; 
+  pointer-events: none;
 }
 
 #hud .hud-row {
@@ -155,6 +154,84 @@ h1 {
   font: 700 16px system-ui, sans-serif;
   white-space: nowrap;
   padding-left: 4px;
+}
+
+.hud-volume {
+  position: relative;
+  
+}
+
+.hud-volume .vol-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-6px) scale(0.98);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 30;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+
+  width: 40px;
+  background: rgba(0, 0, 0, 0.65);
+  
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.hud-volume:hover .vol-panel,
+.hud-volume:focus-within .vol-panel,
+.hud-volume.open .vol-panel {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0) scale(1);
+  pointer-events: auto;
+  border: 3px solid rgba(255, 255, 255, 0.25);
+}
+
+.slider-wrap {
+  position: relative;
+  width: 26px;
+  height: 120px;
+  display: grid;
+  place-items: center;
+}
+
+#volSlider {
+  appearance: none;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  width: 22px;
+  height: 100px;
+  margin: 0;
+  background-color: rgb(44, 42, 42);
+  accent-color: #ffd34d;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 10px;
+}
+
+@supports not (writing-mode: vertical-lr) {
+  #volSlider {
+    appearance: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    margin: 0;
+  }
+}
+
+#volPct {
+  font: 400 12px/1.2 system-ui, sans-serif;
+  color: #fff;
+  background-color: rgb(44, 42, 42);
+  padding: 4px;
+  margin-bottom: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
 }
 
 @media (max-width: 520px) {
