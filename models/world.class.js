@@ -57,7 +57,8 @@ class World {
     this.animate();
     this.elapsedMs = 0;
     this.phase = "small";
-    this.phase2AtMs = this.cfg.phase2AtMs ?? 90000;
+    this.phase2AtMs = this.cfg.phase2AtMs ?? 90_000;
+    this.bossAtMs = this.cfg.bossAtMs ?? 180_000;
     this.maxSmall = this.cfg.maxSmall ?? 5;
     this.maxBig = this.cfg.maxBig ?? 5;
 
@@ -131,7 +132,7 @@ class World {
     this.updateProjectiles(dtMs);
     this.checkPickups();
     this.maintainBottlesAhead(6);
-    this.maybeSpawnBoss();
+
     this.maintainEnemies();
   }
 
@@ -161,15 +162,19 @@ class World {
 
   managePhases() {
     const t = this.elapsedMs | 0;
+
     if (this.phase === "small" && t >= this.phase2AtMs) {
       this.phase = "big";
       this.opponents = this.opponents.filter(
         (o) => !(o instanceof SmallChicken)
       );
+      this.spawnRegularChickens();
     }
 
-    const bossAtMs = this.cfg.bossAtMs ?? this.phase2AtMs + 60000;
-    if (!this.bossSpawned && t >= bossAtMs) {
+    if (this.phase === "big" && t >= this.bossAtMs && !this.bossSpawned) {
+      this.phase = "boss";
+
+      this.opponents.length = 0;
       this.spawnBoss();
     }
   }
@@ -195,11 +200,23 @@ class World {
       while (count(SmallChicken) < this.maxSmall) this.spawnEnemy("small");
 
       this.opponents = this.opponents.filter((o) => !(o instanceof Chicken));
-    } else if (this.phase === "big") {
+      return;
+    }
+
+    if (this.phase === "big") {
       while (count(Chicken) < this.maxBig) this.spawnEnemy("big");
+
       this.opponents = this.opponents.filter(
         (o) => !(o instanceof SmallChicken)
       );
+      return;
+    }
+
+    if (this.phase === "boss") {
+      this.opponents = this.opponents.filter(
+        (o) => o instanceof Endboss && !o._dead
+      );
+      return;
     }
   }
 
@@ -290,27 +307,25 @@ class World {
     if (!this.keyboard?.SPACE && !this.keyboard?.UP) this.jumpLock = false;
   }
 
-applyPhysics(dtMs) {
-  const c = this.character;
-  const k = dtMs / 16;             
+  applyPhysics(dtMs) {
+    const c = this.character;
+    const k = dtMs / 16;
 
-  c.vy += this.gravity * k;
+    c.vy += this.gravity * k;
 
-  if (c.hurtT > 0) c.knockT = Math.max(c.knockT || 0, 250);
+    if (c.hurtT > 0) c.knockT = Math.max(c.knockT || 0, 250);
 
-  if ((c.knockT || 0) > 0) {
-    c.knockT -= dtMs;
-    c.vx *= Math.pow(0.90, k);
-    if (Math.abs(c.vx) < 0.02) c.vx = 0;
-  } else {
+    if ((c.knockT || 0) > 0) {
+      c.knockT -= dtMs;
+      c.vx *= Math.pow(0.9, k);
+      if (Math.abs(c.vx) < 0.02) c.vx = 0;
+    } else {
+      c.vx = 0;
+    }
 
-    c.vx = 0;
+    c.x += c.vx;
+    c.y += c.vy * k;
   }
-
-  c.x += c.vx;   
-  c.y += c.vy * k;     
-}
-
 
   handleGround() {
     if (this.character.y + this.character.height >= this.groundY) {
@@ -338,29 +353,54 @@ applyPhysics(dtMs) {
     );
   }
 
+updateOpponents(dtMs){
+  if (this.phase === 'boss'){ this._updateBoss(dtMs); return; }
+  const k    = Math.max(0.5, Math.min(3, dtMs/16));
+  const left = this.cameraX - 150;
+  const ahead= this.cameraX + this.canvas.width + 200;
+  const far  = Math.max(0, ...this.opponents.map(o=>o.x||0));
+  const Klass= (this.phase==='small') ? SmallChicken : Chicken;
+  this.opponents = this.opponents.filter(
+    o => this._tickEnemy(o, Klass, k, left, ahead, far)
+  );
+}
 
-  updateOpponents(dtMs) {
-    const left = this.cameraX - 150;
-    const ahead = this.cameraX + this.canvas.width + 200;
-    const far = Math.max(0, ...this.opponents.map((op) => op.x || 0));
+_updateBoss(dtMs){
+  this.opponents = this.opponents.filter(o=>{
+    if (!(o instanceof Endboss)) return false;
+    o.updateBoss?.(this, dtMs);
+    this.placeOnGround(o);
+    return !o._dead;
+  });
+}
 
-    this.opponents.forEach((o) => {
-      if (o.updateBoss) {
-        o.updateBoss(this, dtMs);
-        return;
-      }
-
-      o.x -= o.speed ?? 0;
-      this.placeOnGround(o);
-      if (o.x + o.width < left) {
-        const gap = 260 + Math.random() * 460;
-        o.x = Math.max(ahead, far + gap);
-        o.speed = 1.6 + Math.random() * 0.8;
-      }
-    });
-
-    this.opponents = this.opponents.filter((o) => !o._dead);
+_tickEnemy(o, Klass, k, left, ahead, far){
+  if (!(o instanceof Klass)) return false;
+  o.x -= (o.speed ?? 0) * k;
+  this.placeOnGround(o);
+  if (o.x + o.width < left){
+    o.x = this._respawnX(ahead, far);
+    this._rerollSpeed(o);
   }
+  return !o._dead;
+}
+
+_respawnX(ahead, far){
+  const gap = 260 + Math.random()*460;
+  return Math.max(ahead, far + gap);
+}
+
+_rerollSpeed(o){
+  const E = this.cfg.enemies || {};
+  if (o instanceof SmallChicken){
+    const a = E.smallSpeedMin ?? 1.2, b = E.smallSpeedMax ?? 2.0;
+    o.speed = a + Math.random()*(b-a);
+  } else {
+    const a = E.speedMin ?? 1.6, b = E.speedMax ?? 2.5;
+    o.speed = a + Math.random()*(b-a);
+  }
+}
+
 
   checkCharEnemyCollisions(dtMs) {
     const c = this.character;
@@ -446,7 +486,7 @@ applyPhysics(dtMs) {
     if (!F && ts.charging) {
       ts.charging = false;
       if ((this.inventory.bottles || 0) > 0) {
-        const pow = 1 + (ts.holdMs / ts.maxMs) * 1.5; 
+        const pow = 1 + (ts.holdMs / ts.maxMs) * 1.5;
         const dir = this.character.facing === -1 ? -1 : 1;
         const p = new Projectile(
           this.character.x + this.character.width / 2,
@@ -539,18 +579,18 @@ applyPhysics(dtMs) {
     this.spawnBottleClusters(clusters);
   }
 
-  maybeSpawnBoss() {
-    if (this.bossSpawned) return;
-    const at = this.cfg.bossAtPx ?? 3800;
-    if (this.distanceX >= at) {
-      const b = new Endboss().setGround?.(this.groundY).placeOnGround?.();
-      b.x = at + 420;
-      this.opponents.push(b);
-      this.bossSpawned = true;
+spawnBoss(){
+  if (this.bossSpawned) return;
+  const b = new Endboss().setGround?.(this.groundY).placeOnGround?.();
+  b.x = this.character.x + 800;
+  this.opponents.push(b);
+  this.bossSpawned = true;
+  this.phase = 'boss';
+  SFX.play?.('boss', { vol: 0.8 });
       // Optional: Musik wechseln
       // SFX.stop?.('bg'); SFX.loop?.('boss','bg',{vol:0.35});
-    }
-  }
+}
+
 
   draw() {
     const { ctx, canvas } = this;

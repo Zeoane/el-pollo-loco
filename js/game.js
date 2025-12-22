@@ -67,9 +67,10 @@ window.init = function () {
     const canvas = document.getElementById("canvas");
     const level1 = createLevel1();
     window.world = new World(canvas, keyboard, level1);
-
+    world.pause?.(true);
     startHudRAF();
-
+    setupStartScreen();
+    wireHowTo();
     console.log("[GAME] init() done");
   } catch (e) {
     console.error("[GAME] init() error:", e);
@@ -119,7 +120,7 @@ function wireToolbar() {
   const volSlider = document.getElementById("volSlider");
   const volPct = document.getElementById("volPct");
 
- const updateMuteIcon = () => {
+  const updateMuteIcon = () => {
     let icon = "🔊";
     const v = SFX.vol ?? 1;
     if (SFX.muted || v <= 0) icon = "🔇";
@@ -154,7 +155,10 @@ function wireToolbar() {
   };
 
   const savedMuted = localStorage.getItem("audio.muted") === "1";
-  const savedVol   = Math.max(0, Math.min(100, parseInt(localStorage.getItem("audio.vol") || "60", 10)));
+  const savedVol = Math.max(
+    0,
+    Math.min(100, parseInt(localStorage.getItem("audio.vol") || "60", 10))
+  );
 
   SFX.setVolume?.(savedVol / 100);
   if (savedMuted) SFX.setMuted(true);
@@ -168,12 +172,19 @@ function wireToolbar() {
     applyVolume(parseInt(e.target.value, 10) || 0);
   });
 
-  volSlider?.addEventListener("wheel", (e) => {
-    e.preventDefault();
-    const step = e.deltaY > 0 ? -2 : 2;
-    const next = Math.max(0, Math.min(100, (parseInt(volSlider.value, 10) || 0) + step));
-    applyVolume(next);
-  }, { passive:false });
+  volSlider?.addEventListener(
+    "wheel",
+    (e) => {
+      e.preventDefault();
+      const step = e.deltaY > 0 ? -2 : 2;
+      const next = Math.max(
+        0,
+        Math.min(100, (parseInt(volSlider.value, 10) || 0) + step)
+      );
+      applyVolume(next);
+    },
+    { passive: false }
+  );
 
   btnPause?.addEventListener("click", () => {
     if (!world) return;
@@ -198,11 +209,66 @@ function wireToolbar() {
   });
 
   addEventListener("keydown", (e) => {
-    if (e.code === "KeyM") { toggleMute(); return; }
+    if (e.code === "KeyM") {
+      toggleMute();
+      return;
+    }
     if (e.code === "KeyP") world?.pause?.();
     if (e.code === "Escape") world?.stop?.();
     if (e.code === "KeyR") btnRestart?.click();
   });
+}
+
+function openHowTo() {
+  document.getElementById("howtoModal")?.classList.remove("hidden");
+}
+function closeHowTo() {
+  document.getElementById("howtoModal")?.classList.add("hidden");
+}
+function setHowToLang(lang) {
+  const de = lang === "de";
+  document.getElementById("howtoDECnt").hidden = !de;
+  document.getElementById("howtoENCnt").hidden = de;
+  document.getElementById("howtoDE")?.classList.toggle("active", de);
+  document.getElementById("howtoEN")?.classList.toggle("active", !de);
+}
+
+function setupStartScreen() {
+  const scr = document.getElementById("startScreen");
+  const btn = document.getElementById("btnStartGame");
+  if (!scr || !btn) return;
+
+  const startGame = () => {
+    scr.classList.add("hidden");
+    world?.pause?.(false);
+    SFX.loop?.("bg", "bg", { vol: 0.15 });
+  };
+
+  btn.addEventListener("click", startGame);
+  addEventListener(
+    "keydown",
+    (e) => {
+      if (scr.classList.contains("hidden")) return;
+      if (e.code === "Enter" || e.code === "Space") {
+        e.preventDefault();
+        startGame();
+      }
+    },
+    { capture: true }
+  );
+}
+
+function wireHowTo() {
+  const h = (id) => document.getElementById(id);
+  h("btnHowTo")?.addEventListener("click", openHowTo);
+  h("howtoClose")?.addEventListener("click", closeHowTo);
+  h("howtoClose2")?.addEventListener("click", closeHowTo);
+  h("howtoDE")?.addEventListener("click", () => setHowToLang("de"));
+  h("howtoEN")?.addEventListener("click", () => setHowToLang("en"));
+  addEventListener("keydown", (e) => {
+    if (e.code === "Escape") closeHowTo();
+  });
+  setHowToLang("de");
 }
 
 /* -----------------------

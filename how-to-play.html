@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="de">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>El Pollo Loco – How to Play</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rye&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #0b0f14;
+            --card: #121924cc;
+            --border: #ffffff22;
+            --accent: #ffd34d;
+            --text: #eaf1f7;
+            --muted: #b7c3cf;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            background: radial-gradient(1200px 700px at 70% -10%, #33465a55, transparent 60%), var(--bg);
+            color: var(--text);
+            font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif;
+            display: grid;
+            place-items: center;
+            padding: 32px 16px;
+        }
+
+        .wrap {
+            width: min(960px, 96vw);
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: 0 18px 50px rgba(0, 0, 0, .5), 0 2px 8px rgba(0, 0, 0, .35);
+            padding: clamp(16px, 3vw, 28px);
+            backdrop-filter: blur(6px);
+        }
+
+        h1 {
+            margin: 0 0 12px;
+            font-family: "Rye", ui-serif, Georgia, serif;
+            font-size: clamp(28px, 5vw, 44px);
+            letter-spacing: .5px;
+            text-align: center;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .lang {
+            display: flex;
+            gap: 8px;
+        }
+
+        .lang button {
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: #0c121899;
+            color: var(--text);
+            cursor: pointer;
+            transition: background .15s ease, border-color .15s ease;
+        }
+
+        .lang button[aria-pressed="true"] {
+            background: #16212dcc;
+            border-color: #ffffff3a;
+            color: #fff;
+        }
+
+        .card {
+            margin-top: 10px;
+            background: #0c1218aa;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .grid h3 {
+            margin: 10px 0 6px;
+            font-size: 18px;
+            color: var(--accent);
+        }
+
+        ul {
+            margin: 0;
+            padding-left: 1.25rem;
+        }
+
+        li+li {
+            margin-top: 4px;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+        }
+
+        .back {
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #0b0f14;
+            background: var(--accent);
+            font-weight: 700;
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, .35);
+        }
+
+        .kbd {
+            display: inline-block;
+            min-width: 1.8em;
+            text-align: center;
+            padding: .15em .45em;
+            border-radius: 6px;
+            background: #202b37;
+            color: #eaf1f7;
+            border: 1px solid #ffffff20;
+            font: 600 12px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        }
+
+        .muted {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .lang-section {
+            display: none;
+        }
+
+        .lang-section.active {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="wrap" role="main">
+        <div class="topbar">
+            <div class="muted">El Pollo Loco</div>
+            <div class="lang" role="tablist" aria-label="Language">
+                <button id="btnDE" role="tab" aria-selected="true" aria-pressed="true">DE</button>
+                <button id="btnEN" role="tab" aria-selected="false" aria-pressed="false">EN</button>
+            </div>
+        </div>
+
+        <h1>How to Play</h1>
+
+        <!-- Deutsch -->
+        <section id="secDE" class="lang-section active" lang="de" aria-labelledby="btnDE">
+            <div class="card grid">
+                <div>
+                    <h3>Ziel</h3>
+                    <ul>
+                        <li>Sammle <strong>Flaschen</strong> &amp; <strong>Münzen</strong>, weiche Gegnern aus oder
+                            besiege sie.</li>
+                        <li>Kleine gelbe Hühner zuerst, später braune Hühner, zum Schluss der <strong>Endboss</strong>.
+                        </li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>Steuerung</h3>
+                    <ul>
+                        <li>Bewegen: <span class="kbd">←</span><span class="kbd">→</span></li>
+                        <li>Springen: <span class="kbd">↑</span> oder <span class="kbd">Space</span></li>
+                        <li>Flasche werfen: <span class="kbd">F</span> (halten = Powerwurf)</li>
+                        <li>Heilen (sofern genug Ressourcen): <span class="kbd">H</span></li>
+                        <li>Pause / Fortsetzen: <span class="kbd">P</span> • Stop: <span class="kbd">Esc</span> •
+                            Neustart: <span class="kbd">R</span></li>
+                        <li>Stumm: <span class="kbd">M</span> • Lautstärke am Mute-Icon öffnen/regeln</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>Tipps</h3>
+                    <ul>
+                        <li>Kleine Hühner kannst du durch <strong>Stomp</strong> (von oben landen) besiegen.</li>
+                        <li>Flaschen liegen im Sand – sammle sie für Angriffe &amp; Heilen.</li>
+                        <li>Für Heilen z. B. <strong>3 Münzen oder 3 Flaschen = +20% Leben</strong> (Taste <span
+                                class="kbd">H</span>).</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer">
+                <span class="muted">Viel Erfolg, Amigo!</span>
+                <a class="back" href="index.html" aria-label="Zurück zum Spiel">▶ Zurück zum Spiel</a>
+            </div>
+        </section>
+
+        <!-- English -->
+        <section id="secEN" class="lang-section" lang="en" aria-labelledby="btnEN">
+            <div class="card grid">
+                <div>
+                    <h3>Goal</h3>
+                    <ul>
+                        <li>Collect <strong>bottles</strong> &amp; <strong>coins</strong>, dodge or defeat enemies.</li>
+                        <li>First yellow chicks, later brown chickens, and finally the <strong>end boss</strong>.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>Controls</h3>
+                    <ul>
+                        <li>Move: <span class="kbd">←</span><span class="kbd">→</span></li>
+                        <li>Jump: <span class="kbd">↑</span> or <span class="kbd">Space</span></li>
+                        <li>Throw bottle: <span class="kbd">F</span> (hold for power throw)</li>
+                        <li>Heal (if resources available): <span class="kbd">H</span></li>
+                        <li>Pause / Resume: <span class="kbd">P</span> • Stop: <span class="kbd">Esc</span> • Restart:
+                            <span class="kbd">R</span></li>
+                        <li>Mute: <span class="kbd">M</span> • Volume via the mute icon</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>Tips</h3>
+                    <ul>
+                        <li>You can <strong>stomp</strong> small chicks (land on them) to defeat them.</li>
+                        <li>Bottles rest in the sand – collect them for attacks &amp; healing.</li>
+                        <li>Example heal: <strong>3 coins or 3 bottles = +20% health</strong> (key <span
+                                class="kbd">H</span>).</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer">
+                <span class="muted">Good luck, amigo!</span>
+                <a class="back" href="index.html" aria-label="Back to game">▶ Back to Game</a>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const btnDE = document.getElementById('btnDE');
+        const btnEN = document.getElementById('btnEN');
+        const secDE = document.getElementById('secDE');
+        const secEN = document.getElementById('secEN');
+
+        function setLang(lang) {
+            const de = (lang === 'de');
+            btnDE.setAttribute('aria-pressed', de ? 'true' : 'false');
+            btnEN.setAttribute('aria-pressed', de ? 'false' : 'true');
+            btnDE.setAttribute('aria-selected', de ? 'true' : 'false');
+            btnEN.setAttribute('aria-selected', de ? 'false' : 'true');
+            secDE.classList.toggle('active', de);
+            secEN.classList.toggle('active', !de);
+            localStorage.setItem('htp.lang', lang);
+            document.documentElement.lang = de ? 'de' : 'en';
+        }
+        btnDE.addEventListener('click', () => setLang('de'));
+        btnEN.addEventListener('click', () => setLang('en'));
+
+        const params = new URLSearchParams(location.search);
+        const q = params.get('lang');
+        const saved = localStorage.getItem('htp.lang');
+        const nav = (navigator.language || 'en').toLowerCase().startsWith('de') ? 'de' : 'en';
+        setLang(q || saved || nav);
+    </script>
+</body>
+
+</html>
