@@ -94,8 +94,24 @@ class World {
     this.updateProjectiles(dtMs);
     this.checkPickups();
     this.maintainBottlesAhead(6);
+    this.maintainCoinsAhead(6); 
     this.maintainEnemies();
   }
 }
+
+Object.assign(World.prototype, {
+  maintainCoinsAhead(minAhead = 6){
+    const from = this.cameraX + this.canvas.width * 0.6;
+    const to   = from + 1000;
+    const n = this.coins.filter(c => c.x >= from && c.x <= to).length;
+    if (n < minAhead) this.spawnCoinRow(to - 200 + Math.random()*300);
+  },
+  spawnCoinRow(baseX){
+    const cnt = 3 + Math.floor(Math.random()*4);   // 3–6 Coins
+    const dx  = 34;
+    const y   = this.groundY - 120 - Math.random()*60;
+    for(let i=0;i<cnt;i++) this.coins.push(new Coin(baseX + i*dx, y));
+  }
+});
 
 window.World = World;
