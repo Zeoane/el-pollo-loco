@@ -1,50 +1,55 @@
+// models/chicken.class.js
 class Chicken extends MovableObject {
-  constructor() {
+  constructor(){
     super();
-    this.footOffset = 6;
-    this.setSize(60, 60).setSpeed(0.8);
-    this.setHitbox(6, 4, 48, 52);
-    this.hp = 1;
+    this.spriteFacing = -1;
     this.facing = 1;
-    this.dmg = 18;
-    this.bumpVX = 2.5;
-    this.bumpVY = -7;
+    this.footOffset = 6;
+    this.setSize(70,60).setSpeed(1.6);
+    this.setHitbox(6,4,56,50);
+    this.dmg = 15;
 
-    // Animation
     this.IMAGES_WALK = [
       "img/3_enemies_chicken/chicken_normal/1_walk/1_w.png",
       "img/3_enemies_chicken/chicken_normal/1_walk/2_w.png",
       "img/3_enemies_chicken/chicken_normal/1_walk/3_w.png",
     ];
-    this.IMAGE_DEAD = "img/3_enemies_chicken/chicken_normal/2_dead/dead.png";
-
     this.setWalkFrames(this.IMAGES_WALK, 120);
-    this.loadImage(this.IMAGES_WALK[0]);
 
-    this._tLast = performance.now();
+    this.deadImg = new Image();
+    this.deadImg.src = "img/3_enemies_chicken/chicken_normal/2_dead/dead.png"; 
+
+    this.hp = 2;
+    this.alpha = 1;
+    this.state = 'walk';
+    this.deadT = 0;
+    this.deadHoldMs = 1000;
+    this.deadFadeMs = 1000;
   }
 
-  _tick() {
-    const now = performance.now();
-    const dt = Math.min(50, now - (this._tLast || now));
-    this._tLast = now;
-    this.updateAnimation(dt);
+  die(){
+    if (this.state === 'dead') return;
+    this.state = 'dead';
+    this.speed = 0; this.vx = 0; this.vy = 0;
+    this.img = this.deadImg;
+    this.deadT = 0;
+    this.alpha = 1;
   }
+  onDie(){ this.die(); }
 
-  updateAnimation(dtMs = 16) {
-    if (this.hp <= 0) {
-      if (!this._deadShown) {
-        this.loadImage(this.IMAGE_DEAD);
-        this._deadShown = true;
+  update(dtMs=16){
+    if (this.state === 'dead'){
+      this.deadT += dtMs;
+      if (this.deadT > this.deadHoldMs){
+        const t = this.deadT - this.deadHoldMs;
+        const a = 1 - Math.min(1, t / this.deadFadeMs);
+        this.alpha = a;
+        if (a <= 0) this._dead = true;
       }
       return;
     }
-    this.updateWalkAnimation(dtMs, true);
-  }
-
-  draw(ctx) {
-    this._tick();
-    super.draw(ctx);
+    this.updateWalkAnimation?.(dtMs, true);
   }
 }
 window.Chicken = Chicken;
+

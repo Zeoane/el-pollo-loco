@@ -2,9 +2,9 @@
 class HUD {
   constructor() {
     const base = "img/7_statusbars/1_statusbar/1_statusbar_coin/green";
-    this.left = 20; // linker Rand
-    this.top = 26; // oberer Rand
-    this.gap = 58; // Zeilenabstand
+    this.left = 20; 
+    this.top = 26;
+    this.gap = 58; 
     this.font = "700 16px system-ui,sans-serif";
 
     this.coinBar = new StatusBar(
@@ -39,13 +39,13 @@ class HUD {
     let x = this.left,
       y = this.top;
 
-    this._row(ctx, this.bottleBar, x, y, this.counts.bottles); // 1. Reihe
+    this._row(ctx, this.bottleBar, x, y, this.counts.bottles); 
     y += this.gap;
 
-    this._row(ctx, this.healthBar, x, y, null); // 2. Reihe
+    this._row(ctx, this.healthBar, x, y, null); 
     y += this.gap;
 
-    this._row(ctx, this.coinBar, x, y, this.counts.coins); // 3. Reihe
+    this._row(ctx, this.coinBar, x, y, this.counts.coins); 
   }
 
   _row(ctx, bar, x, y, count = null) {
