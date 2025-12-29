@@ -76,7 +76,6 @@ window.init = function () {
 window.addEventListener("DOMContentLoaded", async () => {
   applyDivBackground("img/5_background/desert-landscape.jpg");
 
-  // Audio vorbereiten
   SFX.unlockOnGesture();
   await SFX.loadAll({
     bg: "audio/sounds/carnival-game-theme-loop.wav",
@@ -85,22 +84,38 @@ window.addEventListener("DOMContentLoaded", async () => {
     bottle_throw: "audio/sounds/open_bottle_gas_1.wav",
     bottle_hit: "audio/sounds/bottle-hit-3.wav",
     jump: "audio/sounds/jump_extra-life-8-bit.wav",
-    hit: "audio/sounds/death-song-8-bit.wav",
-    chicken: "audio/sounds/chickens.wav",
+    hit: "audio/sounds/punch.wav",
+    chicken: "audio/sounds/chickens_wind_bird.wav",
     rooster: "audio/sounds/rooster1.wav",
   });
 
-  // Musik erst nach User-Input
-  const startBg = () => {
-    SFX.loop("bg", "bg", { vol: 0.15 });
-    removeEventListener("keydown", startBg);
-    removeEventListener("pointerdown", startBg);
-  };
-  addEventListener("keydown", startBg);
-  addEventListener("pointerdown", startBg);
-
+  armMenuMusic();
   wireToolbar();
 });
+
+function armMenuMusic() {
+  let started = false;
+  const tryStart = (e) => {
+    if (started) return;
+    const scr = document.getElementById("startScreen");
+    if (!scr || scr.classList.contains("hidden")) return;
+    SFX.resume?.();
+
+    started = true;
+    console.log("[MENU] starting bg loop via", e?.type);
+    SFX.setMuted?.(false);
+    if (typeof SFX.vol !== "number") SFX.setVolume?.(0.15);
+    SFX.loop?.("bg", "menu", { vol: 0.15 });
+
+    window.removeEventListener("pointerdown", tryStart, true);
+    window.removeEventListener("keydown", tryStart, true);
+    window.removeEventListener("click", tryStart, true);
+  };
+
+  window.addEventListener("pointerdown", tryStart, true);
+  window.addEventListener("click", tryStart, true);
+  window.addEventListener("keydown", tryStart, true);
+}
 
 /* -----------------------
    Toolbar (Mute/Pause/Stop/Restart)
@@ -233,8 +248,10 @@ function setupStartScreen() {
 
   const startGame = () => {
     scr.classList.add("hidden");
+    SFX.fade?.("menu", 0, 400);
+    setTimeout(() => SFX.stop?.("menu"), 450);
+
     world?.pause?.(false);
-    SFX.loop?.("bg", "bg", { vol: 0.15 });
   };
 
   btn.addEventListener("click", startGame);

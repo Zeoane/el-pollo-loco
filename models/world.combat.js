@@ -27,31 +27,48 @@ Object.assign(World.prototype, {
     }
   },
 
-  updateProjectiles(dtMs){
-    const gY=this.groundY;
-    this.projectiles.forEach(p=>{ p.update(dtMs); if(p.state==='fly'&&p.y+p.height>=gY) p.hitAndSplash(gY); });
-    this.projectiles.forEach(p=>{
-      if(p.state!=='fly') return;
-      const hit=this.opponents.find(o=>!(o.state==='dead'||o._dead)&&AABB(p,o)); if(!hit) return;
-      if(typeof hit.onHit==='function') hit.onHit(25); else { hit.hp=(hit.hp||1)-1; if(hit.hp<=0) hit.die?.(); SFX.play?.('hit',{vol:.9}); }
-      p.hitAndSplash();
-    });
-    this.projectiles=this.projectiles.filter(p=>!p._dead);
-    this.opponents=this.opponents.filter(o=>!o._dead);
-  },
+updateProjectiles(dtMs){
+  const gY=this.groundY;
+  this.projectiles.forEach(p=>{
+    p.update(dtMs);
+    if(p.state==='fly' && p.y+p.height>=gY) p.hitAndSplash(gY);
+  });
 
-  checkCharEnemyCollisions(dtMs){
-    const c=this.character; c.invT=Math.max(0,(c.invT||0)-dtMs); if(c.invT) return;
-    const cb=c.getBounds?.()||c;
-    for(const e of this.opponents){
-      if(e._dead||e.state==='dead') continue;
-      const eb=e.getBounds?.()||e; if(!AABB(cb,eb)) continue;
-      const stomp=c.prevY+c.height<=e.y+8 && c.vy>0;
-      if(stomp){ e.die?.(); SFX.play?.('hit',{vol:.9}); c.vy=-8; } 
-      else { c.hp=Math.max(0,(c.hp??100)-(e.dmg??20)); c.invT=600; c.hurtT=400; c.vx=c.facing===1?-2.5:2.5; SFX.play?.('hit',{vol:.9}); }
-      break;
+  this.projectiles.forEach(p=>{
+    if(p.state!=='fly') return;
+    const hit=this.opponents.find(o=>!(o.state==='dead'||o._dead)&&AABB(p,o));
+    if(!hit) return;
+
+    if(typeof hit.onHit==='function') hit.onHit(25);
+    else { hit.hp=(hit.hp||1)-1; if(hit.hp<=0) hit.die?.(); }
+    SFX.play?.('bottle_hit',{vol:.8});
+    p.hitAndSplash();
+  });
+
+  this.projectiles=this.projectiles.filter(p=>!p._dead);
+  this.opponents=this.opponents.filter(o=>!o._dead);
+},
+
+checkCharEnemyCollisions(dtMs){
+  const c=this.character; c.invT=Math.max(0,(c.invT||0)-dtMs); if(c.invT) return;
+  const cb=c.getBounds?.()||c;
+  for(const e of this.opponents){
+    if(e._dead||e.state==='dead') continue;
+    const eb=e.getBounds?.()||e; if(!AABB(cb,eb)) continue;
+
+    const stomp=c.prevY+c.height<=e.y+8 && c.vy>0;
+    if(stomp){
+      e.die?.();
+      SFX.play?.('chicken',{vol:.6});
+      c.vy=-8;
+    } else {
+      c.hp=Math.max(0,(c.hp??100)-(e.dmg??20));
+      c.invT=600; c.hurtT=400; c.vx=c.facing===1?-2.5:2.5;
+      SFX.play?.('hit',{vol:.9});
     }
-  },
+    break;
+  }
+},
 
 handleHeal(dtMs){
 

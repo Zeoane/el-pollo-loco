@@ -69,17 +69,17 @@ Object.assign(World.prototype, {
     }
   },
 
-  spawnBoss(){
-    if (this.bossSpawned) return;
-    const b = new Endboss().setGround?.(this.groundY).placeOnGround?.();
-    b.x = this.character.x + 800;
-    this.opponents.push(b);
-    this.bossSpawned = true;
-    this.phase = 'boss';
-    SFX.play?.('boss', { vol: .8 });
-    // Musikwechsel später ggf. hier:
-    // SFX.stop?.('bg'); SFX.loop?.('boss','bg',{ vol:0.35 });
-  },
+spawnBoss(/* ... */){
+  if (this.bossSpawned) return;
+  const b = new Endboss().setGround?.(this.groundY).placeOnGround?.();
+  b.x = this.character.x + 800;
+  this.opponents.push(b);
+  this.bossSpawned = true;
+  this.phase = 'boss';
+  SFX.stop?.('chicken');                 
+  if (this.audio){ this.audio.roosterLeft = 2; this.audio.nextRooster = this.elapsedMs + 1000; }
+  SFX.play?.('boss', { vol: .8 });
+},
 
   updateOpponents(dtMs){
     const left = this.cameraX - 150, ahead = this.cameraX + this.canvas.width + 200;

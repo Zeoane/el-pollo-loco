@@ -95,7 +95,7 @@ class Endboss extends MovableObject {
     } else {
       this.setState("hurt");
     }
-    SFX.play?.("hit", { vol: 0.9 });
+    SFX.play?.("hit", { vol: 0.6 });
   }
 
   updateBoss(world, dtMs = 16) {
