@@ -111,7 +111,7 @@ class World {
     this.tSinceStartMs += dtMs;
     this.managePhases();
     this.tickAmbientAudio?.(dtMs);
-    this.handleInput(dtMs);
+    this.handleInput?.(dtMs);
     this.character.prevY = this.character.y;
 
     this.applyPhysics(dtMs);
@@ -139,6 +139,31 @@ class World {
     this.maintainEnemies();
   }
 }
+
+
+Object.assign(World.prototype, {
+  draw() {
+    const { ctx, canvas } = this;
+    ctx.setTransform?.(1,0,0,1,0,0);
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    this.backgroundObjects.forEach(bo => bo.draw(ctx, this.cameraX));
+
+    ctx.save(); ctx.translate(-this.cameraX, 0);
+    this.coins.forEach(c => this.addToMap(c));
+    this.bottles.forEach(b => this.addToMap(b));
+    this.addToMap(this.character);
+    this.opponents.forEach(o => this.addToMap(o));
+    this.projectiles.forEach(p => this.addToMap(p));
+    ctx.restore();
+
+    this.clouds.forEach(c => c.draw?.(ctx, this.cameraX));
+    this.hud?.draw(ctx, this);
+  }
+});
+
+
 
 Object.assign(World.prototype, {
   maintainCoinsAhead(minAhead = 6) {

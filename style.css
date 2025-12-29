@@ -24,6 +24,7 @@ body {
   );
   backdrop-filter: blur(1px);
 }
+
 #startScreen.hidden {
   display: none;
 }
@@ -96,7 +97,7 @@ body {
 h1 {
   text-align: center;
   font-size: 48px;
-  color: black;
+  color: rgb(242, 105, 6);
   font: 700 48px "Rye", serif;
 }
 
@@ -304,7 +305,6 @@ h1 {
   font-size: 24px;
   line-height: 1;
   color: #fff;
-
   background: rgba(0, 0, 0, 0.55);
   border: 1px solid #ffffff24;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);

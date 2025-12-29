@@ -78,7 +78,6 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   SFX.unlockOnGesture();
   await SFX.loadAll({
-    bg: "audio/sounds/carnival-game-theme-loop.wav",
     coin: "audio/sounds/coin-ca-ching.mp3",
     bottle_pick: "audio/sounds/open-treasure-chest-8-bit.wav",
     bottle_throw: "audio/sounds/open_bottle_gas_1.wav",
@@ -94,26 +93,21 @@ window.addEventListener("DOMContentLoaded", async () => {
 });
 
 function armMenuMusic() {
-  let started = false;
+  let armed = true;
+
   const tryStart = (e) => {
-    if (started) return;
+    if (!armed) return;
     const scr = document.getElementById("startScreen");
     if (!scr || scr.classList.contains("hidden")) return;
-    SFX.resume?.();
-
-    started = true;
-    console.log("[MENU] starting bg loop via", e?.type);
-    SFX.setMuted?.(false);
-    if (typeof SFX.vol !== "number") SFX.setVolume?.(0.15);
-    SFX.loop?.("bg", "menu", { vol: 0.15 });
+    if (e?.target?.closest?.("#btnStartGame")) return;
+    armed = false;
+    SFX.loop("bg", "menu", { vol: 0.2 });
 
     window.removeEventListener("pointerdown", tryStart, true);
     window.removeEventListener("keydown", tryStart, true);
-    window.removeEventListener("click", tryStart, true);
   };
 
   window.addEventListener("pointerdown", tryStart, true);
-  window.addEventListener("click", tryStart, true);
   window.addEventListener("keydown", tryStart, true);
 }
 
@@ -230,9 +224,11 @@ function wireToolbar() {
 function openHowTo() {
   document.getElementById("howtoModal")?.classList.remove("hidden");
 }
+
 function closeHowTo() {
   document.getElementById("howtoModal")?.classList.add("hidden");
 }
+
 function setHowToLang(lang) {
   const de = lang === "de";
   document.getElementById("howtoDECnt").hidden = !de;
@@ -241,23 +237,31 @@ function setHowToLang(lang) {
   document.getElementById("howtoEN")?.classList.toggle("active", !de);
 }
 
+async function enableSound() {
+  try {
+    await SFX.ctx?.resume?.();
+  } catch {}
+  SFX.setMuted(false);
+  SFX.setVolume(0.2);
+  SFX.loop("bg", "menu", { vol: 0.2 });
+}
+
 function setupStartScreen() {
   const scr = document.getElementById("startScreen");
   const btn = document.getElementById("btnStartGame");
   if (!scr || !btn) return;
+  const btnEnable = document.getElementById("btnEnableSound");
+  btnEnable?.addEventListener("click", enableSound);
 
   const startGame = () => {
     scr.classList.add("hidden");
-    SFX.fade?.("menu", 0, 400);
-    setTimeout(() => SFX.stop?.("menu"), 450);
-
+    SFX.stop?.("menu");
     world?.pause?.(false);
   };
 
   btn.addEventListener("click", startGame);
   addEventListener(
-    "keydown",
-    (e) => {
+    "keydown", (e) => {
       if (scr.classList.contains("hidden")) return;
       if (e.code === "Enter" || e.code === "Space") {
         e.preventDefault();

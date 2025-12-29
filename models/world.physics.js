@@ -1,19 +1,19 @@
 // models/world.physics.js
 Object.assign(World.prototype, {
-  handleInput(dtMs){
-    const run = this.cfg.player?.speed ?? 3.4;
-    this.character.speed = run;
-
-    if (this.keyboard?.RIGHT){ this.character.stepRight?.(dtMs); this.character.facing = 1; }
-    if (this.keyboard?.LEFT ){ this.character.stepLeft?.(dtMs);  this.character.facing = -1; }
-
-    if (!this.jumpLock && (this.keyboard?.SPACE || this.keyboard?.UP) && this.character.onGround){
-      this.character.vy = this.cfg.player?.jumpVy ?? -12;
-      this.character.onGround = false;
-      this.jumpLock = true;
+  updateBackgrounds(dtMs, moving) {
+    const camX = this.cameraX, cvs = this.canvas;
+    for (let i = 0; i < this.backgroundObjects.length; i++) {
+      const bo = this.backgroundObjects[i];
+      if (!bo) continue;
+      if (typeof bo.update === 'function') {
+        bo.update(camX, cvs, dtMs, moving);
+      } else if (!bo._warnNoUpdate) {
+        console.warn('[BG] layer ohne update():', i, bo?.constructor?.name);
+        bo._warnNoUpdate = true;
+      }
     }
-    if (!this.keyboard?.SPACE && !this.keyboard?.UP) this.jumpLock = false;
   },
+
 
   applyPhysics(dtMs){
     const c = this.character, k = dtMs/16;
