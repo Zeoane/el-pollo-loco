@@ -124,13 +124,13 @@ loadImages(paths = []) {
     tryNext();
   }
 
-  // Hitbox setzen (optional kleiner als Sprite)
+
   setHitbox(ox = 0, oy = 0, w = null, h = null) {
     this.hb = { ox, oy, w, h };
     return this;
   }
 
-  // Korrigierte Bounds für AABB
+
   getBounds() {
     const hb = this.hb || {};
     const w = hb.w ?? this.width,
@@ -143,13 +143,13 @@ loadImages(paths = []) {
     };
   }
 
-  // Kollisions-Test gegen anderes Objekt (nutzt utils/AABB)
+
   intersects(other) {
     if (!other || !window.AABB) return false;
     return AABB(this.getBounds(), other.getBounds?.() || other);
   }
 
-  // mehrere Bilder cachen
+
   loadImages(paths = []) {
     const frames = [];
     paths.forEach((path) => {

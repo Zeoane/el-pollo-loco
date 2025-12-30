@@ -1,14 +1,16 @@
 // models/world.physics.js
 Object.assign(World.prototype, {
-  updateBackgrounds(dtMs, moving) {
-    const camX = this.cameraX, cvs = this.canvas;
-    for (let i = 0; i < this.backgroundObjects.length; i++) {
-      const bo = this.backgroundObjects[i];
+  updateBackgrounds(dtMs = 16, moving) {
+    const camX = this.cameraX;
+    const cvs  = this.canvas;
+    const arr  = this.backgroundObjects || [];
+    for (let i = 0; i < arr.length; i++) {
+      const bo = arr[i];
       if (!bo) continue;
       if (typeof bo.update === 'function') {
         bo.update(camX, cvs, dtMs, moving);
       } else if (!bo._warnNoUpdate) {
-        console.warn('[BG] layer ohne update():', i, bo?.constructor?.name);
+        console.warn('[BG] layer ohne update(): idx=', i, 'type=', bo?.constructor?.name);
         bo._warnNoUpdate = true;
       }
     }
@@ -39,14 +41,18 @@ Object.assign(World.prototype, {
     if (c.x < 0) c.x = 0;
   },
 
+
   updateCamera(moving){
     const target = this.character.x - this.canvas.width * 0.4;
-    this.cameraX = moving ? this.cameraX + (target - this.cameraX) * 0.1 : target;
+    const dx = target - this.cameraX;
+    if (moving) {
+      this.cameraX += dx * 0.10;     
+    } else if (Math.abs(dx) > 0.5) {
+      this.cameraX += dx * 0.20;       
+    } else {
+      this.cameraX = target;          
+    }
   },
 
   updateClouds(){ this.clouds.forEach(cl => cl.update?.(this.canvas.width)); },
-
-  updateBackgrounds(dtMs, moving){
-    this.backgroundObjects.forEach(bo => bo.update(this.cameraX, this.canvas, dtMs, moving));
-  }
 });

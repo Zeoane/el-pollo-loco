@@ -1,11 +1,15 @@
-//background-object.class.js//
+// background-object.class.js
 class BackgroundObject extends MovableObject {
   constructor(folder, y=0, h=null, flow=0, parallax=0){
     super();
     this.x=0; this.y=y; this.height=h;
-    this.flowSpeed=flow; this.parallax=parallax; this._flow=0;
-    this.tiles=[]; this.fallback=new Image();
+    this.flowSpeed=flow;           
+    this.parallax=parallax;       
+    this._flow=0;
+    this.tiles=[];
+    this.fallback=new Image();
     this._loadTiles(folder);
+    this._tileW = 0;
   }
 
   _loadTiles(folder){
@@ -22,26 +26,25 @@ class BackgroundObject extends MovableObject {
   }
 
   update(cameraX, canvas, dtMs=16){
-    const k=(dtMs||16)/16;
-    const w=this._tileW||0;
-    this._flow=((this._flow - (this.flowSpeed||0)*k) % (w||1) + (w||1)) % (w||1);
+    const k = (dtMs||16) / 16;
+    this._flow -= (this.flowSpeed||0) * k;
   }
 
   draw(ctx, cameraX=0){
     const A=this._activeA(); if(!A) return;
     const {w,h}=this._dims(ctx,A); if(!(w>1)) return;
-    this._tileW=w;
+    this._tileW = w;
 
-    const par=1-(this.parallax||0);
-    const cx=((cameraX*par)%w + w)%w;              
-    const off=-((cx + (this._flow||0)) % w);
+    const p = this.parallax || 0;
+    const norm = (((cameraX * p) + (this._flow||0)) % w + w) % w;
+    const off  = -norm;
 
     const B=this._activeB(A);
     ctx.save();
-    ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
     ctx.translate(off,0);
-    for(let x=-w,i=0; x<ctx.canvas.width+w; x+=w)
+    for(let x=-w,i=0; x<ctx.canvas.width + w; x+=w){
       this._blit(ctx, (i++%2?B:A), x, w, h);
+    }
     ctx.restore();
   }
 
@@ -55,23 +58,22 @@ class SkyLayer extends MovableObject {
   constructor(path, parallax=0.0, y=0, h=null){
     super();
     this.y=y; this.h=h; this.parallax=parallax;
-    this.img=new Image(); this.imageLoaded=false;
-    this.img.onload=()=>{ this.imageLoaded=true; };
+    this.img=new Image(); this._ok=false;
+    this.img.onload=()=>{ this._ok=true; };
     this.img.onerror=(e)=>{ console.error('[SkyLayer] failed:', path, e); this.img._broken=true; };
     this.img.src=path;
   }
-
-   update(cameraX, canvas, dtMs, moving) {} 
+  update(){}
 
   draw(ctx, cameraX=0){
-    if(!this.imageLoaded) return;
+    if(!this._ok) return;
     const h=this.h ?? ctx.canvas.height;
     const s=h/(this.img.naturalHeight||h);
     const w=(this.img.naturalWidth||h)*s; if(!(w>1)) return;
 
-    const par = 1 - (this.parallax || 0);
-    const cx  = ((cameraX * par) % w + w) % w;
-    const off = -cx;
+    const p = this.parallax || 0;                 
+    const norm = (((cameraX * p)) % w + w) % w;
+    const off  = -norm;
 
     ctx.save();
     ctx.translate(off, 0);
@@ -82,49 +84,41 @@ class SkyLayer extends MovableObject {
   }
 }
 
-
 class MirrorLayer extends MovableObject {
-  constructor(pathFolder, parallax = 0.6, y = 0, h = null){
+  constructor(pathFolder, parallax = 0.6, y = 0, h = null, dir = 1){
     super();
     this.y = y;
     this.h = h;
     this.parallax = parallax;
+    this.dir = dir;                
     this.img = new Image();
     this._ok = false;
     this.img.onload = () => this._ok = true;
     this.img.onerror = (e) => { console.error('[MirrorLayer] failed:', pathFolder, e); this.img._broken = true; };
     this.img.src = `${pathFolder}/full.png`;
   }
-
-  update(cameraX, canvas, dtMs, moving) {} 
+  update(){}
 
   draw(ctx, cameraX = 0){
     if (!this._ok) return;
     const h = this.h ?? ctx.canvas.height;
     const s = h / (this.img.naturalHeight || h);
     const w = (this.img.naturalWidth || h) * s; if (!(w > 1)) return;
-    const par = 1 - (this.parallax || 0);
-    const cx  = ((cameraX * par) % w + w) % w;
-    const off = -cx;
+
+    const p = this.parallax || 0;
+    const norm = (((cameraX * p)) % w + w) % w;
+    const off  = (this.dir === -1) ? +norm : -norm;   
 
     ctx.save();
-    ctx.globalAlpha = 1;
-    ctx.globalCompositeOperation = 'source-over';
     ctx.translate(off, 0);
-
     for (let x = -w, i = 0; x < ctx.canvas.width + w; ){
       const drawX = Math.round(x) - 0.5;
-      if (i % 2 === 0) {
-        ctx.drawImage(this.img, drawX, this.y, w + 1, h);
-      } else {
-        ctx.save();
-        ctx.translate(drawX + w, 0);
-        ctx.scale(-1, 1);
-        ctx.drawImage(this.img, 0, this.y, w + 1, h);
-        ctx.restore();
+      if ((i & 1) === 0) ctx.drawImage(this.img, drawX, this.y, w + 1, h);
+      else {
+        ctx.save(); ctx.translate(drawX + w, 0); ctx.scale(-1, 1);
+        ctx.drawImage(this.img, 0, this.y, w + 1, h); ctx.restore();
       }
-      x += w;
-      i++;
+      x += w; i++;
     }
     ctx.restore();
   }
@@ -135,6 +129,10 @@ class CloudLayer extends BackgroundObject {
   constructor(folder='img/5_background/layers/4_clouds', y=0, h=null, flow=0.02, parallax=0.05){
     super(folder,y,h,flow,parallax);
   }
+  update(cameraX, canvas, dtMs=16){
+    const k = (dtMs||16)/16;
+    this._flow += (this.flowSpeed||0) * k;  
+  }
 }
 
 const BackgroundLayers = {
@@ -144,11 +142,12 @@ const BackgroundLayers = {
       new CloudLayer('img/5_background/layers/4_clouds', 0, null, 0.02, 0.05),
       new MirrorLayer('img/5_background/layers/3_third_layer', 0.15),
       new MirrorLayer('img/5_background/layers/2_second_layer', 0.30),
-      new MirrorLayer('img/5_background/layers/1_first_layer', 0.60),
-    ];
+      new MirrorLayer('img/5_background/layers/1_first_layer', 0.60, 0, null, -1), 
+      ];
   }
 };
-window.BackgroundLayers = BackgroundLayers; 
+
+window.BackgroundLayers = BackgroundLayers;
 
 
 

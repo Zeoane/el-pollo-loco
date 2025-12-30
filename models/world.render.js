@@ -1,31 +1,22 @@
 // models/world.render.js
 
 Object.assign(World.prototype, {
-  draw() {
+  draw(){
     const { ctx, canvas } = this;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    this.backgroundObjects.forEach((bo, i) => {
-      if (typeof bo?.draw !== "function") {
-        if (!bo?._warnNoDraw) {
-          console.warn("[BG] layer ohne draw():", i, bo);
-          bo._warnNoDraw = true;
-        }
-        return;
-      }
-      bo.draw(ctx, this.cameraX);
-    });
+    this.backgroundObjects.forEach(bo => bo.draw(ctx, this.cameraX));
 
     ctx.save();
     ctx.translate(-this.cameraX, 0);
-    this.coins.forEach((c) => this.addToMap(c));
-    this.bottles.forEach((b) => this.addToMap(b));
+    this.coins.forEach(c => this.addToMap(c));
+    this.bottles.forEach(b => this.addToMap(b));
     this.addToMap(this.character);
-    this.opponents.forEach((o) => this.addToMap(o));
-    this.projectiles.forEach((p) => this.addToMap(p));
+    this.opponents.forEach(o => this.addToMap(o));
+    this.projectiles.forEach(p => this.addToMap(p));
     ctx.restore();
 
-    this.clouds.forEach((c) => c.draw?.(ctx));
+    this.clouds.forEach(c => c.draw?.(ctx)); 
     this.hud?.draw(ctx, this);
   },
 
