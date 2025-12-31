@@ -6,10 +6,9 @@ Object.assign(World.prototype, {
     const arr  = this.backgroundObjects || [];
     for (let i = 0; i < arr.length; i++) {
       const bo = arr[i];
-      if (!bo) continue;
-      if (typeof bo.update === 'function') {
+      if (bo && typeof bo.update === 'function') {
         bo.update(camX, cvs, dtMs, moving);
-      } else if (!bo._warnNoUpdate) {
+      } else if (bo && !bo._warnNoUpdate) {
         console.warn('[BG] layer ohne update(): idx=', i, 'type=', bo?.constructor?.name);
         bo._warnNoUpdate = true;
       }

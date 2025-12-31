@@ -45,6 +45,17 @@ class World {
         clouds: [],
       };
     this.backgroundObjects = L.backgroundObjects;
+
+this.backgroundObjects.forEach((b) => {
+
+  const isCloud = b && b.constructor && b.constructor.name === 'CloudLayer';
+  if (!isCloud && (b.flowSpeed || 0) !== 0) {
+    console.warn('[BG] Forcing flow=0 on non-cloud layer', b.constructor?.name, b.flowSpeed);
+    b.flowSpeed = 0;
+    b._flow = 0;
+  }
+});
+
     this.opponents = L.opponents;
     this.clouds = L.clouds;
 
