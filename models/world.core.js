@@ -136,8 +136,11 @@ this.gameOverAt = 0;
 
     this.tickCollectibles(dtMs);
     const moving = !!(this.keyboard?.LEFT || this.keyboard?.RIGHT);
-    this.character.updateAnimation?.(dtMs, moving);
+    if (this.character.hp <= 0) {
+    this.character.updateAnimation(dtMs, false);
+  }
 
+  if (this.paused) return;
     this.updateCamera(moving);
     this.updateClouds();
     this.updateBackgrounds(dtMs, moving);

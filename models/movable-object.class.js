@@ -89,19 +89,6 @@ class MovableObject {
   return img;
 }
 
-loadImages(paths = []) {
-  const frames = [];
-  paths.forEach((path) => {
-    if (this.imageCache[path]) { frames.push(this.imageCache[path]); return; }
-    const im = new Image();
-    im.onload = () => {};
-    im.onerror = () => { im._broken = true; console.error('Missing/broken:', path); };
-    im.src = path;
-    this.imageCache[path] = im;
-    frames.push(im);
-  });
-  return frames;
-}
 
   loadImageFromCandidates(paths = []) {
     if (!paths.length) return;

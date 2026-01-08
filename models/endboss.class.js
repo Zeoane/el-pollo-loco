@@ -86,17 +86,23 @@ class Endboss extends MovableObject {
     }
   }
 
-  onHit(dmg = 20) {
-    if (this.state === "dead" || this.invT > 0) return;
-    this.hp = Math.max(0, this.hp - dmg);
-    if (this.hp === 0) {
-      this.setState("dead");
-      this._deadline = 800; 
-    } else {
-      this.setState("hurt");
+onHit(dmg = 20) {
+  if (this.state === "dead" || this.invT > 0) return;
+  this.hp = Math.max(0, this.hp - dmg);
+  
+  if (this.hp === 0) {
+    this.setState("dead");
+    this._deadline = 800;
+
+    if (window.world) {
+      setTimeout(() => {
+        window.world.triggerGameOver('win');
+      }, 1000); 
     }
-    SFX.play?.("hit", { vol: 0.6 });
+  } else {
+    this.setState("hurt");
   }
+}
 
   updateBoss(world, dtMs = 16) {
     const k = dtMs / 16;
@@ -108,7 +114,7 @@ class Endboss extends MovableObject {
     const centerX = this.x + this.width / 2;
     const targetX = c.x + c.width / 2;
     const dist = targetX - centerX;
-    this.facing = dist >= 0 ? 1 : -1;
+    this.facing = dist >= 0 ? -1 : 1;
 
     switch (this.state) {
       case "walk": {

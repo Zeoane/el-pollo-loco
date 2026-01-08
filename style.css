@@ -158,17 +158,17 @@ h1 {
 }
 
 #hud {
-  --bar-w: 200px;
-  --bar-h: 28px;
+  --bar-w: 160px;
+  --bar-h: 20px;
   --icon: 30px;
-  --gap: 10px;
+  --gap: 6px;
   position: absolute;
-  top: 14px;
-  left: 14px;
+  top: 8px;
+  left: 8px;
   right: auto;
   z-index: 10;
   display: grid;
-  gap: 10px;
+  gap: 4px;
   pointer-events: none;
 }
 

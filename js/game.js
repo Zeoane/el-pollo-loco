@@ -91,6 +91,15 @@ window.IMG_GAME_OVER = new Image();
 window.IMG_GAME_OVER.src = encodeURI('img/You won, you lost/Game Over.png');
   armMenuMusic();
   wireToolbar();
+
+  window.IMG_GAME_OVER = new Image();
+  window.IMG_GAME_OVER.src = 'img/You won, you lost/Game Over.png';
+  
+  window.IMG_LOST_BOSS = new Image();
+  window.IMG_LOST_BOSS.src = 'img/You won, you lost/You lost.png';
+  
+  window.IMG_WON_BOSS = new Image();
+  window.IMG_WON_BOSS.src = 'img/You won, you lost/You won A.png';
 });
 
 function armMenuMusic() {
@@ -199,7 +208,9 @@ function wireToolbar() {
 
   btnStop?.addEventListener("click", () => world?.stop?.());
 
-  btnRestart?.addEventListener("click", () => {
+btnRestart?.addEventListener("click", () => {
+  const hud = document.getElementById('hud');
+  if (hud) hud.style.display = 'flex';
     world?.dispose?.();
     const canvas = document.getElementById("canvas");
     const level1 = createLevel1();
