@@ -54,6 +54,11 @@ this.backgroundObjects.forEach((b) => {
     b.flowSpeed = 0;
     b._flow = 0;
   }
+this.imgGameOver = window.IMG_GAME_OVER || null;
+this.gameOver = false;
+this.gameOverReason = '';
+this.gameOverAt = 0;
+
 });
 
     this.opponents = L.opponents;

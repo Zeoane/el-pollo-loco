@@ -18,6 +18,24 @@ Object.assign(World.prototype, {
 
     this.clouds.forEach(c => c.draw?.(ctx)); 
     this.hud?.draw(ctx, this);
+
+if (this.gameOver && this.gameOverReason === 'boss' && (this.imgGameOver?.complete || window.IMG_GAME_OVER?.complete)) {
+  const img = this.imgGameOver || window.IMG_GAME_OVER;
+  const { ctx, canvas } = this;
+  const fade = Math.min(1, (performance.now() - (this.gameOverAt || 0)) / 600);
+  const maxW = canvas.width * 0.9;  
+  const scale = Math.min(maxW / img.naturalWidth, 1);
+  const w = img.naturalWidth * scale;
+  const h = img.naturalHeight * scale;
+  const x = (canvas.width  - w) / 2;
+  const y = (canvas.height - h) / 2;
+
+  ctx.save();
+  ctx.globalAlpha = fade;
+  ctx.drawImage(img, x, y, w, h);
+  ctx.restore();
+}
+
   },
 
   placeOnGround(obj) {

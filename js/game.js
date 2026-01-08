@@ -87,7 +87,8 @@ window.addEventListener("DOMContentLoaded", async () => {
     chicken: "audio/sounds/chickens_wind_bird.wav",
     rooster: "audio/sounds/rooster1.wav",
   });
-
+window.IMG_GAME_OVER = new Image();
+window.IMG_GAME_OVER.src = encodeURI('img/You won, you lost/Game Over.png');
   armMenuMusic();
   wireToolbar();
 });
