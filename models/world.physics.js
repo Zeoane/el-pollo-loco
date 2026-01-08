@@ -40,18 +40,5 @@ Object.assign(World.prototype, {
     if (c.x < 0) c.x = 0;
   },
 
-
-  updateCamera(moving){
-    const target = this.character.x - this.canvas.width * 0.4;
-    const dx = target - this.cameraX;
-    if (moving) {
-      this.cameraX += dx * 0.10;     
-    } else if (Math.abs(dx) > 0.5) {
-      this.cameraX += dx * 0.20;       
-    } else {
-      this.cameraX = target;          
-    }
-  },
-
   updateClouds(){ this.clouds.forEach(cl => cl.update?.(this.canvas.width)); },
 });

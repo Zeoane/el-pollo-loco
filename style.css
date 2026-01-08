@@ -178,10 +178,7 @@ h1 {
   grid-template-columns: var(--icon) var(--bar-w) auto;
   align-items: center;
   gap: var(--gap);
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 12px;
-  padding: 6px 10px;
   pointer-events: none;
 }
 

@@ -45,21 +45,23 @@ class World {
         clouds: [],
       };
     this.backgroundObjects = L.backgroundObjects;
+    this.imgGameOver = window.IMG_GAME_OVER || null;
+    this.gameOver = false;
+    this.gameOverReason = "";
+    this.gameOverAt = 0;
 
-this.backgroundObjects.forEach((b) => {
-
-  const isCloud = b && b.constructor && b.constructor.name === 'CloudLayer';
-  if (!isCloud && (b.flowSpeed || 0) !== 0) {
-    console.warn('[BG] Forcing flow=0 on non-cloud layer', b.constructor?.name, b.flowSpeed);
-    b.flowSpeed = 0;
-    b._flow = 0;
-  }
-this.imgGameOver = window.IMG_GAME_OVER || null;
-this.gameOver = false;
-this.gameOverReason = '';
-this.gameOverAt = 0;
-
-});
+    this.backgroundObjects.forEach((b) => {
+      const isCloud = b && b.constructor && b.constructor.name === "CloudLayer";
+      if (!isCloud && (b.flowSpeed || 0) !== 0) {
+        console.warn(
+          "[BG] Forcing flow=0 on non-cloud layer",
+          b.constructor?.name,
+          b.flowSpeed
+        );
+        b.flowSpeed = 0;
+        b._flow = 0;
+      }
+    });
 
     this.opponents = L.opponents;
     this.clouds = L.clouds;
@@ -136,12 +138,13 @@ this.gameOverAt = 0;
 
     this.tickCollectibles(dtMs);
     const moving = !!(this.keyboard?.LEFT || this.keyboard?.RIGHT);
+    this.character.updateAnimation(dtMs, moving);
     if (this.character.hp <= 0) {
-    this.character.updateAnimation(dtMs, false);
-  }
+      this.character.updateAnimation(dtMs, false);
+    }
 
-  if (this.paused) return;
-    this.updateCamera(moving);
+    if (this.paused) return;
+    this.updateCamera();
     this.updateClouds();
     this.updateBackgrounds(dtMs, moving);
     this.updateOpponents(dtMs);
@@ -159,30 +162,29 @@ this.gameOverAt = 0;
   }
 }
 
-
 Object.assign(World.prototype, {
   draw() {
     const { ctx, canvas } = this;
-    ctx.setTransform?.(1,0,0,1,0,0);
-    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.setTransform?.(1, 0, 0, 1, 0, 0);
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = "source-over";
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    this.backgroundObjects.forEach(bo => bo.draw(ctx, this.cameraX));
+    this.backgroundObjects.forEach((bo) => bo.draw(ctx, this.cameraX));
 
-    ctx.save(); ctx.translate(-this.cameraX, 0);
-    this.coins.forEach(c => this.addToMap(c));
-    this.bottles.forEach(b => this.addToMap(b));
+    ctx.save();
+    ctx.translate(-this.cameraX, 0);
+    this.coins.forEach((c) => this.addToMap(c));
+    this.bottles.forEach((b) => this.addToMap(b));
     this.addToMap(this.character);
-    this.opponents.forEach(o => this.addToMap(o));
-    this.projectiles.forEach(p => this.addToMap(p));
+    this.opponents.forEach((o) => this.addToMap(o));
+    this.projectiles.forEach((p) => this.addToMap(p));
     ctx.restore();
 
-    this.clouds.forEach(c => c.draw?.(ctx, this.cameraX));
+    this.clouds.forEach((c) => c.draw?.(ctx, this.cameraX));
     this.hud?.draw(ctx, this);
-  }
+  },
 });
-
-
 
 Object.assign(World.prototype, {
   maintainCoinsAhead(minAhead = 6) {

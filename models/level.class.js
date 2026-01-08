@@ -17,7 +17,7 @@ function buildBackground() {
     new CloudLayer('img/5_background/layers/4_clouds', 0, null, 0.4, 0.05), 
     mkLayer('3_third_layer',  0.05, 0.15),
     mkLayer('2_second_layer', 0.08, 0.30),
-    mkLayer('1_first_layer',  0.12, 0.60),
+    mkLayer('1_first_layer',  0.10, 0.50), 
   ];
 }
 

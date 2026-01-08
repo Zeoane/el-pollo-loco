@@ -23,15 +23,12 @@ Object.assign(World.prototype, {
     if (!wantJump) this.jumpLock = false;
   }, 
 
-  updateCamera() {
+updateCamera() {
     const leftOffset = 100; 
     this.cameraX = this.character.x - leftOffset;
     if (this.cameraX < 0) {
       this.cameraX = 0;
     }
-
-    // Optional: nach rechts begrenzen
-    // if (this.cameraX > 2500) this.cameraX = 2500;
   }
 });
 

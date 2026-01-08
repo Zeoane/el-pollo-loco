@@ -1,10 +1,15 @@
-// models/character.class.js
 class Character extends MovableObject {
   constructor() {
     super();
+    this.initStats();
+    this.initImages();
+    this.img = this._idleFrames[0];
+    this.resetFrame("idle");
+  }
+
+  initStats() {
     this.hpMax = 100;
     this.hp = 100;
-
     this.x = 120;
     this.setSize(160, 320);
     this.footOffset = 16;
@@ -13,8 +18,10 @@ class Character extends MovableObject {
     this.vy = 0;
     this.onGround = false;
     this.facing = 1;
+    this.idleElapsed = 0;
+  }
 
-    // Animation-Frames
+  initImages() {
     this.IMAGES_WALKING = [
       "img/2_character_pepe/2_walk/W-21.png",
       "img/2_character_pepe/2_walk/W-22.png",
@@ -72,72 +79,85 @@ class Character extends MovableObject {
       "img/2_character_pepe/5_dead/D-56.png",
       "img/2_character_pepe/5_dead/D-57.png",
     ];
-
-    this.setWalkFrames(this.IMAGES_WALKING, 90);
-    this.idleElapsed = 0;
-    this.state = "idle";
-  }
-
-  hpPercent() {
-    return Math.max(0, Math.min(100, (100 * this.hp) / this.hpMax));
+    this._walkFrames = this.loadImages(this.IMAGES_WALKING);
+    this._jumpFrames = this.loadImages(this.IMAGES_JUMPING);
+    this._idleFrames = this.loadImages(this.IMAGES_IDLE);
+    this._longIdleFrames = this.loadImages(this.IMAGES_LONG_IDLE);
+    this._hurtFrames = this.loadImages(this.IMAGES_HURT);
+    this._deadFrames = this.loadImages(this.IMAGES_DEAD);
   }
 
   updateAnimation(dtMs, moving) {
-    this.hurtT = Math.max(0, (this.hurtT || 0) - dtMs);
-
-    let next;
-    if (this.hp <= 0) next = "dead";
-    else if (this.hurtT > 0) next = "hurt";
-    else if (!this.onGround) next = "jump";
-    else if (moving) next = "walk";
-    else next = this.idleElapsed > 3000 ? "long_idle" : "idle";
-
-    this.idleElapsed =
-      next === "idle" ? Math.min(4000, (this.idleElapsed || 0) + dtMs) : 0;
-
-    if (next !== this.state) {
-      this.state = next;
-      this.frameIndex = 0;
-      this.frameElapsedMs = 0;
-    }
-
-    if (this.state === "jump") {
-      if (!this._jumpFrames)
-        this._jumpFrames = this.loadImages(this.IMAGES_JUMPING);
-      return this._animateSequence(dtMs, this._jumpFrames, 90, /*loop*/ false);
-    }
-    if (this.state === "walk") {
-      return this.updateWalkAnimation(dtMs, true);
-    }
-    if (this.state === "hurt") {
-      if (!this._hurtFrames)
-        this._hurtFrames = this.loadImages(this.IMAGES_HURT);
-      return this._animateSequence(dtMs, this._hurtFrames, 120, false);
-    }
-    if (this.state === "dead") {
-      if (!this._deadFrames)
-        this._deadFrames = this.loadImages(this.IMAGES_DEAD);
-      return this._animateSequence(dtMs, this._deadFrames, 120, false);
-    }
-
-    const key = this.state === "long_idle" ? "_longIdleFrames" : "_idleFrames";
-    if (!this[key])
-      this[key] = this.loadImages(
-        this.state === "long_idle" ? this.IMAGES_LONG_IDLE : this.IMAGES_IDLE
-      );
-    return this._animateSequence(dtMs, this[key], 120, true);
+    this.updateTimers(dtMs);
+    this.determineState(moving);
+    this.playCurrentAnimation(dtMs);
   }
 
-  _animateSequence(dtMs, frames, frameMs = 100, loop = true) {
-    if (!frames?.length) return;
+
+  hpPercent() {
+  const currentHp = this.hp || 0;
+  const maxHp = this.hpMax || 100;
+  return Math.max(0, Math.min(100, (100 * currentHp) / maxHp));
+}
+
+  updateTimers(dtMs) {
+    this.hurtT = Math.max(0, (this.hurtT || 0) - dtMs);
+    const isIdle = this.state === "idle" || this.state === "long_idle";
+    this.idleElapsed = isIdle ? (this.idleElapsed || 0) + dtMs : 0;
+  }
+
+  determineState(moving) {
+    const next = this.calculateNextState(moving);
+    if (next !== this.state) this.resetFrame(next);
+  }
+
+  calculateNextState(moving) {
+    if (this.hp <= 0) return "dead";
+    if (this.hurtT > 0) return "hurt";
+    if (!this.onGround) return "jump";
+    return moving ? "walk" : this.idleElapsed > 3000 ? "long_idle" : "idle";
+  }
+
+  resetFrame(next) {
+    this.state = next;
+    this.frameIndex = 0;
+    this.frameElapsedMs = 0;
+  }
+
+  playCurrentAnimation(dtMs) {
+    if (this.state === "dead")
+      return this._animateSequence(dtMs, this._deadFrames, 120, false);
+    if (this.state === "hurt")
+      return this._animateSequence(dtMs, this._hurtFrames, 120, false);
+    if (this.state === "jump")
+      return this._animateSequence(dtMs, this._jumpFrames, 90, false);
+    this.playLoopingAnimation(dtMs);
+  }
+
+  playLoopingAnimation(dtMs) {
+    if (this.state === "walk")
+      return this._animateSequence(dtMs, this._walkFrames, 90, true);
+    this.playIdleAnimation(dtMs);
+  }
+
+  playIdleAnimation(dtMs) {
+    const frames =
+      this.state === "long_idle" ? this._longIdleFrames : this._idleFrames;
+    this._animateSequence(dtMs, frames, 120, true);
+  }
+
+  _animateSequence(dtMs, frames, ms, loop) {
+    if (!frames || frames.length === 0) return;
     this.frameElapsedMs = (this.frameElapsedMs || 0) + dtMs;
-    if (this.frameElapsedMs >= frameMs) {
-      this.frameElapsedMs = 0;
-      this.frameIndex = (this.frameIndex || 0) + 1;
-      if (loop) this.frameIndex %= frames.length;
-      else this.frameIndex = Math.min(this.frameIndex, frames.length - 1);
-    }
-    this.img = frames[this.frameIndex || 0] || frames[0];
+    if (this.frameElapsedMs >= ms) this.advanceFrame(frames, loop);
+    this.img = frames[this.frameIndex] || frames[0];
+  }
+
+  advanceFrame(frames, loop) {
+    this.frameElapsedMs = 0;
+    this.frameIndex++;
+    if (loop) this.frameIndex %= frames.length;
+    else this.frameIndex = Math.min(this.frameIndex, frames.length - 1);
   }
 }
 window.Character = Character;

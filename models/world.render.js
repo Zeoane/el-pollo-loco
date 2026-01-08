@@ -4,8 +4,6 @@ Object.assign(World.prototype, {
 draw() {
     const { ctx, canvas } = this;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // 1. Hintergrund & Objekte zeichnen
     this.backgroundObjects.forEach(bo => bo.draw(ctx, this.cameraX));
     ctx.save();
     ctx.translate(-this.cameraX, 0);
