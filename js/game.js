@@ -378,3 +378,21 @@ function startHudRAF() {
   };
   loop();
 }
+
+
+function checkOrientation() {
+    const isPortrait = window.innerHeight > window.innerWidth;
+    const isMobile = window.innerWidth <= 950;
+
+    if (isPortrait && isMobile) {
+        window.world?.pause?.(true);
+    } else {
+        const startScreen = document.getElementById('startScreen');
+        if (startScreen?.classList.contains('hidden')) {
+            window.world?.pause?.(false);
+        }
+    }
+}
+
+window.addEventListener('resize', checkOrientation);
+window.addEventListener('load', checkOrientation);

@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link rel="stylesheet" href="style.css">
   <link rel="icon" type="image/png" sizes="32x32" href="img/favicon/icons8-screaming-rooster-32.png">
   <link rel="preload" as="image" href="img/5_background/desert-landscape.jpg" fetchpriority="high">
@@ -53,6 +53,13 @@
 </head>
 
 <body onload="init()">
+
+<div id="rotateDeviceScreen" class="rotate-device-overlay">
+    <div class="rotate-content">
+        <span>Please turn your device to play</span>
+        <div class="rotate-icon">🔄</div>
+    </div>
+</div>
 
   <div id="startScreen" role="dialog" aria-modal="true" aria-label="Start screen">
     <div class="start-inner">
