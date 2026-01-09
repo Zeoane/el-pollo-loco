@@ -15,51 +15,53 @@
   <title>El Pollo Loco</title>
 
   <!-- Utils -->
+  <script defer src="audio/sound.manager.js"></script>
   <script defer src="utils/aabb.js"></script>
 
   <!-- Baseclasses -->
   <script defer src="models/movable-object.class.js"></script>
+  <script defer src="models/statusbar.class.js"></script>
 
   <!-- Rendering/Background -->
   <script defer src="models/background-object.class.js"></script>
+  <script defer src="models/character.class.js"></script>
+
+  <!-- Level & World -->
+  <script defer src="models/world.core.js"></script>
+  <script defer src="models/world.render.js"></script>
+  <script defer src="models/world.audio.js"></script>
+  <script defer src="models/world.controls.js"></script>
+  <script defer src="models/world.physics.js"></script>
+  <script defer src="models/world.items.js"></script>
+  <script defer src="models/world.enemies.js"></script>
+  <script defer src="models/world.combat.js"></script>
+
+  <script defer src="models/keyboard.class.js"></script>
+
+  <script defer src="js/game.js"></script>
+
   <script defer src="models/level.class.js"></script>
   <script defer src="models/cloud.class.js"></script>
 
   <!-- Entities & Items -->
   <script defer src="models/collectibles.class.js"></script>
   <script defer src="models/projectile.class.js"></script>
-  <script defer src="models/character.class.js"></script>
+
   <script defer src="models/smallchicken.class.js"></script>
   <script defer src="models/chicken.class.js"></script>
   <script defer src="models/endboss.class.js"></script>
 
-  <!-- Level & World -->
-  
-  <script defer src="models/statusbar.class.js"></script>
-  <script defer src="audio/sound.manager.js"></script>
-  <script defer src="models/world.core.js"></script>
-  <script defer src="models/world.audio.js"></script>
-  <script defer src="models/world.controls.js"></script>
-  <script defer src="models/world.render.js"></script>
-  <script defer src="models/world.physics.js"></script>
-  <script defer src="models/world.items.js"></script>
-  <script defer src="models/world.enemies.js"></script>
-  <script defer src="models/world.combat.js"></script>
-  <script defer src="models/hud.dom.js"></script>
-  <script defer src="models/keyboard.class.js"></script>
-
-  <script defer src="js/game.js"></script>
 
 </head>
 
 <body onload="init()">
 
-<div id="rotateDeviceScreen" class="rotate-device-overlay">
+  <div id="rotateDeviceScreen" class="rotate-device-overlay">
     <div class="rotate-content">
-        <span>Please turn your device to play</span>
-        <div class="rotate-icon">🔄</div>
+      <span>Please turn your device to play</span>
+      <div class="rotate-icon">🔄</div>
     </div>
-</div>
+  </div>
 
   <div id="startScreen" role="dialog" aria-modal="true" aria-label="Start screen">
     <div class="start-inner">
@@ -75,102 +77,70 @@
   <div id="bg" aria-hidden="false">
     <h1>El pollo loco</h1>
 
-    <a class="htp-fab" href="how-to-play.html" title="How to play / Anleitung" aria-label="How to play">
-      ❔
-    </a>
-
-    <div id="hudTopRight" class="hud-bar" role="toolbar" aria-label="Game controls">
-      <div class="hud-volume">
-        <button id="btnMute" class="hud-btn" aria-pressed="false" title="Mute (M)">🔊</button>
-        <div class="vol-panel" role="group" aria-label="Volume">
-          <div class="slider-wrap">
-            <input id="volSlider" type="range" min="0" max="100" step="1" value="60" aria-label="Volume"
-              aria-orientation="vertical">
-          </div>
-          <div id="volPct">60%</div>
-        </div>
+<div id="hudActions" class="hud-fab-container">
+  <div class="hud-fab hud-volume-wrapper">
+    <button id="btnMute" class="hud-btn-reset" aria-label="Mute">🔊</button>
+    <div class="vol-panel">
+      <div id="volPct">60%</div>
+      <div class="slider-wrap">
+        <input id="volSlider" type="range" min="0" max="100" value="60" aria-orientation="vertical">
       </div>
-      <button id="btnPause" class="hud-btn" aria-pressed="false" title="Pause / Resume (P)">⏸</button>
-      <button id="btnStop" class="hud-btn" title="Stop (Esc)">■</button>
-      <button id="btnRestart" class="hud-btn" title="Restart (R)">⟲</button>
     </div>
   </div>
+
+  <button id="btnPause" class="hud-fab" title="Pause">⏸</button>
+  <button id="btnStop" class="hud-fab" title="Stop">■</button>
+  <button id="btnRestart" class="hud-fab" title="Restart">⟲</button>
+  
+  <a class="hud-fab htp-fab" href="how-to-play.html" title="Anleitung">❔</a>
+</div>
 
   <div id="game">
     <canvas id="canvas" width="720" height="480">
     </canvas>
 
-    <div id="hud" aria-hidden="false">
-      <div class="hud-row" data-kind="bottle">
-        <img class="icon" src="img/7_statusbars/3_icons/icon_salsa_bottle.png" alt="">
-        <div class="track">
-          <div class="fill" style="--p:0%"></div>
-        </div>
-        <span class="label" id="lbl-bottle">×0</span>
-      </div>
+    <div id="howtoModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="howtoTitle">
+      <div class="modal">
+        <header class="modal-h">
+          <h2 id="howtoTitle">How to Play</h2>
+          <div class="lang">
+            <button id="howtoDE" class="chip active" type="button">DE</button>
+            <button id="howtoEN" class="chip" type="button">EN</button>
+          </div>
+          <button id="howtoClose" class="x" aria-label="Close" type="button">✕</button>
+        </header>
 
-      <div class="hud-row" data-kind="health">
-        <img class="icon" src="img/7_statusbars/3_icons/icon_health.png" alt="">
-        <div class="track">
-          <div class="fill" style="--p:100%"></div>
-        </div>
-        <span class="label" id="lbl-health">100%</span>
-      </div>
+        <div class="modal-b">
+          <div id="howtoDECnt" class="howto-pane">
+            <h3>Kurz-Anleitung</h3>
+            <ul>
+              <li><b>Bewegen:</b> Pfeile ← →</li>
+              <li><b>Springen:</b> ↑ oder Leertaste</li>
+              <li><b>Flasche werfen:</b> F (halten = Power-Wurf)</li>
+              <li><b>Heilen:</b> H (3 Münzen oder 3 Flaschen → +20% Leben)</li>
+              <li>Phasen: Kleine Hühner → reguläre Hühner → Endboss</li>
+              <li><b>Mute/Pause/Stop/Restart:</b> Buttons oben rechts oder M / P / Esc / R</li>
+            </ul>
+          </div>
 
-      <div class="hud-row" data-kind="coin">
-        <img class="icon" src="img/7_statusbars/3_icons/icon_coin.png" alt="">
-        <div class="track">
-          <div class="fill" style="--p:0%"></div>
+          <div id="howtoENCnt" class="howto-pane" hidden>
+            <h3>Quick Guide</h3>
+            <ul>
+              <li><b>Move:</b> Arrows ← →</li>
+              <li><b>Jump:</b> ↑ or Space</li>
+              <li><b>Throw bottle:</b> F (hold for power)</li>
+              <li><b>Heal:</b> H (3 coins or 3 bottles → +20% HP)</li>
+              <li>Phases: Small chickens → regular chickens → End boss</li>
+              <li><b>Mute/Pause/Stop/Restart:</b> top-right buttons or M / P / Esc / R</li>
+            </ul>
+          </div>
         </div>
-        <span class="label" id="lbl-coin">×0</span>
+
+        <footer class="modal-f">
+          <button id="howtoClose2" class="btn" type="button">OK</button>
+        </footer>
       </div>
     </div>
-  </div>
-
-  </div>
-
-  <div id="howtoModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="howtoTitle">
-    <div class="modal">
-      <header class="modal-h">
-        <h2 id="howtoTitle">How to Play</h2>
-        <div class="lang">
-          <button id="howtoDE" class="chip active" type="button">DE</button>
-          <button id="howtoEN" class="chip" type="button">EN</button>
-        </div>
-        <button id="howtoClose" class="x" aria-label="Close" type="button">✕</button>
-      </header>
-
-      <div class="modal-b">
-        <div id="howtoDECnt" class="howto-pane">
-          <h3>Kurz-Anleitung</h3>
-          <ul>
-            <li><b>Bewegen:</b> Pfeile ← →</li>
-            <li><b>Springen:</b> ↑ oder Leertaste</li>
-            <li><b>Flasche werfen:</b> F (halten = Power-Wurf)</li>
-            <li><b>Heilen:</b> H (3 Münzen oder 3 Flaschen → +20% Leben)</li>
-            <li>Phasen: Kleine Hühner → reguläre Hühner → Endboss</li>
-            <li><b>Mute/Pause/Stop/Restart:</b> Buttons oben rechts oder M / P / Esc / R</li>
-          </ul>
-        </div>
-
-        <div id="howtoENCnt" class="howto-pane" hidden>
-          <h3>Quick Guide</h3>
-          <ul>
-            <li><b>Move:</b> Arrows ← →</li>
-            <li><b>Jump:</b> ↑ or Space</li>
-            <li><b>Throw bottle:</b> F (hold for power)</li>
-            <li><b>Heal:</b> H (3 coins or 3 bottles → +20% HP)</li>
-            <li>Phases: Small chickens → regular chickens → End boss</li>
-            <li><b>Mute/Pause/Stop/Restart:</b> top-right buttons or M / P / Esc / R</li>
-          </ul>
-        </div>
-      </div>
-
-      <footer class="modal-f">
-        <button id="howtoClose2" class="btn" type="button">OK</button>
-      </footer>
-    </div>
-  </div>
 
 
 </body>

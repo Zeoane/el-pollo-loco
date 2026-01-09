@@ -7,6 +7,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  font: "Rye", serif;
 }
 
 #game {
@@ -30,7 +31,6 @@ body {
   justify-self: center;;
   display: block;
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 .modal-backdrop {
@@ -76,6 +76,7 @@ h1 {
   pointer-events: none;
 }
 
+
 #hud .hud-row {
   display: grid;
   grid-template-columns: var(--icon) var(--bar-w) auto;
@@ -109,61 +110,83 @@ h1 {
   text-shadow: 1px 1px 2px #000;
 }
 
-.hud-bar {
+.hud-fab-container {
   position: absolute;
-  bottom: 16px;   
-  right: 84px;   
-  z-index: 25;
+  bottom: clamp(10px, 4vw, 20px);
+  right: clamp(10px, 4vw, 20px);
+  z-index: 100;
   display: flex;
-  flex-direction: row; 
-  flex-wrap: nowrap;   
+  flex-direction: row;
   align-items: center;
-  gap: 8px;
-  padding: 6px;
-  background: rgba(0, 0, 0, 0.45);
-  border-radius: 14px;
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  gap: clamp(8px, 2vw, 12px); 
   pointer-events: auto;
-  min-width: max-content;
 }
 
-#bg .htp-fab {
-  position: absolute; 
-  right: 16px;
-  bottom: 16px;
-  z-index: 25;
-  width: 56px;
-  height: 56px;
-  background: rgba(0, 0, 0, 0.45);
+.hud-fab, #bg .htp-fab {
+  width: clamp(44px, 10vw, 56px);
+  height: clamp(44px, 10vw, 56px);
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 14px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px); 
+  color: rgb(255, 255, 255);
+  font-size: clamp(18px, 5vw, 24px);
   display: flex;
   align-items: center;
   justify-content: center;
-  text-decoration: none;
-  font-size: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(8px);
-  color: white;
-}
-
-.hud-btn {
-  width: 48px;
-  height: 48px;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  border-radius: 10px;
-  color: white;
-  font-size: 20px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  flex-shrink: 0; 
 }
 
-.hud-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+.hud-fab:hover, #bg .htp-fab:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+#btnMute {
+color: black;
+padding: 0;
+}
+
+.vol-panel {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+
+.hud-volume-wrapper:hover .vol-panel {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+
+#volSlider {
+  -webkit-appearance: slider-vertical;
+  width: 8px;
+  height: 80px;
+}
+
+#volPct {
+  color: #fff;
+  font: 700 14px system-ui, sans-serif;
+  text-shadow: 1px 1px 2px #000;
+  width: 30px;
+  text-align: center;
 }
 
 .rotate-device-overlay {
@@ -231,6 +254,13 @@ h1 {
 @media (max-width: 950px) and (orientation: portrait) {
   .rotate-device-overlay {
     display: flex;
+  }
+}
+
+@media (max-width: 480px) {
+  .hud-fab-container {
+    bottom: 10px;
+    right: 10px;
   }
 }
 

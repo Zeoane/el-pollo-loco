@@ -70,7 +70,12 @@ class World {
     this.spawnSmallChickens();
     this.spawnPickups();
 
-    this.hud = window.USE_CANVAS_HUD && window.HUD ? new HUD() : null;
+if (typeof HUD !== 'undefined') {
+    this.hud = new HUD();
+} else {
+    console.error("HUD-Klasse wurde nicht gefunden.");
+}
+
 
     this.phase = "small";
     this.phase2AtMs = this.cfg.phase2AtMs ?? 90_000;
