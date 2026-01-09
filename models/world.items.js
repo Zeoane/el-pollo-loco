@@ -10,13 +10,13 @@ Object.assign(World.prototype, {
 
     this.coins = this.coins.filter(c => {
       const hit = AABB(cbb, c.getBounds?.() || c);
-      if (hit){ this.inventory.coins++; SFX.play?.('coin',{vol:.8}); return false; }
+      if (hit){ this.inventory.coins++; SFX.play?.('coin',{vol:.6}); return false; }
       return true;
     });
 
     this.bottles = this.bottles.filter(b => {
       const hit = AABB(cbb, b.getBounds?.() || b);
-      if (hit){ this.inventory.bottles++; SFX.play?.('bottle_pick',{vol:.8}); return false; }
+      if (hit){ this.inventory.bottles++; SFX.play?.('bottle_pick',{vol:.6}); return false; }
       return true;
     });
   },

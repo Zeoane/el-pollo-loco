@@ -77,29 +77,33 @@ window.addEventListener("DOMContentLoaded", async () => {
   applyDivBackground("img/5_background/desert-landscape.jpg");
 
   SFX.unlockOnGesture();
+  
+  // Audio laden mit Fehlerabfang
   await SFX.loadAll({
     coin: "audio/sounds/coin-ca-ching.mp3",
-    bottle_pick: "audio/sounds/open-treasure-chest-8-bit.wav",
-    bottle_throw: "audio/sounds/open_bottle_gas_1.wav",
-    bottle_hit: "audio/sounds/bottle-hit-3.wav",
-    jump: "audio/sounds/jump_extra-life-8-bit.wav",
+    bottle_pick: "audio/sounds/bottle-pickup.wav", 
+    bottle_throw: "audio/sounds/bottle-throw.wav",
+    bottle_hit: "audio/sounds/bottle-hit.wav",
+    jump: "audio/sounds/jumpbounce.wav",
     hit: "audio/sounds/punch.wav",
-    chicken: "audio/sounds/chickens_wind_bird.wav",
+    chicken: "audio/sounds/chickens.wav",
     rooster: "audio/sounds/rooster1.wav",
-  });
-window.IMG_GAME_OVER = new Image();
-window.IMG_GAME_OVER.src = encodeURI('img/You won, you lost/Game Over.png');
+  }).catch(err => console.error("Audio Load Error:", err));
+
+  // Bilder-Initialisierung
+  const loadImg = (path) => {
+    const i = new Image();
+    i.src = path;
+    return i;
+  };
+
+  window.IMG_GAME_OVER = loadImg("img/You won, you lost/Game Over.png");
+  window.IMG_LOST_BOSS = loadImg("img/You won, you lost/You lost.png");
+  window.IMG_WON_BOSS = loadImg("img/You won, you lost/You won A.png");
+
+  // Initialisierung der Systeme
   armMenuMusic();
   wireToolbar();
-
-  window.IMG_GAME_OVER = new Image();
-  window.IMG_GAME_OVER.src = 'img/You won, you lost/Game Over.png';
-  
-  window.IMG_LOST_BOSS = new Image();
-  window.IMG_LOST_BOSS.src = 'img/You won, you lost/You lost.png';
-  
-  window.IMG_WON_BOSS = new Image();
-  window.IMG_WON_BOSS.src = 'img/You won, you lost/You won A.png';
 });
 
 function armMenuMusic() {
@@ -209,18 +213,21 @@ function wireToolbar() {
   btnStop?.addEventListener("click", () => world?.stop?.());
 
 btnRestart?.addEventListener("click", () => {
-  const hud = document.getElementById('hud');
-  if (hud) hud.style.display = 'flex';
-    world?.dispose?.();
+    const hud = document.getElementById('hud');
+    if (hud) hud.style.display = 'flex';
+    
+    if (window.world) window.world.dispose?.(); 
+    
     const canvas = document.getElementById("canvas");
     const level1 = createLevel1();
-    world = new World(canvas, keyboard, level1);
+    window.world = new World(canvas, keyboard, level1);
+    
     startHudRAF();
     if (btnPause) {
       btnPause.textContent = "⏸";
       btnPause.setAttribute("aria-pressed", "false");
     }
-  });
+});
 
   addEventListener("keydown", (e) => {
     if (e.code === "KeyM") {
@@ -273,7 +280,8 @@ function setupStartScreen() {
 
   btn.addEventListener("click", startGame);
   addEventListener(
-    "keydown", (e) => {
+    "keydown",
+    (e) => {
       if (scr.classList.contains("hidden")) return;
       if (e.code === "Enter" || e.code === "Space") {
         e.preventDefault();

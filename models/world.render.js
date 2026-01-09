@@ -40,10 +40,21 @@ draw() {
       ctx.restore();
     }
 if (this.gameOver) {
-      this.drawEndScreens();
-      this.hideDomHud(); 
+        this.drawEndScreenSequence();
     }
-  },
+},
+
+drawEndScreenSequence() {
+       let img = window.IMG_GAME_OVER; 
+    if (this.gameOverReason === 'lost_boss') img = window.IMG_LOST_BOSS;
+    if (this.gameOverReason === 'won_boss' || this.gameOverReason === 'win') img = window.IMG_WON_BOSS;
+    if (img && img.complete && img.naturalWidth > 0) {
+        this.drawCenteredImage(img);
+    } else {
+        this.ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+},
 
 
 
