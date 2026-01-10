@@ -35,9 +35,9 @@
   <script defer src="models/world.items.js"></script>
   <script defer src="models/world.enemies.js"></script>
   <script defer src="models/world.combat.js"></script>
-
   <script defer src="models/keyboard.class.js"></script>
 
+  <script defer src="js/menu.template.js"></script>
   <script defer src="js/game.js"></script>
 
   <script defer src="models/level.class.js"></script>
@@ -77,70 +77,70 @@
   <div id="bg" aria-hidden="false">
     <h1>El pollo loco</h1>
 
-<div id="hudActions" class="hud-fab-container">
-  <div class="hud-fab hud-volume-wrapper">
-    <button id="btnMute" class="hud-btn-reset" aria-label="Mute">🔊</button>
-    <div class="vol-panel">
-      <div id="volPct">60%</div>
-      <div class="slider-wrap">
-        <input id="volSlider" type="range" min="0" max="100" value="60" aria-orientation="vertical">
-      </div>
-    </div>
-  </div>
-
-  <button id="btnPause" class="hud-fab" title="Pause">⏸</button>
-  <button id="btnStop" class="hud-fab" title="Stop">■</button>
-  <button id="btnRestart" class="hud-fab" title="Restart">⟲</button>
-  
-  <a class="hud-fab htp-fab" href="how-to-play.html" title="Anleitung">❔</a>
-</div>
-
-  <div id="game">
-    <canvas id="canvas" width="720" height="480">
-    </canvas>
-
-    <div id="howtoModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="howtoTitle">
-      <div class="modal">
-        <header class="modal-h">
-          <h2 id="howtoTitle">How to Play</h2>
-          <div class="lang">
-            <button id="howtoDE" class="chip active" type="button">DE</button>
-            <button id="howtoEN" class="chip" type="button">EN</button>
-          </div>
-          <button id="howtoClose" class="x" aria-label="Close" type="button">✕</button>
-        </header>
-
-        <div class="modal-b">
-          <div id="howtoDECnt" class="howto-pane">
-            <h3>Kurz-Anleitung</h3>
-            <ul>
-              <li><b>Bewegen:</b> Pfeile ← →</li>
-              <li><b>Springen:</b> ↑ oder Leertaste</li>
-              <li><b>Flasche werfen:</b> F (halten = Power-Wurf)</li>
-              <li><b>Heilen:</b> H (3 Münzen oder 3 Flaschen → +20% Leben)</li>
-              <li>Phasen: Kleine Hühner → reguläre Hühner → Endboss</li>
-              <li><b>Mute/Pause/Stop/Restart:</b> Buttons oben rechts oder M / P / Esc / R</li>
-            </ul>
-          </div>
-
-          <div id="howtoENCnt" class="howto-pane" hidden>
-            <h3>Quick Guide</h3>
-            <ul>
-              <li><b>Move:</b> Arrows ← →</li>
-              <li><b>Jump:</b> ↑ or Space</li>
-              <li><b>Throw bottle:</b> F (hold for power)</li>
-              <li><b>Heal:</b> H (3 coins or 3 bottles → +20% HP)</li>
-              <li>Phases: Small chickens → regular chickens → End boss</li>
-              <li><b>Mute/Pause/Stop/Restart:</b> top-right buttons or M / P / Esc / R</li>
-            </ul>
+    <div id="hudActions" class="hud-fab-container">
+      <div class="hud-fab hud-volume-wrapper">
+        <button id="btnMute" class="hud-btn-reset" aria-label="Mute">🔊</button>
+        <div class="vol-panel">
+          <div id="volPct">60%</div>
+          <div class="slider-wrap">
+            <input id="volSlider" type="range" min="0" max="100" value="60" style="writing-mode: vertical-lr; direction: rtl">
           </div>
         </div>
-
-        <footer class="modal-f">
-          <button id="howtoClose2" class="btn" type="button">OK</button>
-        </footer>
       </div>
+
+      <button id="btnPause" class="hud-fab" title="Pause">⏸</button>
+      <button id="btnStop" class="hud-fab" title="Stop">■</button>
+      <button id="btnRestart" class="hud-fab" title="Restart">⟲</button>
+
+      <a class="hud-fab htp-fab" href="how-to-play.html" title="Anleitung">❔</a>
     </div>
+
+    <div id="game">
+      <canvas id="canvas" width="720" height="480">
+      </canvas>
+
+      <div id="howtoModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="howtoTitle">
+        <div class="modal">
+          <header class="modal-h">
+            <h2 id="howtoTitle">How to Play</h2>
+            <div class="lang">
+              <button id="howtoDE" class="chip active" type="button">DE</button>
+              <button id="howtoEN" class="chip" type="button">EN</button>
+            </div>
+            <button id="howtoClose" class="x" aria-label="Close" type="button">✕</button>
+          </header>
+
+          <div class="modal-b">
+            <div id="howtoDECnt" class="howto-pane">
+              <h3>Kurz-Anleitung</h3>
+              <ul>
+                <li><b>Bewegen:</b> Pfeile ← →</li>
+                <li><b>Springen:</b> ↑ oder Leertaste</li>
+                <li><b>Flasche werfen:</b> F (halten = Power-Wurf)</li>
+                <li><b>Heilen:</b> H (3 Münzen oder 3 Flaschen → +20% Leben)</li>
+                <li>Phasen: Kleine Hühner → reguläre Hühner → Endboss</li>
+                <li><b>Mute/Pause/Stop/Restart:</b> Buttons oben rechts oder M / P / Esc / R</li>
+              </ul>
+            </div>
+
+            <div id="howtoENCnt" class="howto-pane" hidden>
+              <h3>Quick Guide</h3>
+              <ul>
+                <li><b>Move:</b> Arrows ← →</li>
+                <li><b>Jump:</b> ↑ or Space</li>
+                <li><b>Throw bottle:</b> F (hold for power)</li>
+                <li><b>Heal:</b> H (3 coins or 3 bottles → +20% HP)</li>
+                <li>Phases: Small chickens → regular chickens → End boss</li>
+                <li><b>Mute/Pause/Stop/Restart:</b> top-right buttons or M / P / Esc / R</li>
+              </ul>
+            </div>
+          </div>
+
+          <footer class="modal-f">
+            <button id="howtoClose2" class="btn" type="button">OK</button>
+          </footer>
+        </div>
+      </div>
 
 
 </body>

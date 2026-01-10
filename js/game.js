@@ -382,9 +382,9 @@ function startHudRAF() {
 
 function checkOrientation() {
     const isPortrait = window.innerHeight > window.innerWidth;
-    const isMobile = window.innerWidth <= 950;
+    const isMobileSize = window.innerWidth <= 480;
 
-    if (isPortrait && isMobile) {
+    if (isPortrait && isMobileSize) {
         window.world?.pause?.(true);
     } else {
         const startScreen = document.getElementById('startScreen');
@@ -393,6 +393,5 @@ function checkOrientation() {
         }
     }
 }
-
 window.addEventListener('resize', checkOrientation);
 window.addEventListener('load', checkOrientation);

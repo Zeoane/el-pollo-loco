@@ -27,27 +27,27 @@ body {
   height: auto;
   max-width: 100vw;
   max-height: 100vh;
-  object-fit: contain; 
-  justify-self: center;;
+  object-fit: contain;
+  justify-self: center;
   display: block;
   border-radius: 12px;
 }
 
 .modal-backdrop {
   position: fixed;
-  inset: 0;       
-  z-index: 1100;  
-  display: flex;   
+  inset: 0;
+  z-index: 1100;
+  display: flex;
   place-items: center;
   justify-content: center;
   align-items: center;
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(3px);
-  pointer-events: auto; 
+  pointer-events: auto;
 }
 
 .modal-backdrop.hidden {
-  display: none !important; 
+  display: none !important;
 }
 
 h1 {
@@ -57,10 +57,27 @@ h1 {
   text-align: center;
   z-index: 5;
   pointer-events: none;
-  font: 700 clamp(24px, 5vw, 48px) "Rye", serif; 
+  font: 700 clamp(24px, 5vw, 48px) "Rye", serif;
   color: rgb(242, 105, 6);
   margin: 0;
   padding: 0;
+}
+
+.btnprimary,
+.btn {
+  background-color: #c58722;
+  color: rgb(14, 14, 14);
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btnprimary,
+.btn:hover {
+  background-color: #e6a944;
 }
 
 #hud {
@@ -75,7 +92,6 @@ h1 {
   gap: 4px;
   pointer-events: none;
 }
-
 
 #hud .hud-row {
   display: grid;
@@ -118,18 +134,19 @@ h1 {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: clamp(8px, 2vw, 12px); 
+  gap: clamp(8px, 2vw, 12px);
   pointer-events: auto;
 }
 
-.hud-fab, #bg .htp-fab {
+.hud-fab,
+#bg .htp-fab {
   width: clamp(44px, 10vw, 56px);
   height: clamp(44px, 10vw, 56px);
   background: rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 14px;
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px); 
+  -webkit-backdrop-filter: blur(10px);
   color: rgb(255, 255, 255);
   font-size: clamp(18px, 5vw, 24px);
   display: flex;
@@ -138,18 +155,19 @@ h1 {
   cursor: pointer;
   transition: all 0.2s ease;
   text-decoration: none;
-  flex-shrink: 0; 
+  flex-shrink: 0;
 }
 
-.hud-fab:hover, #bg .htp-fab:hover {
+.hud-fab:hover,
+#bg .htp-fab:hover {
   background: rgba(255, 255, 255, 0.15);
   transform: translateY(-3px);
   border-color: rgba(255, 255, 255, 0.4);
 }
 
 #btnMute {
-color: black;
-padding: 0;
+  color: black;
+  padding: 0;
 }
 
 .vol-panel {
@@ -174,7 +192,6 @@ padding: 0;
   transform: translateX(-50%) translateY(0);
 }
 
-
 #volSlider {
   -webkit-appearance: slider-vertical;
   width: 8px;
@@ -193,11 +210,13 @@ padding: 0;
   position: fixed;
   inset: 0;
   background: #000;
+  color: white; 
   z-index: 9999;
-  display: none;
+  display: none; 
   justify-content: center;
   align-items: center;
   flex-direction: column;
+  text-align: center;
 }
 
 .rotate-icon {
@@ -251,20 +270,39 @@ padding: 0;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
 }
 
-@media (max-width: 950px) and (orientation: portrait) {
-  .rotate-device-overlay {
-    display: flex;
-  }
+.impressum-link {
+  margin-top: 15px;
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  font-size: 12px;
+  transition: color 0.2s;
+}
+
+.impressum-link:hover {
+  color: #ffffff;
+  text-decoration: underline;
 }
 
 @media (max-width: 480px) {
+  .rotate-device-overlay {
+    display: flex; 
+  }
   .hud-fab-container {
     bottom: 10px;
     right: 10px;
   }
 }
 
+@media (orientation: landscape) {
+  .rotate-device-overlay {
+    display: none !important;
+  }
+}
+
 @media (max-height: 480px) and (orientation: landscape) {
+  .rotate-device-overlay {
+    display: flex;
+  }
   h1 {
     font-size: 20px;
     top: 4px;
