@@ -165,6 +165,11 @@ class SoundManager {
   toggleMute() {
     this.setMuted(!this.muted);
   }
+
+  stopAll() {
+  Object.keys(this.loops).forEach((k) => this.stop(k));
+  this._pending = [];
+}
 }
 
 window.SFX = new SoundManager();

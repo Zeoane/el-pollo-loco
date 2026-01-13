@@ -38,7 +38,11 @@
   <script defer src="models/keyboard.class.js"></script>
 
   <script defer src="js/menu.template.js"></script>
-  <script defer src="js/game.js"></script>
+  <script defer src="js/game.init.js"></script>
+  <script defer src="js/game.ui.js"></script>
+  <script defer src="js/game.audio-ui.js"></script>
+  <script defer src="js/game.hud.js"></script>
+  <script defer src="js/game.orientation.js"></script>
 
   <script defer src="models/level.class.js"></script>
   <script defer src="models/cloud.class.js"></script>
@@ -83,7 +87,8 @@
         <div class="vol-panel">
           <div id="volPct">60%</div>
           <div class="slider-wrap">
-            <input id="volSlider" type="range" min="0" max="100" value="60" style="writing-mode: vertical-lr; direction: rtl">
+            <input id="volSlider" type="range" min="0" max="100" value="60"
+              style="writing-mode: vertical-lr; direction: rtl">
           </div>
         </div>
       </div>
@@ -137,6 +142,10 @@
           </div>
 
           <footer class="modal-f">
+            <a href="impressum.html" target="_blank" rel="noopener" class="impressum-link">
+              Impressum
+            </a>
+
             <button id="howtoClose2" class="btn" type="button">OK</button>
           </footer>
         </div>
