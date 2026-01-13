@@ -19,43 +19,45 @@
   <script defer src="utils/aabb.js"></script>
 
   <!-- Baseclasses -->
-  <script defer src="models/movable-object.class.js"></script>
-  <script defer src="models/statusbar.class.js"></script>
+  <script defer src="classes/movable-object.class.js"></script>
+  <script defer src="classes/statusbar.class.js"></script>
 
   <!-- Rendering/Background -->
-  <script defer src="models/background-object.class.js"></script>
-  <script defer src="models/character.class.js"></script>
+  <script defer src="classes/background-object.class.js"></script>
+  <script defer src="classes/character.class.js"></script>
 
   <!-- Level & World -->
-  <script defer src="models/world.core.js"></script>
-  <script defer src="models/world.render.js"></script>
-  <script defer src="models/world.audio.js"></script>
-  <script defer src="models/world.controls.js"></script>
-  <script defer src="models/world.physics.js"></script>
-  <script defer src="models/world.items.js"></script>
-  <script defer src="models/world.enemies.js"></script>
-  <script defer src="models/world.combat.js"></script>
-  <script defer src="models/keyboard.class.js"></script>
+  <script defer src="classes/world.core.js"></script>
+  <script defer src="classes/world.render.js"></script>
+  <script defer src="classes/world.audio.js"></script>
+  <script defer src="classes/world.controls.js"></script>
+  <script defer src="classes/world.physics.js"></script>
+  <script defer src="classes/world.items.js"></script>
+  <script defer src="classes/world.enemies.js"></script>
+  <script defer src="classes/world.combat.js"></script>
+  <script defer src="classes/keyboard.class.js"></script>
 
-  <script defer src="js/menu.template.js"></script>
+  <script defer src="classes/level.class.js"></script>
+  <script defer src="classes/cloud.class.js"></script>
+
+  <!-- Entities & Items -->
+  <script defer src="classes/collectibles.class.js"></script>
+  <script defer src="classes/projectile.class.js"></script>
+
+  <script defer src="classes/smallchicken.class.js"></script>
+  <script defer src="classes/chicken.class.js"></script>
+  <script defer src="classes/endboss.class.js"></script>
+
+
+<script defer src="templates/start-screen.template.js"></script>
+<script defer src="templates/howto-modal.template.js"></script>
+<script defer src="templates/end-screen-template.js"></script>
+
   <script defer src="js/game.init.js"></script>
   <script defer src="js/game.ui.js"></script>
   <script defer src="js/game.audio-ui.js"></script>
   <script defer src="js/game.hud.js"></script>
   <script defer src="js/game.orientation.js"></script>
-
-  <script defer src="models/level.class.js"></script>
-  <script defer src="models/cloud.class.js"></script>
-
-  <!-- Entities & Items -->
-  <script defer src="models/collectibles.class.js"></script>
-  <script defer src="models/projectile.class.js"></script>
-
-  <script defer src="models/smallchicken.class.js"></script>
-  <script defer src="models/chicken.class.js"></script>
-  <script defer src="models/endboss.class.js"></script>
-
-
 </head>
 
 <body onload="init()">
@@ -66,17 +68,6 @@
       <div class="rotate-icon">🔄</div>
     </div>
   </div>
-
-  <div id="startScreen" role="dialog" aria-modal="true" aria-label="Start screen">
-    <div class="start-inner">
-      <img class="start-art" src="img/9_intro_outro_screens/start/startscreen_1.png" alt="El Pollo Loco – Startbild" />
-      <div class="start-actions">
-        <button id="btnStartGame" class="btn primary">Start</button>
-        <button id="btnHowTo" class="btn">How to Play</button>
-      </div>
-    </div>
-  </div>
-
 
   <div id="bg" aria-hidden="false">
     <h1>El pollo loco</h1>
@@ -97,57 +88,14 @@
       <button id="btnStop" class="hud-fab" title="Stop">■</button>
       <button id="btnRestart" class="hud-fab" title="Restart">⟲</button>
 
-      <a class="hud-fab htp-fab" href="how-to-play.html" title="Anleitung">❔</a>
+      <button class="hud-fab htp-fab" id="btnHowToFab" type="button" title="Anleitung">❔</button>
+
     </div>
 
     <div id="game">
       <canvas id="canvas" width="720" height="480">
       </canvas>
 
-      <div id="howtoModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="howtoTitle">
-        <div class="modal">
-          <header class="modal-h">
-            <h2 id="howtoTitle">How to Play</h2>
-            <div class="lang">
-              <button id="howtoDE" class="chip active" type="button">DE</button>
-              <button id="howtoEN" class="chip" type="button">EN</button>
-            </div>
-            <button id="howtoClose" class="x" aria-label="Close" type="button">✕</button>
-          </header>
-
-          <div class="modal-b">
-            <div id="howtoDECnt" class="howto-pane">
-              <h3>Kurz-Anleitung</h3>
-              <ul>
-                <li><b>Bewegen:</b> Pfeile ← →</li>
-                <li><b>Springen:</b> ↑ oder Leertaste</li>
-                <li><b>Flasche werfen:</b> F (halten = Power-Wurf)</li>
-                <li><b>Heilen:</b> H (3 Münzen oder 3 Flaschen → +20% Leben)</li>
-                <li>Phasen: Kleine Hühner → reguläre Hühner → Endboss</li>
-                <li><b>Mute/Pause/Stop/Restart:</b> Buttons oben rechts oder M / P / Esc / R</li>
-              </ul>
-            </div>
-
-            <div id="howtoENCnt" class="howto-pane" hidden>
-              <h3>Quick Guide</h3>
-              <ul>
-                <li><b>Move:</b> Arrows ← →</li>
-                <li><b>Jump:</b> ↑ or Space</li>
-                <li><b>Throw bottle:</b> F (hold for power)</li>
-                <li><b>Heal:</b> H (3 coins or 3 bottles → +20% HP)</li>
-                <li>Phases: Small chickens → regular chickens → End boss</li>
-                <li><b>Mute/Pause/Stop/Restart:</b> top-right buttons or M / P / Esc / R</li>
-              </ul>
-            </div>
-          </div>
-
-          <footer class="modal-f">
-            <a href="impressum.html" target="_blank" rel="noopener" class="impressum-link">
-              Impressum
-            </a>
-
-            <button id="howtoClose2" class="btn" type="button">OK</button>
-          </footer>
         </div>
       </div>
 

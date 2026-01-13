@@ -19,18 +19,17 @@ function toggleRotateOverlay(show) {
 /**
  * Enforces landscape play on mobile/tablet.
 */
- 
 function checkOrientation() {
   const mustRotate = isMobileLike() && isPortraitMode();
-
   toggleRotateOverlay(mustRotate);
-  if (mustRotate) return world?.pause?.(true);
+  if (mustRotate) return window.world?.pause?.(true);
+  resumeIfStarted();
+}
 
-  const started = document
-    .getElementById("startScreen")
+function resumeIfStarted() {
+  const started = document.getElementById("startScreen")
     ?.classList.contains("hidden");
-
-  if (started) world?.pause?.(false);
+  if (started) window.world?.pause?.(false);
 }
 
 addEventListener("resize", checkOrientation);
