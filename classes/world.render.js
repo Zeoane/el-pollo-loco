@@ -1,5 +1,4 @@
 // models/world.render.js
-
 Object.assign(World.prototype, {
 draw() {
     const { ctx, canvas } = this;
@@ -55,8 +54,6 @@ drawEndScreenSequence() {
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
 },
-
-
 
   placeOnGround(obj) {
     obj.y = this.groundY - obj.height + (obj.footOffset || 0);
