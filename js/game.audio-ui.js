@@ -13,11 +13,31 @@ window.addEventListener("DOMContentLoaded", async () => {
     hit: "audio/sounds/punch.wav",
     chicken: "audio/sounds/chickens.wav",
     rooster: "audio/sounds/rooster1.wav",
+    lost: "audio/sounds/sadwhisle.wav",
+    win: "audio/sounds/groovy-winner.wav",
+    handleHeal: "audio/sounds/heal-chimes.wav"
   }).catch(() => {});
   initStaticImages();
   armMenuMusic();
   wireToolbar();
 });
+
+let endSoundPlayed = false;
+
+window.endSoundPlayed = false;
+
+/**
+ * Plays end sound once based on reason.
+ * @param {string} reason
+ */
+function playEndSound(reason) {
+  if (window.endSoundPlayed) return;
+  window.endSoundPlayed = true;
+  const isWin = reason === "win" || reason === "won_boss";
+  SFX.play?.(isWin ? "win" : "lost", { vol: 0.8 });
+}
+
+window.playEndSound = playEndSound;
 
 /**
  * Loads static game over images.
@@ -165,6 +185,8 @@ function restartGame() {
   startHudRAF();
   resetPauseBtn();
   checkOrientation?.();
+
+  window.endSoundPlayed = false;
 }
 
 /**

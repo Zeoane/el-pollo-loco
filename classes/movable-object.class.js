@@ -161,26 +161,35 @@ class MovableObject {
     }
   }
 
-  // Bodenschatten
-  drawGroundShadow(ctx, groundY, opts = {}) {
-    const {
-      alpha = 0.12,
-      yOffset = -2,
-      rxFactor = 0.45,
-      ryFactor = 0.1,
-      minRy = 4,
-    } = opts;
-    const cx = this.x + this.width / 2;
-    const rx = Math.max(6, this.width * rxFactor);
-    const ry = Math.max(minRy, this.height * ryFactor);
-    const cy = groundY + yOffset;
+/**
+ * Draws a soft ground shadow below the object.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} groundY
+ * @param {Object} opts
+ */
+drawGroundShadow(ctx, groundY, opts = {}) {
+  if (this.hasGroundShadow === false) return;
 
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = "#000";
-    ctx.beginPath();
-    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
+  const {
+    alpha = 0.12,
+    yOffset = -2,
+    rxFactor = 0.45,
+    ryFactor = 0.1,
+    minRy = 4,
+  } = opts;
+
+  const cx = this.x + this.width / 2;
+  const rx = Math.max(6, this.width * rxFactor);
+  const ry = Math.max(minRy, this.height * ryFactor);
+  const cy = groundY + yOffset;
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = "#000";
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
 }

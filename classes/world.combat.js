@@ -13,7 +13,7 @@ Object.assign(World.prototype, {
       this.projectiles.push(p);
       this.inventory.bottles--;
       this.throwLock = true;
-      SFX.play?.("throw", { vol: 0.8 });
+      SFX.play?.("bottle_throw", { vol: 0.8 });
     }
     if (!KB.F && !KB.G && !KB.THROW) this.throwLock = false;
   },
@@ -109,14 +109,15 @@ Object.assign(World.prototype, {
   },
 
 
-  triggerGameOver(reason = 'enemy') {
-    if (this.gameOver) return;
-    this.gameOver = true;
-    this.gameOverReason = reason;
-    this.gameOverAt = performance.now();
-    this.pause(true);          
-    SFX.stop?.('menu');
-  },
+triggerGameOver(reason = "enemy") {
+  if (this.gameOver) return;
+  this.gameOver = true;
+  this.gameOverReason = reason;
+  this.gameOverAt = performance.now();
+  this.pause(true);
+  SFX.stop?.("menu");
+  window.playEndSound?.(reason);
+},
 
 
   handleHeal(dtMs) {
@@ -146,7 +147,7 @@ Object.assign(World.prototype, {
     const gain = Math.round(max * ((this.healCfg.hpPct || 20) / 100));
     this.inventory.coins -= cost;
     this.character.hp = Math.min(max, hp + gain);
-    SFX.play?.("bottle_pick", { vol: 0.8 });
+    SFX.play?.("heal-chimes", { vol: 0.8 });
     this._healCdMs = this.healCfg.cdMs || 1000;
 
     if (window.DEBUG_HEAL)

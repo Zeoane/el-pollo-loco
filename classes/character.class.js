@@ -19,6 +19,7 @@ class Character extends MovableObject {
     this.onGround = false;
     this.facing = 1;
     this.idleElapsed = 0;
+    this.hasGroundShadow = false;
   }
 
   initImages() {
