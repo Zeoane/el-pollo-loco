@@ -17,11 +17,31 @@ function injectTemplates() {
   insertOnce("endScreen", window.endScreenTemplate());
 }
 
+function setupStartScreen() {
+  const scr = document.getElementById("startScreen");
+  const btn = document.getElementById("btnStartGame");
+  if (!scr || !btn) return;
+
+  startStartScreenLoop(); 
+
+  btn.addEventListener("click", () => startGame(scr));
+}
+
 /**
  * Opens the How-To modal.
  */
 function openHowTo() {
   document.getElementById("howtoModal")?.classList.remove("hidden");
+}
+
+/**
+ * Handles opening the How-To modal.
+ * @param {Event} e
+ */
+function handleHowToOpen(e) {
+  e.preventDefault();
+  window.startStartScreenLoop?.();
+  openHowTo();
 }
 
 /**
@@ -107,25 +127,15 @@ function bindHowToLanguage() {
 }
 
 /**
- * Sets up start screen interactions.
- */
-function setupStartScreen() {
-  const scr = document.getElementById("startScreen");
-  const btn = document.getElementById("btnStartGame");
-  if (!scr || !btn) return;
-
-  btn.addEventListener("click", () => startGame(scr));
-}
-
-/**
  * Starts the game and hides start screen.
  * @param {HTMLElement} scr
  */
 function startGame(scr) {
+  SFX.stop?.("start_screen");
   scr.classList.add("hidden");
-  SFX.stop?.("menu");
   window.world?.pause?.(false);
 }
+
 
 /**
  * Initializes the game.

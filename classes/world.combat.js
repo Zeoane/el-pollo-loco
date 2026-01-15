@@ -147,7 +147,7 @@ triggerGameOver(reason = "enemy") {
     const gain = Math.round(max * ((this.healCfg.hpPct || 20) / 100));
     this.inventory.coins -= cost;
     this.character.hp = Math.min(max, hp + gain);
-    SFX.play?.("heal-chimes", { vol: 0.8 });
+    SFX.play?.("heal_chimes", { vol: 0.8 });
     this._healCdMs = this.healCfg.cdMs || 1000;
 
     if (window.DEBUG_HEAL)

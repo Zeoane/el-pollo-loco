@@ -5,8 +5,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   applyDivBackground("img/5_background/desert-landscape.jpg");
   SFX.unlockOnGesture();
   await SFX.loadAll({
+    start_screen: "audio/sounds/start-screen.wav",
     coin: "audio/sounds/coin-ca-ching.mp3",
-    bottle_pick: "audio/sounds/bottle-pickup.wav", 
+    bottle_pick: "audio/sounds/bottle-pickup.wav",
     bottle_throw: "audio/sounds/bottle-throw.wav",
     bottle_hit: "audio/sounds/bottle-hit.wav",
     jump: "audio/sounds/jumpbounce.wav",
@@ -15,15 +16,51 @@ window.addEventListener("DOMContentLoaded", async () => {
     rooster: "audio/sounds/rooster1.wav",
     lost: "audio/sounds/sadwhisle.wav",
     win: "audio/sounds/groovy-winner.wav",
-    handleHeal: "audio/sounds/heal-chimes.wav"
+    heal_chimes: "audio/sounds/heal-chimes.wav",
   }).catch(() => {});
   initStaticImages();
+  armStartScreenSound();
   armMenuMusic();
   wireToolbar();
 });
 
-let endSoundPlayed = false;
+/**
+ * Starts the start-screen loop when the start screen is visible.
+ */
+function startStartScreenLoop() {
+  const scr = document.getElementById("startScreen");
+  if (!scr || scr.classList.contains("hidden")) return;
+  SFX.setMuted?.(false);
+  SFX.loop?.("start_screen", "start_screen", { vol: 0.25 });
+}
 
+window.startStartScreenLoop = startStartScreenLoop;
+
+let startSoundArmed = false;
+
+/**
+ * Arms the start-screen sound to start on first user interaction.
+ */
+function armStartScreenSound() {
+  if (startSoundArmed) return;
+  startSoundArmed = true;
+  addEventListener("pointerdown", onStartSoundGesture, true);
+  addEventListener("keydown", onStartSoundGesture, true);
+}
+
+/**
+ * Starts start-screen sound after a gesture not on the Start button.
+ * @param {Event} e
+ */
+async function onStartSoundGesture(e) {
+  if (e?.target?.closest?.("#btnStartGame")) return;
+  try { await SFX.ctx?.resume?.(); } catch {}
+  startStartScreenLoop();
+  removeEventListener("pointerdown", onStartSoundGesture, true);
+  removeEventListener("keydown", onStartSoundGesture, true);
+}
+
+let endSoundPlayed = false;
 window.endSoundPlayed = false;
 
 /**
@@ -43,7 +80,11 @@ window.playEndSound = playEndSound;
  * Loads static game over images.
  */
 function initStaticImages() {
-  const loadImg = (path) => { const i = new Image(); i.src = path; return i; };
+  const loadImg = (path) => {
+    const i = new Image();
+    i.src = path;
+    return i;
+  };
   window.IMG_GAME_OVER = loadImg("img/You won, you lost/Game Over.png");
   window.IMG_LOST_BOSS = loadImg("img/You won, you lost/You lost.png");
   window.IMG_WON_BOSS = loadImg("img/You won, you lost/You won A.png");
@@ -56,7 +97,13 @@ function armMenuMusic() {
   let armed = true;
   const tryStart = (e) => {
     const scr = document.getElementById("startScreen");
-    if (!armed || !scr || scr.classList.contains("hidden") || e.target.closest("#btnStartGame")) return;
+    if (
+      !armed ||
+      !scr ||
+      scr.classList.contains("hidden") ||
+      e.target.closest("#btnStartGame")
+    )
+      return;
     armed = false;
     SFX.loop("bg", "menu", { vol: 0.2 });
     window.removeEventListener("pointerdown", tryStart, true);
@@ -132,7 +179,9 @@ function wireToolbar() {
   setupVolumeControls();
   document.getElementById("btnMute")?.addEventListener("click", toggleMute);
   document.getElementById("btnPause")?.addEventListener("click", togglePauseUI);
-  document.getElementById("btnStop")?.addEventListener("click", () => window.world?.stop?.());
+  document
+    .getElementById("btnStop")
+    ?.addEventListener("click", () => window.world?.stop?.());
   document.getElementById("btnRestart")?.addEventListener("click", restartGame);
   addEventListener("keydown", handleToolbarKeys);
 }
@@ -150,7 +199,7 @@ function handleToolbarKeys(e) {
 function togglePauseUI() {
   const w = window.world;
   if (!w) return;
-  w.pause?.(); 
+  w.pause?.();
   updatePauseBtn();
 }
 
@@ -169,14 +218,13 @@ function updatePauseBtn() {
   btn.setAttribute("aria-pressed", paused ? "true" : "false");
 }
 
-
 /**
  * Logic for restarting the world.
  */
 function restartGame() {
   const hud = document.getElementById("hud");
   if (hud) hud.style.display = "flex";
-  SFX.stopAll?.(); 
+  SFX.stopAll?.();
   window.world?.dispose?.();
 
   const canvas = document.getElementById("canvas");
@@ -204,7 +252,8 @@ function toggleMute() {
 function updateMuteIcon() {
   const btn = document.getElementById("btnMute");
   const v = SFX.vol ?? 1;
-  let icon = SFX.muted || v <= 0 ? "🔇" : (v <= 0.33 ? "🔈" : (v <= 0.66 ? "🔉" : "🔊"));
+  let icon =
+    SFX.muted || v <= 0 ? "🔇" : v <= 0.33 ? "🔈" : v <= 0.66 ? "🔉" : "🔊";
   if (btn) btn.textContent = icon;
 }
 
@@ -227,6 +276,7 @@ function updateVolumeUI() {
   const val = Math.round((SFX.vol ?? 1) * 100);
   const slider = document.getElementById("volSlider");
   if (slider) slider.value = String(val);
-  if (document.getElementById("volPct")) document.getElementById("volPct").textContent = val + "%";
+  if (document.getElementById("volPct"))
+    document.getElementById("volPct").textContent = val + "%";
   updateMuteIcon();
 }
