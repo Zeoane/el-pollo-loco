@@ -9,22 +9,23 @@ function insertOnce(id, html) {
 }
 
 /**
- * Injects all UI templates into the DOM.
+ * Injects all UI templates into the DOM once.
  */
 function injectTemplates() {
+  if (!window.startScreenTemplate) return;
+  if (!window.howtoModalTemplate) return;
+  if (!window.endScreenTemplate) return;
+
   insertOnce("startScreen", window.startScreenTemplate());
   insertOnce("howtoModal", window.howtoModalTemplate());
   insertOnce("endScreen", window.endScreenTemplate());
 }
 
-function setupStartScreen() {
-  const scr = document.getElementById("startScreen");
-  const btn = document.getElementById("btnStartGame");
-  if (!scr || !btn) return;
-
-  startStartScreenLoop(); 
-
-  btn.addEventListener("click", () => startGame(scr));
+/**
+ * Starts the start screen animation loop if available.
+ */
+function startStartScreenIfAvailable() {
+  window.startStartScreenLoop?.();
 }
 
 /**
@@ -35,16 +36,6 @@ function openHowTo() {
 }
 
 /**
- * Handles opening the How-To modal.
- * @param {Event} e
- */
-function handleHowToOpen(e) {
-  e.preventDefault();
-  window.startStartScreenLoop?.();
-  openHowTo();
-}
-
-/**
  * Closes the How-To modal.
  */
 function closeHowTo() {
@@ -52,36 +43,11 @@ function closeHowTo() {
 }
 
 /**
- * Switches language inside the How-To modal.
- * @param {string} lang
+ * Closes the How-To modal when clicking the backdrop.
+ * @param {MouseEvent} e
  */
-function setHowToLang(lang) {
-  const de = lang === "de";
-  document.getElementById("howtoDECnt").hidden = !de;
-  document.getElementById("howtoENCnt").hidden = de;
-  document.getElementById("howtoDE")?.classList.toggle("active", de);
-  document.getElementById("howtoEN")?.classList.toggle("active", !de);
-}
-
-/**
- * Wires all How-To related event listeners.
- */
-function wireHowTo() {
-  bindHowToOpeners();
-  bindHowToClosers();
-  bindHowToLanguage();
-  setHowToLang("de");
-}
-
-/**
- * Binds buttons that open the How-To modal.
- */
-function bindHowToOpeners() {
-  document.getElementById("btnHowTo")
-    ?.addEventListener("click", handleHowToOpen);
-
-  document.getElementById("btnHowToFab")
-    ?.addEventListener("click", handleHowToOpen);
+function closeHowToOnBackdrop(e) {
+  if (e.target?.id === "howtoModal") closeHowTo();
 }
 
 /**
@@ -95,17 +61,35 @@ function handleHowToOpen(e) {
 }
 
 /**
- * Binds buttons that close the How-To modal.
+ * Switches language inside the How-To modal.
+ * @param {"de"|"en"} lang
  */
-let howToKeysBound = false;
-
-function bindHowToClosers() {
-  document.getElementById("howtoClose")?.addEventListener("click", closeHowTo);
-  document.getElementById("howtoClose2")?.addEventListener("click", closeHowTo);
-  if (howToKeysBound) return;
-  addEventListener("keydown", handleHowToEscape);
-  howToKeysBound = true;
+function setHowToLang(lang) {
+  const isDE = lang === "de";
+  document.getElementById("howtoDECnt").hidden = !isDE;
+  document.getElementById("howtoENCnt").hidden = isDE;
+  document.getElementById("howtoDE")?.classList.toggle("active", isDE);
+  document.getElementById("howtoEN")?.classList.toggle("active", !isDE);
 }
+
+/**
+ * Adds a click listener to an element if it exists.
+ * @param {string} id
+ * @param {Function} handler
+ */
+function onClick(id, handler) {
+  document.getElementById(id)?.addEventListener("click", handler);
+}
+
+/**
+ * Binds buttons that open the How-To modal.
+ */
+function bindHowToOpeners() {
+  onClick("btnHowTo", handleHowToOpen);
+  onClick("btnHowToFab", handleHowToOpen);
+}
+
+let howToKeysBound = false;
 
 /**
  * Closes modal on Escape key.
@@ -116,53 +100,75 @@ function handleHowToEscape(e) {
 }
 
 /**
- * Binds language switch buttons.
+ * Binds buttons that close the How-To modal and Escape listener once.
  */
-function bindHowToLanguage() {
-  document.getElementById("howtoDE")
-    ?.addEventListener("click", () => setHowToLang("de"));
+function bindHowToClosers() {
+  if (howToKeysBound) return;
 
-  document.getElementById("howtoEN")
-    ?.addEventListener("click", () => setHowToLang("en"));
+  onClick("howtoClose", closeHowTo);
+  onClick("howtoClose2", closeHowTo);
+  onClick("howtoModal", closeHowToOnBackdrop);
+
+  addEventListener("keydown", handleHowToEscape);
+  howToKeysBound = true;
+}
+
+function bindHowToLanguage() {
+  onClick("howtoDE", () => setHowToLang("de"));
+  onClick("howtoEN", () => setHowToLang("en"));
 }
 
 /**
- * Starts the game and hides start screen.
+ * Wires all How-To related event listeners.
+ */
+function wireHowTo() {
+  bindHowToOpeners();
+  bindHowToClosers();
+  bindHowToLanguage();
+  setHowToLang("de");
+}
+
+/**
+ * Starts the game and hides the start screen.
  * @param {HTMLElement} scr
  */
 function startGame(scr) {
   SFX.stop?.("start_screen");
+  window.resetStartScreenLoopFlag?.();
+
   scr.classList.add("hidden");
   window.world?.pause?.(false);
 }
 
-
 /**
- * Initializes the game.
+ * Wires the start screen once it exists in the DOM.
  */
-window.init = function () {
-  injectTemplates();
-  const canvas = document.getElementById("canvas");
-  window.world = new World(canvas, window.keyboard, createLevel1());
-  window.world.pause?.(true);
-  startHudRAF();
-  setupStartScreen();
-  wireHowTo();
-};
+function setupStartScreen() {
+  const scr = document.getElementById("startScreen");
+  const btn = document.getElementById("btnStartGame");
+  if (!scr || !btn) return;
+  startStartScreenIfAvailable();
+  btn.addEventListener("click", () => startGame(scr));
+}
 
 /**
- * Applies a background image to the BG div.
- * @param {string} url - Image path.
+ * Applies a background image to the #bg element after it is ready.
+ * @param {string} url
  */
 function applyDivBackground(url) {
   const bg = document.getElementById("bg");
   if (!bg) return;
+
   const img = new Image();
   img.src = url;
+
   const apply = () => {
     bg.style.backgroundImage = `url("${url}")`;
     bg.style.backgroundSize = "cover";
     bg.style.backgroundPosition = "center";
   };
-img.decode ? img.decode().then(apply).catch(apply) : (img.onload = apply);
+
+  img.decode ? img.decode().then(apply).catch(apply) : (img.onload = apply);
 }
+
+window.applyDivBackground = applyDivBackground;

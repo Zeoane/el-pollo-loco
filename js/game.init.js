@@ -1,58 +1,102 @@
 /**
- * Global Keyboard state object.
- * @type {Object}
+ * Creates the initial keyboard state for the game.
+ * @returns {{LEFT:boolean,RIGHT:boolean,UP:boolean,DOWN:boolean,SPACE:boolean,F:boolean,G:boolean,HEAL:boolean}}
  */
-const KB = window.GameKeyboard ? new GameKeyboard() : {};
-window.keyboard = KB;
+function createKeyboardState() {
+  return {
+    LEFT: false,
+    RIGHT: false,
+    UP: false,
+    DOWN: false,
+    SPACE: false,
+    F: false,
+    G: false,
+    HEAL: false,
+  };
+}
 
 /**
- * Checks if a key code belongs to the game controls.
- * @param {string} code - The keyboard event code.
+ * Returns true if the given KeyboardEvent.code is used by the game.
+ * @param {string} code
  * @returns {boolean}
  */
-const isGameKey = (code) => ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Space", "KeyF", "KeyG", "KeyH"].includes(code);
+function isGameKey(code) {
+  return [
+    "ArrowLeft",
+    "ArrowRight",
+    "ArrowUp",
+    "ArrowDown",
+    "Space",
+    "KeyF",
+    "KeyG",
+    "KeyH",
+  ].includes(code);
+}
 
 /**
- * Maps key codes to internal KB state.
- * @param {string} code - Keyboard code.
- * @param {boolean} val - True for down, false for up.
+ * Updates the keyboard state based on a key code.
+ * @param {object} kb
+ * @param {string} code
+ * @param {boolean} isDown
  */
-const updateKB = (code, val) => {
-  if (code === "ArrowLeft") KB.LEFT = val;
-  if (code === "ArrowRight") KB.RIGHT = val;
-  if (code === "ArrowUp") KB.UP = val;
-  if (code === "ArrowDown") KB.DOWN = val;
-  if (code === "Space") KB.SPACE = val;
-  if (code === "KeyF") KB.F = val;
-  if (code === "KeyG") KB.G = val;
-  if (code === "KeyH") KB.HEAL = val;
-};
+function updateKeyboardState(kb, code, isDown) {
+  const map = {
+    ArrowLeft: "LEFT",
+    ArrowRight: "RIGHT",
+    ArrowUp: "UP",
+    ArrowDown: "DOWN",
+    Space: "SPACE",
+    KeyF: "F",
+    KeyG: "G",
+    KeyH: "HEAL",
+  };
+  const key = map[code];
+  if (key) kb[key] = isDown;
+}
 
 /**
- * Global key event handler.
+ * Handles keydown/keyup for game controls only.
+ * @param {KeyboardEvent} e
+ * @param {object} kb
+ * @param {boolean} isDown
  */
-const handleKeyEvent = (e, isDown) => {
+function handleKeyEvent(e, kb, isDown) {
   if (!isGameKey(e.code)) return;
   e.preventDefault();
   e.stopPropagation();
-  updateKB(e.code, isDown);
-};
-
-addEventListener("keydown", (e) => handleKeyEvent(e, true), true);
-addEventListener("keyup", (e) => handleKeyEvent(e, false), true);
+  updateKeyboardState(kb, e.code, isDown);
+}
 
 /**
- * Initializes the core game instance.
+ * Binds keyboard listeners once.
+ * @param {object} kb
  */
-window.init = function () {
-  try {
-    const canvas = document.getElementById("canvas");
-    window.world = new World(canvas, keyboard, createLevel1());
-    world.pause?.(true);
-    startHudRAF();
-    setupStartScreen();
-    wireHowTo();
-  } catch (e) {}
+function bindKeyboard(kb) {
+  addEventListener("keydown", (e) => handleKeyEvent(e, kb, true), true);
+  addEventListener("keyup", (e) => handleKeyEvent(e, kb, false), true);
+}
+
+/**
+ * Creates the world instance.
+ * @returns {World}
+ */
+function createWorld() {
+  const canvas = document.getElementById("canvas");
+  return new World(canvas, window.keyboard, createLevel1());
+}
+
+/**
+ * Initializes the game (entry point called from HTML or load event).
+ */
+window.init = function init() {
+  window.keyboard = window.keyboard ?? createKeyboardState();
+  bindKeyboard(window.keyboard);
+
+  window.world = createWorld();
+  window.world.pause?.(true);
+
+  injectTemplates?.();
+  startHudRAF?.();
+  setupStartScreen?.();
+  wireHowTo?.();
 };
-
-

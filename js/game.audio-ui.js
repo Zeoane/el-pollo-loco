@@ -4,25 +4,27 @@
 window.addEventListener("DOMContentLoaded", async () => {
   applyDivBackground("img/5_background/desert-landscape.jpg");
   SFX.unlockOnGesture();
-  await SFX.loadAll({
-    start_screen: "audio/sounds/start-screen.wav",
-    coin: "audio/sounds/coin-ca-ching.mp3",
-    bottle_pick: "audio/sounds/bottle-pickup.wav",
-    bottle_throw: "audio/sounds/bottle-throw.wav",
-    bottle_hit: "audio/sounds/bottle-hit.wav",
-    jump: "audio/sounds/jumpbounce.wav",
-    hit: "audio/sounds/punch.wav",
-    chicken: "audio/sounds/chickens.wav",
-    rooster: "audio/sounds/rooster1.wav",
-    lost: "audio/sounds/sadwhisle.wav",
-    win: "audio/sounds/groovy-winner.wav",
-    heal_chimes: "audio/sounds/heal-chimes.wav",
-  }).catch(() => {});
+await SFX.loadAll({
+  start_screen: "audio/sounds/start-screen.wav",
+  coin: "audio/sounds/coin-ca-ching.mp3",
+  bottle_pick: "audio/sounds/bottle-pickup.wav",
+  bottle_throw: "audio/sounds/bottle-throw.wav",
+  bottle_hit: "audio/sounds/bottle-hit.wav",
+  jump: "audio/sounds/jumpbounce.wav",
+  hit: "audio/sounds/punch.wav",
+  chicken: "audio/sounds/chickens.wav",
+  rooster: "audio/sounds/rooster1.wav",
+  lost: "audio/sounds/sadwhisle.wav",
+  win: "audio/sounds/groovy-winner.wav",
+  heal_chimes: "audio/sounds/heal-chimes.wav",
+}).catch(handleAudioLoadError);
   initStaticImages();
   armStartScreenSound();
   armMenuMusic();
   wireToolbar();
 });
+
+let startScreenLoopRunning = false;
 
 /**
  * Starts the start-screen loop when the start screen is visible.
@@ -30,11 +32,11 @@ window.addEventListener("DOMContentLoaded", async () => {
 function startStartScreenLoop() {
   const scr = document.getElementById("startScreen");
   if (!scr || scr.classList.contains("hidden")) return;
-  SFX.setMuted?.(false);
+  if (startScreenLoopRunning) return;
+
+  startScreenLoopRunning = true;
   SFX.loop?.("start_screen", "start_screen", { vol: 0.25 });
 }
-
-window.startStartScreenLoop = startStartScreenLoop;
 
 let startSoundArmed = false;
 
@@ -60,8 +62,10 @@ async function onStartSoundGesture(e) {
   removeEventListener("keydown", onStartSoundGesture, true);
 }
 
-let endSoundPlayed = false;
 window.endSoundPlayed = false;
+
+const END_REASON_WIN = "win";
+const END_REASON_WON_BOSS = "won_boss";
 
 /**
  * Plays end sound once based on reason.
@@ -70,11 +74,9 @@ window.endSoundPlayed = false;
 function playEndSound(reason) {
   if (window.endSoundPlayed) return;
   window.endSoundPlayed = true;
-  const isWin = reason === "win" || reason === "won_boss";
+  const isWin = reason === END_REASON_WIN || reason === END_REASON_WON_BOSS;
   SFX.play?.(isWin ? "win" : "lost", { vol: 0.8 });
 }
-
-window.playEndSound = playEndSound;
 
 /**
  * Loads static game over images.
@@ -91,24 +93,37 @@ function initStaticImages() {
 }
 
 /**
+ * Checks whether menu music may start.
+ * @param {Event} e
+ * @param {HTMLElement|null} scr
+ * @param {boolean} armed
+ * @returns {boolean}
+ */
+function canStartMenuMusic(e, scr, armed) {
+  return (
+    armed &&
+    scr &&
+    !scr.classList.contains("hidden") &&
+    !e.target.closest("#btnStartGame")
+  );
+}
+
+/**
  * Arms music to start on first interaction.
  */
 function armMenuMusic() {
   let armed = true;
+
   const tryStart = (e) => {
     const scr = document.getElementById("startScreen");
-    if (
-      !armed ||
-      !scr ||
-      scr.classList.contains("hidden") ||
-      e.target.closest("#btnStartGame")
-    )
-      return;
+    if (!canStartMenuMusic(e, scr, armed)) return;
+
     armed = false;
     SFX.loop("bg", "menu", { vol: 0.2 });
     window.removeEventListener("pointerdown", tryStart, true);
     window.removeEventListener("keydown", tryStart, true);
   };
+
   window.addEventListener("pointerdown", tryStart, true);
   window.addEventListener("keydown", tryStart, true);
 }
@@ -136,6 +151,15 @@ function setupVolumeControls() {
 }
 
 /**
+ * Handles audio loading errors gracefully without console output.
+ */
+function handleAudioLoadError() {
+  SFX.setMuted?.(true);
+  localStorage.setItem("audio.muted", "1");
+  updateMuteIcon?.();
+}
+
+/**
  * Handles slider input.
  * @param {Event} e
  */
@@ -145,14 +169,16 @@ function onVolumeInput(e) {
 }
 
 /**
- * Handles mouse wheel on slider.
+ * Handles mouse wheel on volume slider only.
  * @param {WheelEvent} e
  */
 function onVolumeWheel(e) {
-  e.preventDefault();
-  const slider = document.getElementById("volSlider");
+  const slider = e.target === document.getElementById("volSlider")
+    ? e.target
+    : null;
   if (!slider) return;
 
+  e.preventDefault();
   const cur = parseInt(slider.value, 10) || 0;
   const step = e.deltaY > 0 ? -2 : 2;
   applyVolume(cur + step);
@@ -172,6 +198,8 @@ function clampInt(raw, fallback, min, max) {
   return Math.max(min, Math.min(max, v));
 }
 
+let toolbarKeysBound = false;
+
 /**
  * Wires Toolbar buttons and volume slider.
  */
@@ -183,17 +211,34 @@ function wireToolbar() {
     .getElementById("btnStop")
     ?.addEventListener("click", () => window.world?.stop?.());
   document.getElementById("btnRestart")?.addEventListener("click", restartGame);
+  if (!toolbarKeysBound) {
   addEventListener("keydown", handleToolbarKeys);
+  toolbarKeysBound = true;
+}
 }
 
 /**
  * Handles toolbar keyboard shortcuts.
+ * @param {KeyboardEvent} e
  */
 function handleToolbarKeys(e) {
+  if (isUiBlockingInput()) return;
+
   if (e.code === "KeyM") toggleMute();
   if (e.code === "KeyP") window.world?.pause?.();
   if (e.code === "Escape") window.world?.stop?.();
   if (e.code === "KeyR") document.getElementById("btnRestart")?.click();
+}
+
+/**
+ * Returns true if UI overlays should block game shortcuts.
+ * @returns {boolean}
+ */
+function isUiBlockingInput() {
+  return (
+    document.getElementById("howtoModal")?.classList.contains("hidden") === false ||
+    document.getElementById("startScreen")?.classList.contains("hidden") === false
+  );
 }
 
 function togglePauseUI() {
@@ -219,22 +264,55 @@ function updatePauseBtn() {
 }
 
 /**
- * Logic for restarting the world.
+ * Restarts the game world without reloading the page.
  */
 function restartGame() {
+  showHud();
+  stopAllAudio();
+  window.resetStartScreenLoopFlag?.();
+  disposeWorld();
+  recreateWorld();
+  rearmHudAndUi();
+  window.endSoundPlayed = false;
+}
+
+/**
+ * Ensures the HUD is visible.
+ */
+function showHud() {
   const hud = document.getElementById("hud");
   if (hud) hud.style.display = "flex";
-  SFX.stopAll?.();
-  window.world?.dispose?.();
+}
 
+/**
+ * Stops all currently playing sounds.
+ */
+function stopAllAudio() {
+  SFX.stopAll?.();
+}
+
+/**
+ * Disposes the current world instance if present.
+ */
+function disposeWorld() {
+  window.world?.dispose?.();
+}
+
+/**
+ * Creates a fresh world instance and stores it globally.
+ */
+function recreateWorld() {
   const canvas = document.getElementById("canvas");
   window.world = new World(canvas, window.keyboard, createLevel1());
+}
 
+/**
+ * Restarts HUD updates and resets UI state after restart.
+ */
+function rearmHudAndUi() {
   startHudRAF();
   resetPauseBtn();
   checkOrientation?.();
-
-  window.endSoundPlayed = false;
 }
 
 /**
@@ -242,9 +320,11 @@ function restartGame() {
  */
 function toggleMute() {
   SFX.toggleMute?.();
+  if (SFX.muted) SFX.stopAll?.();  
   localStorage.setItem("audio.muted", SFX.muted ? "1" : "0");
   updateMuteIcon();
 }
+
 
 /**
  * Helper to update the mute button icon.
@@ -275,8 +355,18 @@ function applyVolume(val) {
 function updateVolumeUI() {
   const val = Math.round((SFX.vol ?? 1) * 100);
   const slider = document.getElementById("volSlider");
+  const pct = document.getElementById("volPct");
+
   if (slider) slider.value = String(val);
-  if (document.getElementById("volPct"))
-    document.getElementById("volPct").textContent = val + "%";
+  if (pct) pct.textContent = `${val}%`;
+
   updateMuteIcon();
 }
+
+
+/**
+ * Public functions used across scripts.
+ */
+window.startStartScreenLoop = startStartScreenLoop;
+window.playEndSound = playEndSound;
+window.resetStartScreenLoopFlag = () => (startScreenLoopRunning = false);
