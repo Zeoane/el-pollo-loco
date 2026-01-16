@@ -1,43 +1,78 @@
 // classes/world.items.js
-/**
- * Updates all collectible items each frame.
- * @param {number} dtMs - Delta time in milliseconds
- */
 Object.assign(World.prototype, {
-  tickCollectibles(dtMs){
+  /**
+   * Updates all collectible items each frame.
+   * @param {number} dtMs - Delta time in milliseconds
+   */
+  tickCollectibles(dtMs) {
     this.coins.forEach(c => c.update?.(dtMs));
     this.bottles.forEach(b => b.update?.(dtMs));
   },
 
   /**
- * Checks collisions between the character and collectible items.
- * Increases inventory and removes collected items.
- */
-  checkPickups(){
+   * Checks collisions between the character and collectible items.
+   * Updates inventory and removes collected items.
+   */
+  checkPickups() {
     const cbb = this.character.getBounds?.() || this.character;
+    this.collectCoins(cbb);
+    this.collectBottles(cbb);
+  },
 
+  /**
+   * Collects coins that collide with the character bounds.
+   * @param {Object} cbb - Character bounds
+   */
+  collectCoins(cbb) {
     this.coins = this.coins.filter(c => {
       const hit = AABB(cbb, c.getBounds?.() || c);
-      if (hit){ this.inventory.coins++; SFX.play?.('coin',{vol:.6}); return false; }
-      return true;
-    });
-
-    this.bottles = this.bottles.filter(b => {
-      const hit = AABB(cbb, b.getBounds?.() || b);
-      if (hit){ this.inventory.bottles++; SFX.play?.('bottle_pick',{vol:.6}); return false; }
-      return true;
+      if (!hit) return true;
+      this.inventory.coins++;
+      SFX.play?.("coin", { vol: 0.6 });
+      return false;
     });
   },
 
   /**
- * Spawns initial collectible items based on level configuration.
- */
-  spawnPickups(){
-    const it = this.cfg.items || {};
-    for (let i=0;i<(it.coins||0);i++) this.coins.push(Coin.rand(this));
-    const clusters = it.bottleClusters ?? Math.ceil((it.bottles || 12)/2);
-    this.spawnBottleClusters(clusters);
+   * Collects bottles that collide with the character bounds.
+   * @param {Object} cbb - Character bounds
+   */
+  collectBottles(cbb) {
+    this.bottles = this.bottles.filter(b => {
+      const hit = AABB(cbb, b.getBounds?.() || b);
+      if (!hit) return true;
+      this.inventory.bottles++;
+      SFX.play?.("bottle_pick", { vol: 0.6 });
+      return false;
+    });
   },
+
+/**
+ * Spawns initial collectibles based on level configuration.
+ */
+spawnPickups() {
+  const it = this.cfg.items || {};
+  this.spawnRandomCoins(it.coins || 0);
+  this.spawnBottleClusters(this.getBottleClusterCount(it));
+},
+
+/**
+ * Spawns a number of randomly placed coins.
+ * @param {number} count
+ */
+spawnRandomCoins(count) {
+  for (let i = 0; i < count; i++) this.coins.push(Coin.rand(this));
+},
+
+/**
+ * Returns how many bottle clusters should be spawned from item config.
+ * @param {Object} it - Item configuration
+ * @returns {number}
+ */
+getBottleClusterCount(it) {
+  const bottles = it.bottles || 12;
+  return it.bottleClusters ?? Math.ceil(bottles / 2);
+},
 
   /**
  * Ensures a minimum number of bottles are spawned ahead of the camera.
@@ -50,20 +85,38 @@ Object.assign(World.prototype, {
     if (count < minAhead) this.spawnBottleCluster(to - 200 + Math.random()*300);
   },
 
-  /**
+/**
  * Spawns a small cluster of bottles at a given x position.
  * @param {number} baseX - Base x-coordinate for the cluster
  */
-  spawnBottleCluster(baseX){
-    const cnt = 1 + Math.floor(Math.random()*3);
-    const dx  = 26 + Math.floor(Math.random()*12);
-    const firstX = baseX + (Math.random()*80 - 40);
-    for (let i=0;i<cnt;i++){
-      const v = Math.random()<0.5 ? 1 : 2;
-      const b = new Bottle(firstX + i*dx, this.groundY - 60, v);
-      this.bottles.push(b);
-    }
-  },
+spawnBottleCluster(baseX) {
+  const cfg = this.getBottleClusterSpec(baseX);
+  for (let i = 0; i < cfg.cnt; i++) this.spawnOneBottle(cfg, i);
+},
+
+/**
+ * Builds the randomized bottle cluster specification.
+ * @param {number} baseX
+ * @returns {{cnt:number, dx:number, firstX:number}}
+ */
+getBottleClusterSpec(baseX) {
+  return {
+    cnt: 1 + Math.floor(Math.random() * 3),
+    dx: 26 + Math.floor(Math.random() * 12),
+    firstX: baseX + (Math.random() * 80 - 40),
+  };
+},
+
+/**
+ * Spawns a single bottle within a cluster spec.
+ * @param {{dx:number, firstX:number}} cfg
+ * @param {number} i
+ */
+spawnOneBottle(cfg, i) {
+  const v = Math.random() < 0.5 ? 1 : 2;
+  const b = new Bottle(cfg.firstX + i * cfg.dx, this.groundY - 60, v);
+  this.bottles.push(b);
+},
 
   /**
  * Spawns multiple bottle clusters distributed across the level.

@@ -3,29 +3,53 @@ class World {
   canvas;
   ctx;
   character;
+
   opponents = [];
   backgroundObjects = [];
   clouds = [];
+
   tSinceStartMs = 0;
-  phase = 0;
+  elapsedMs = 0;
+
+  phase = "small";
+  phase2AtMs = 90_000;
+  bossAtMs = 180_000;
+  bossSpawned = false;
+
   cameraX = 0;
   gravity = 0.6;
   groundY = 432;
+
   lastTime = performance.now();
   keyboard = null;
+
   jumpLock = false;
   distanceX = 0;
-  bossSpawned = false;
+
   coins = [];
   bottles = [];
   projectiles = [];
+
   throwState = { charging: false, holdMs: 0, maxMs: 800 };
   inventory = { coins: 0, bottles: 0 };
+
   cfg = {};
+  healCfg = { coinCost: 3, hpPct: 20, cdMs: 1000 };
+  _healLock = false;
+  _healCdMs = 0;
+
   paused = false;
   stopped = false;
   _raf = 0;
-  elapsedMs = 0;
+
+  imgGameOver = null;
+  gameOver = false;
+  gameOverReason = "";
+  gameOverAt = 0;
+
+  audio = null;
+  hud = null;
+  _hudMissing = false;
 
   constructor(canvas, keyboard, level) {
     this.canvas = canvas;
@@ -44,38 +68,29 @@ class World {
         opponents: [],
         clouds: [],
       };
-    this.backgroundObjects = L.backgroundObjects;
-    this.imgGameOver = window.IMG_GAME_OVER || null;
-    this.gameOver = false;
-    this.gameOverReason = "";
-    this.gameOverAt = 0;
 
+    this.backgroundObjects = L.backgroundObjects || [];
+    this.opponents = L.opponents || [];
+    this.clouds = L.clouds || [];
+
+    this.imgGameOver = window.IMG_GAME_OVER || null;
+
+    // ensure non-cloud layers do not auto-flow (no console output)
     this.backgroundObjects.forEach((b) => {
       const isCloud = b && b.constructor && b.constructor.name === "CloudLayer";
-      if (!isCloud && (b.flowSpeed || 0) !== 0) {
-        console.warn(
-          "[BG] Forcing flow=0 on non-cloud layer",
-          b.constructor?.name,
-          b.flowSpeed
-        );
+      if (!isCloud && (b?.flowSpeed || 0) !== 0) {
         b.flowSpeed = 0;
         b._flow = 0;
+        b._forcedFlowZero = true;
       }
     });
 
-    this.opponents = L.opponents;
-    this.clouds = L.clouds;
-
     this.initOpponents();
-    this.spawnSmallChickens();
-    this.spawnPickups();
+    this.spawnSmallChickens?.();
+    this.spawnPickups?.();
 
-if (typeof HUD !== 'undefined') {
-    this.hud = new HUD();
-} else {
-    console.error("HUD-Klasse wurde nicht gefunden.");
-}
-
+    if (typeof HUD !== "undefined") this.hud = new HUD();
+    else this._hudMissing = true;
 
     this.phase = "small";
     this.phase2AtMs = this.cfg.phase2AtMs ?? 90_000;
@@ -86,6 +101,7 @@ if (typeof HUD !== 'undefined') {
     this.healCfg = { coinCost: 3, hpPct: 20, cdMs: 1000 };
     this._healLock = false;
     this._healCdMs = 0;
+
     this.audio = {
       chickenInt: 30000,
       roosterInt: 30000,
@@ -93,111 +109,216 @@ if (typeof HUD !== 'undefined') {
       nextRooster: 0,
       roosterLeft: 2,
     };
+
     this.animate();
   }
 
+  /**
+   * Initializes existing opponents by placing them on the ground.
+   */
   initOpponents() {
     this.opponents.forEach((o) =>
       o.setGround?.(this.groundY).placeOnGround?.()
     );
   }
 
+  /**
+   * Animation loop driven by requestAnimationFrame.
+   * @param {number} now
+   */
   animate = (now = performance.now()) => {
     const dtMs = Math.min(50, now - this.lastTime);
     this.lastTime = now;
-    if (!this.stopped) {
-      if (!this.paused) this.update(dtMs);
-      this.draw();
-      this._raf = requestAnimationFrame(this.animate);
-    }
+
+    if (this.stopped) return;
+    if (!this.paused) this.update(dtMs);
+
+    this.draw();
+    this._raf = requestAnimationFrame(this.animate);
   };
 
+  /**
+   * Toggles pause or sets pause explicitly.
+   * @param {boolean=} v
+   */
   pause(v) {
     this.paused = v === undefined ? !this.paused : !!v;
   }
+
+  /**
+   * Stops the animation loop.
+   */
   stop() {
     this.stopped = true;
-    if (this._raf) {
-      cancelAnimationFrame(this._raf);
-      this._raf = 0;
-    }
+    if (!this._raf) return;
+    cancelAnimationFrame(this._raf);
+    this._raf = 0;
   }
+
+  /**
+   * Resumes gameplay if not stopped.
+   */
   resume() {
     if (!this.stopped) this.paused = false;
   }
+
+  /**
+   * Disposes world resources (currently stops the loop).
+   */
   dispose() {
     this.stop();
-  }
-
-  update(dtMs) {
-    this.elapsedMs += dtMs;
-    this.tSinceStartMs += dtMs;
-    this.managePhases();
-    this.tickAmbientAudio?.(dtMs);
-    this.handleInput?.(dtMs);
-    this.character.prevY = this.character.y;
-
-    this.applyPhysics(dtMs);
-    this.handleGround();
-    this.checkCharEnemyCollisions(dtMs);
-
-    this.tickCollectibles(dtMs);
-    const moving = !!(this.keyboard?.LEFT || this.keyboard?.RIGHT);
-    this.character.updateAnimation(dtMs, moving);
-    if (this.character.hp <= 0) {
-      this.character.updateAnimation(dtMs, false);
-    }
-
-    if (this.paused) return;
-    this.updateCamera();
-    this.updateClouds();
-    this.updateBackgrounds(dtMs, moving);
-    this.updateOpponents(dtMs);
-
-    this.distanceX = Math.max(this.distanceX, this.character.x);
-
-    this.handleThrow();
-    this.updateThrow(dtMs);
-    this.handleHeal(dtMs);
-    this.updateProjectiles(dtMs);
-    this.checkPickups();
-    this.maintainBottlesAhead(6);
-    this.maintainCoinsAhead(6);
-    this.maintainEnemies();
   }
 }
 
 Object.assign(World.prototype, {
+  /**
+   * Advances the game simulation by one frame.
+   * @param {number} dtMs - Delta time in milliseconds
+   */
+  update(dtMs) {
+    this.advanceTimers(dtMs);
+    this.updatePrePhysics(dtMs);
+    this.updatePhysicsAndCollisions(dtMs);
+    if (this.paused) return;
+    this.updateWorldSimulation(dtMs);
+    this.updateGameplaySystems(dtMs);
+  },
+
+  /**
+   * Updates global timers and phase logic.
+   * @param {number} dtMs
+   */
+  advanceTimers(dtMs) {
+    this.elapsedMs += dtMs;
+    this.tSinceStartMs += dtMs;
+    this.managePhases?.();
+  },
+
+  /**
+   * Handles input, ambient audio, and animation prep before physics.
+   * @param {number} dtMs
+   */
+  updatePrePhysics(dtMs) {
+    this.tickAmbientAudio?.(dtMs);
+    this.handleInput?.(dtMs);
+    if (this.character) this.character.prevY = this.character.y;
+  },
+
+  /**
+   * Applies physics and resolves character/enemy collisions.
+   * @param {number} dtMs
+   */
+  updatePhysicsAndCollisions(dtMs) {
+    this.applyPhysics?.(dtMs);
+    this.handleGround?.();
+    this.checkCharEnemyCollisions?.(dtMs);
+
+    const moving = !!(this.keyboard?.LEFT || this.keyboard?.RIGHT);
+    this.character?.updateAnimation?.(dtMs, moving);
+    if ((this.character?.hp ?? 1) <= 0)
+      this.character?.updateAnimation?.(dtMs, false);
+  },
+
+  /**
+   * Updates camera, backgrounds, clouds, and opponents.
+   * @param {number} dtMs
+   */
+  updateWorldSimulation(dtMs) {
+    const moving = !!(this.keyboard?.LEFT || this.keyboard?.RIGHT);
+    this.updateCamera?.();
+    this.updateClouds?.();
+    this.updateBackgrounds?.(dtMs, moving);
+    this.updateOpponents?.(dtMs);
+    this.distanceX = Math.max(this.distanceX, this.character?.x || 0);
+  },
+
+  /**
+   * Updates combat, pickups, spawners, and maintenance systems.
+   * @param {number} dtMs
+   */
+  updateGameplaySystems(dtMs) {
+    this.tickCollectibles?.(dtMs);
+    this.updateThrow?.(dtMs);
+    this.handleHeal?.(dtMs);
+    this.updateProjectiles?.(dtMs);
+    this.checkPickups?.();
+
+    this.maintainBottlesAhead?.(6);
+    this.maintainCoinsAhead?.(6);
+    this.maintainEnemies?.();
+  },
+
+  /**
+   * Renders the current world state to the canvas.
+   */
   draw() {
     const { ctx, canvas } = this;
+    this.resetCanvasState(ctx, canvas);
+    this.drawWorldLayer(ctx);
+    this.drawEntitiesLayer(ctx);
+    this.drawHudLayer(ctx);
+  },
+
+  /**
+   * Resets canvas state to a known default before drawing.
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {HTMLCanvasElement} canvas
+   */
+  resetCanvasState(ctx, canvas) {
     ctx.setTransform?.(1, 0, 0, 1, 0, 0);
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = "source-over";
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+  },
 
+  /**
+   * Draws background layers.
+   * @param {CanvasRenderingContext2D} ctx
+   */
+  drawWorldLayer(ctx) {
     this.backgroundObjects.forEach((bo) => bo.draw(ctx, this.cameraX));
+  },
 
+  /**
+   * Draws all entities affected by camera translation.
+   * @param {CanvasRenderingContext2D} ctx
+   */
+  drawEntitiesLayer(ctx) {
     ctx.save();
     ctx.translate(-this.cameraX, 0);
-    this.coins.forEach((c) => this.addToMap(c));
-    this.bottles.forEach((b) => this.addToMap(b));
-    this.addToMap(this.character);
-    this.opponents.forEach((o) => this.addToMap(o));
-    this.projectiles.forEach((p) => this.addToMap(p));
+    this.coins.forEach((c) => this.addToMap?.(c));
+    this.bottles.forEach((b) => this.addToMap?.(b));
+    this.addToMap?.(this.character);
+    this.opponents.forEach((o) => this.addToMap?.(o));
+    this.projectiles.forEach((p) => this.addToMap?.(p));
     ctx.restore();
 
     this.clouds.forEach((c) => c.draw?.(ctx, this.cameraX));
-    this.hud?.draw(ctx, this);
   },
-});
 
-Object.assign(World.prototype, {
+  /**
+   * Draws HUD overlays.
+   * @param {CanvasRenderingContext2D} ctx
+   */
+  drawHudLayer(ctx) {
+    this.hud?.draw?.(ctx, this);
+  },
+
+  /**
+   * Ensures a minimum number of coins exist ahead of the camera by spawning new rows.
+   * @param {number} minAhead - Minimum number of coins within the ahead window
+   */
   maintainCoinsAhead(minAhead = 6) {
     const from = this.cameraX + this.canvas.width * 0.6;
     const to = from + 1000;
     const n = this.coins.filter((c) => c.x >= from && c.x <= to).length;
     if (n < minAhead) this.spawnCoinRow(to - 200 + Math.random() * 300);
   },
+
+  /**
+   * Spawns a small horizontal row of coins around a base x-position.
+   * @param {number} baseX - Base x-coordinate for the coin row
+   */
   spawnCoinRow(baseX) {
     const cnt = 3 + Math.floor(Math.random() * 4);
     const dx = 34;
