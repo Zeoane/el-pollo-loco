@@ -49,11 +49,9 @@ body {
   place-items: center;
   justify-content: center;
   align-items: center;
-
   background: rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(3px) brightness(1.15);
   -webkit-backdrop-filter: blur(3px) brightness(1.15);
-
   pointer-events: auto;
 }
 
@@ -116,7 +114,7 @@ h1 {
   transition: background-color 0.3s ease;
 }
 
-.btnprimary,
+.btnprimary:hover,
 .btn:hover {
   background-color: #e6a944;
 }
@@ -180,7 +178,7 @@ h1 {
 }
 
 .hud-fab,
-#bg .htp-fab {
+.htp-fab {
   width: clamp(44px, 10vw, 56px);
   height: clamp(44px, 10vw, 56px);
   background: rgba(0, 0, 0, 0.5);
@@ -200,7 +198,7 @@ h1 {
 }
 
 .hud-fab:hover,
-#bg .htp-fab:hover {
+.htp-fab:hover {
   background: rgba(255, 255, 255, 0.15);
   transform: translateY(-3px);
   border-color: rgba(255, 255, 255, 0.4);
@@ -245,24 +243,6 @@ h1 {
   text-shadow: 1px 1px 2px #000;
   width: 30px;
   text-align: center;
-}
-
-.rotate-device-overlay {
-  position: fixed;
-  inset: 0;
-  background: #000;
-  color: white;
-  z-index: 9999;
-  display: none;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  text-align: center;
-}
-
-.rotate-icon {
-  font-size: 80px;
-  animation: rotateAnim 2s infinite ease-in-out;
 }
 
 @keyframes rotateAnim {
@@ -325,7 +305,21 @@ h1 {
 }
 
 .rotate-device-overlay {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  color: white;
+  z-index: 9999;
   display: none;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  text-align: center;
+}
+
+.rotate-icon {
+  font-size: 80px;
+  animation: rotateAnim 2s infinite ease-in-out;
 }
 
 .rotate-device-overlay.show {
