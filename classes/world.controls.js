@@ -2,7 +2,7 @@
 Object.assign(World.prototype, {
   /**
    * Handles player input and applies movement/jump to the character.
-   * @param {number} dtMs - Delta time in milliseconds.
+   * @param {number} dtMs 
    */
   handleInput(dtMs) {
     const c = this.character;
@@ -14,7 +14,7 @@ Object.assign(World.prototype, {
 
   /**
    * Applies left/right movement input.
-   * @param {Object} c - Character instance
+   * @param {Object} c 
    * @param {number} dtMs
    */
   _applyMoveInput(c, dtMs) {
@@ -25,9 +25,9 @@ Object.assign(World.prototype, {
 
   /**
    * Performs one movement step and updates facing.
-   * @param {Object} c - Character instance
+   * @param {Object} c
    * @param {number} dtMs
-   * @param {number} dir - 1 for right, -1 for left.
+   * @param {number} dir 
    */
   _step(c, dtMs, dir) {
     if (dir > 0) c.stepRight?.(dtMs);
@@ -37,7 +37,7 @@ Object.assign(World.prototype, {
 
   /**
    * Applies jump input with a simple jump lock.
-   * @param {Object} c - Character instance
+   * @param {Object} c
    */
   _applyJumpInput(c) {
     const wantJump = this.keyboard?.SPACE || this.keyboard?.UP;

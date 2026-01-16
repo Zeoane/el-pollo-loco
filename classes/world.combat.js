@@ -2,7 +2,7 @@
 Object.assign(World.prototype, {
   /**
    * Handles bottle throwing with a charge mechanic (hold to increase speed).
-   * @param {number} dtMs - Delta time in milliseconds
+   * @param {number} dtMs 
    */
   updateThrow(dtMs) {
     const KB = window.keyboard || this.keyboard || {};
@@ -17,7 +17,7 @@ Object.assign(World.prototype, {
 
   /**
    * Updates the charge timer while the throw key is held down.
-   * @param {Object} ts - Throw state
+   * @param {Object} ts 
    * @param {number} dtMs
    */
   chargeThrow(ts, dtMs) {
@@ -30,7 +30,7 @@ Object.assign(World.prototype, {
 
   /**
    * Releases a charged throw and spawns a projectile if ammo is available.
-   * @param {Object} ts - Throw state
+   * @param {Object} ts 
    */
   releaseThrow(ts) {
     if (!ts.charging) return;
@@ -44,8 +44,8 @@ Object.assign(World.prototype, {
 
   /**
    * Spawns a projectile with optional speed multiplier and consumes one bottle.
-   * @param {number} dir - Direction (-1 or 1)
-   * @param {number} pow - Speed multiplier
+   * @param {number} dir 
+   * @param {number} pow 
    */
   spawnProjectile(dir, pow) {
     this.projectiles.push(
@@ -62,7 +62,7 @@ Object.assign(World.prototype, {
 
   /**
    * Updates all projectiles, resolves impacts, and removes dead entities.
-   * @param {number} dtMs - Delta time in milliseconds
+   * @param {number} dtMs 
    */
   updateProjectiles(dtMs) {
     this.updateProjectileFlight(dtMs);
@@ -106,7 +106,7 @@ Object.assign(World.prototype, {
 
   /**
    * Finds the first opponent hit by a projectile.
-   * @param {Object} p - Projectile
+   * @param {Object} p 
    * @returns {Object|null}
    */
   findProjectileHit(p) {
@@ -119,7 +119,7 @@ Object.assign(World.prototype, {
 
   /**
    * Applies damage to a hit opponent (supports custom onHit handlers).
-   * @param {Object} target - Opponent hit by a projectile
+   * @param {Object} target 
    */
   applyHitDamage(target) {
     if (typeof target.onHit === "function") {
@@ -133,7 +133,7 @@ Object.assign(World.prototype, {
   /**
    * Resolves collisions between the character and living opponents.
    * Supports stomp kills and damage hits with invulnerability frames.
-   * @param {number} dtMs - Delta time in milliseconds
+   * @param {number} dtMs 
    */
   checkCharEnemyCollisions(dtMs) {
     if (!this.canProcessCharHit(dtMs)) return;
@@ -211,7 +211,7 @@ Object.assign(World.prototype, {
 
   /**
    * Ends the game, freezes gameplay, and triggers end screen + sounds.
-   * @param {"enemy"|"boss"|"win"} reason - Reason for game over state
+   * @param {"enemy"|"boss"|"win"} reason 
    */
   triggerGameOver(reason = "enemy") {
     if (this.gameOver) return;
@@ -225,7 +225,7 @@ Object.assign(World.prototype, {
 
   /**
    * Handles character healing using coins with cooldown and validation checks.
-   * @param {number} dtMs - Delta time in milliseconds
+   * @param {number} dtMs 
    */
   handleHeal(dtMs) {
     this.updateHealCooldown(dtMs);

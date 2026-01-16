@@ -2,7 +2,7 @@
 Object.assign(World.prototype, {
   /**
    * Updates all collectible items each frame.
-   * @param {number} dtMs - Delta time in milliseconds
+   * @param {number} dtMs 
    */
   tickCollectibles(dtMs) {
     this.coins.forEach(c => c.update?.(dtMs));
@@ -21,7 +21,7 @@ Object.assign(World.prototype, {
 
   /**
    * Collects coins that collide with the character bounds.
-   * @param {Object} cbb - Character bounds
+   * @param {Object} cbb 
    */
   collectCoins(cbb) {
     this.coins = this.coins.filter(c => {
@@ -35,7 +35,7 @@ Object.assign(World.prototype, {
 
   /**
    * Collects bottles that collide with the character bounds.
-   * @param {Object} cbb - Character bounds
+   * @param {Object} cbb 
    */
   collectBottles(cbb) {
     this.bottles = this.bottles.filter(b => {
@@ -66,7 +66,7 @@ spawnRandomCoins(count) {
 
 /**
  * Returns how many bottle clusters should be spawned from item config.
- * @param {Object} it - Item configuration
+ * @param {Object} it 
  * @returns {number}
  */
 getBottleClusterCount(it) {
@@ -76,7 +76,7 @@ getBottleClusterCount(it) {
 
   /**
  * Ensures a minimum number of bottles are spawned ahead of the camera.
- * @param {number} minAhead - Minimum number of bottles ahead of the player
+ * @param {number} minAhead 
  */
   maintainBottlesAhead(minAhead=6){
     const from = this.cameraX + this.canvas.width * 0.6;
@@ -87,7 +87,7 @@ getBottleClusterCount(it) {
 
 /**
  * Spawns a small cluster of bottles at a given x position.
- * @param {number} baseX - Base x-coordinate for the cluster
+ * @param {number} baseX 
  */
 spawnBottleCluster(baseX) {
   const cfg = this.getBottleClusterSpec(baseX);
@@ -120,7 +120,7 @@ spawnOneBottle(cfg, i) {
 
   /**
  * Spawns multiple bottle clusters distributed across the level.
- * @param {number} total - Number of clusters to spawn
+ * @param {number} total 
  */
   spawnBottleClusters(total=6){
     const len = this.cfg.lengthPx || 5000;

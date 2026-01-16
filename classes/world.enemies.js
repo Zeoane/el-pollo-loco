@@ -12,7 +12,7 @@ managePhases() {
 
 /**
  * Checks whether the world should transition into the big phase.
- * @param {number} t - Elapsed time in ms
+ * @param {number} t 
  * @returns {boolean}
  */
 shouldEnterBigPhase(t) {
@@ -21,7 +21,7 @@ shouldEnterBigPhase(t) {
 
 /**
  * Checks whether the world should transition into the boss phase.
- * @param {number} t - Elapsed time in ms
+ * @param {number} t 
  * @returns {boolean}
  */
 shouldEnterBossPhase(t) {
@@ -81,7 +81,7 @@ maintainBossPhase() {
 
 /**
  * Counts enemies of a given class.
- * @param {Function} Cls - Enemy constructor
+ * @param {Function} Cls 
  * @returns {number}
  */
 countEnemies(Cls) {
@@ -90,7 +90,7 @@ countEnemies(Cls) {
 
   /**
    * Spawns a single enemy of the given kind and places it ahead of the camera.
-   * @param {"small"|"big"} kind - Enemy type to spawn
+   * @param {"small"|"big"} kind 
    */
   spawnEnemy(kind = "small") {
     const Klass = kind === "small" ? SmallChicken : Chicken;
@@ -165,7 +165,7 @@ countEnemies(Cls) {
 
 /**
  * Updates all opponents, applies movement, and respawns offscreen enemies.
- * @param {number} dtMs - Delta time in milliseconds
+ * @param {number} dtMs 
  */
 updateOpponents(dtMs) {
   const bounds = this.getEnemyBounds();
@@ -195,10 +195,10 @@ getFarthestEnemyX() {
 
 /**
  * Updates a single opponent instance.
- * @param {Object} o - Opponent instance
- * @param {number} dtMs - Delta time in milliseconds
- * @param {{left:number, ahead:number}} bounds - Respawn bounds
- * @param {number} far - Current farthest opponent x
+ * @param {Object} o 
+ * @param {number} dtMs 
+ * @param {{left:number, ahead:number}} bounds 
+ * @param {number} far 
  */
 updateOpponent(o, dtMs, bounds, far) {
   o.update?.(dtMs);
@@ -214,7 +214,7 @@ updateOpponent(o, dtMs, bounds, far) {
  * Handles boss-specific update logic.
  * @param {Object} o
  * @param {number} dtMs
- * @returns {boolean} True if handled as boss
+ * @returns {boolean} 
  */
 handleBossOpponent(o, dtMs) {
   if (!o.updateBoss) return false;
@@ -244,8 +244,8 @@ respawnOpponentIfNeeded(o, bounds, far) {
 
   /**
    * Calculates a new respawn x-position based on camera and farthest enemy.
-   * @param {number} ahead - X position ahead of the camera
-   * @param {number} far - Current farthest enemy x position
+   * @param {number} ahead 
+   * @param {number} far
    * @returns {number}
    */
   _respawnX(ahead, far) {
@@ -255,7 +255,7 @@ respawnOpponentIfNeeded(o, bounds, far) {
 
   /**
    * Re-randomizes the movement speed for an enemy based on its class/config.
-   * @param {Object} o - Enemy instance
+   * @param {Object} o 
    */
   _rerollSpeed(o) {
     const E = this.cfg.enemies || {};

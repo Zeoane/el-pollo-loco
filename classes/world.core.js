@@ -306,7 +306,7 @@ Object.assign(World.prototype, {
 
   /**
    * Ensures a minimum number of coins exist ahead of the camera by spawning new rows.
-   * @param {number} minAhead - Minimum number of coins within the ahead window
+   * @param {number} minAhead 
    */
   maintainCoinsAhead(minAhead = 6) {
     const from = this.cameraX + this.canvas.width * 0.6;
@@ -317,7 +317,7 @@ Object.assign(World.prototype, {
 
   /**
    * Spawns a small horizontal row of coins around a base x-position.
-   * @param {number} baseX - Base x-coordinate for the coin row
+   * @param {number} baseX 
    */
   spawnCoinRow(baseX) {
     const cnt = 3 + Math.floor(Math.random() * 4);

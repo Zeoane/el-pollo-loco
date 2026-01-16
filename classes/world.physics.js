@@ -102,7 +102,10 @@ Object.assign(World.prototype, {
     c.onGround = true;
   },
 
-  updateClouds() {
-    this.clouds.forEach((cl) => cl.update?.(this.canvas.width));
-  },
+/**
+ * Updates all cloud layers.
+ */
+updateClouds() {
+  this.clouds.forEach(cl => cl.update?.(this.canvas.width));
+},
 });

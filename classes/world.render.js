@@ -16,7 +16,7 @@ draw() {
 
 /**
  * Draws all static world background elements.
- * @param {CanvasRenderingContext2D} ctx - Canvas rendering context
+ * @param {CanvasRenderingContext2D} ctx 
  */
 drawWorldLayer(ctx) {
   this.backgroundObjects.forEach(bo => bo.draw(ctx, this.cameraX));
@@ -24,7 +24,7 @@ drawWorldLayer(ctx) {
 
 /**
  * Draws all dynamic game entities affected by camera movement.
- * @param {CanvasRenderingContext2D} ctx - Canvas rendering context
+ * @param {CanvasRenderingContext2D} ctx 
  */
 drawEntitiesLayer(ctx) {
   ctx.save();
@@ -40,7 +40,7 @@ drawEntitiesLayer(ctx) {
 
 /**
  * Draws the HUD overlay elements.
- * @param {CanvasRenderingContext2D} ctx - Canvas rendering context
+ * @param {CanvasRenderingContext2D} ctx 
  */
 drawHudLayer(ctx) {
   this.hud?.draw(ctx, this);
@@ -74,7 +74,7 @@ drawEndScreenSequence() {
 
 /**
  * Draws a movable object onto the canvas if its image is valid.
- * @param {Object} mo - Movable object to draw
+ * @param {Object} mo
  */
 addToMap(mo) {
   if (!this.isDrawable(mo)) return;
