@@ -1,4 +1,4 @@
-// models/smallchicken.class.js
+// classes/smallchicken.class.js
 class SmallChicken extends MovableObject {
   constructor(){
     super();

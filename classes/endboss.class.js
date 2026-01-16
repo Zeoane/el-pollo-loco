@@ -1,3 +1,4 @@
+// classes/endboss.class.js
 class Endboss extends MovableObject {
   constructor() {
     super();

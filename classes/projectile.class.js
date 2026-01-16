@@ -1,4 +1,4 @@
-// models/projectile.class.js
+// classes/projectile.class.js
 class Projectile extends MovableObject {
   constructor(x, y, dir, opt = {}) {
     super();

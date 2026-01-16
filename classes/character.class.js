@@ -1,3 +1,4 @@
+// classes/character.class.js
 const CHARACTER_SPRITES = {
   WALK: [
     "img/2_character_pepe/2_walk/W-21.png",

@@ -1,4 +1,4 @@
-// models/world.physics.js
+// classes/world.physics.js
 Object.assign(World.prototype, {
   /**
    * Updates background layers based on camera position.

@@ -1,4 +1,4 @@
-// movable-object.class.js
+// classes/movable-object.class.js
 class MovableObject {
   imageCache = {};
   img = null;

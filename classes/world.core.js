@@ -1,4 +1,4 @@
-// models/world.core.js
+// classes/world.core.js
 class World {
   canvas;
   ctx;

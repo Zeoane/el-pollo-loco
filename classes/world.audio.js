@@ -1,4 +1,4 @@
-// models/world.audio.js
+// classes/world.audio.js
 (function attachAmbient(){
   const W = window.World;
   if (!W || !W.prototype){ setTimeout(attachAmbient, 0); return; }

@@ -1,4 +1,4 @@
-// models/level.class.js
+// classes/level.class.js
 class Level {
   constructor(bg = [], enemies = [], clouds = []) {
     this.backgroundObjects = bg;

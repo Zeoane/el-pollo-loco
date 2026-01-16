@@ -1,4 +1,4 @@
-// models/world.controls.js
+// classes/world.controls.js
 Object.assign(World.prototype, {
 /**
  * Handles player input and applies movement/jump to the character.

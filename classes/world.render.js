@@ -1,48 +1,61 @@
-// models/world.render.js
+// classes/world.render.js
+/**
+ * Main render loop entry point.
+ * Clears the canvas and renders world, entities, HUD and end screen.
+ */
 Object.assign(World.prototype, {
 draw() {
-    const { ctx, canvas } = this;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    this.backgroundObjects.forEach(bo => bo.draw(ctx, this.cameraX));
-    ctx.save();
-    ctx.translate(-this.cameraX, 0);
-    this.coins.forEach(c => this.addToMap(c));
-    this.bottles.forEach(b => this.addToMap(b));
-    this.addToMap(this.character);
-    this.opponents.forEach(o => this.addToMap(o));
-    this.projectiles.forEach(o => this.addToMap(o));
-    ctx.restore();
-    this.clouds.forEach(c => c.draw?.(ctx));
-    this.hud?.draw(ctx, this);
+  const { ctx, canvas } = this;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (
-      this.gameOver &&
-      this.gameOverReason === "boss" &&
-      (this.imgGameOver?.complete || window.IMG_GAME_OVER?.complete)
-    ) {
-      const img = this.imgGameOver || window.IMG_GAME_OVER;
-      const { ctx, canvas } = this;
-      const fade = Math.min(
-        1,
-        (performance.now() - (this.gameOverAt || 0)) / 600
-      );
-      const maxW = canvas.width * 0.9;
-      const scale = Math.min(maxW / img.naturalWidth, 1);
-      const w = img.naturalWidth * scale;
-      const h = img.naturalHeight * scale;
-      const x = (canvas.width - w) / 2;
-      const y = (canvas.height - h) / 2;
-
-      ctx.save();
-      ctx.globalAlpha = fade;
-      ctx.drawImage(img, x, y, w, h);
-      ctx.restore();
-    }
-if (this.gameOver) {
-        this.drawEndScreenSequence();
-    }
+  this.drawWorldLayer(ctx);
+  this.drawEntitiesLayer(ctx);
+  this.drawHudLayer(ctx);
+  this.drawEndScreenIfNeeded();
 },
 
+/**
+ * Draws all static world background elements.
+ * @param {CanvasRenderingContext2D} ctx - Canvas rendering context
+ */
+drawWorldLayer(ctx) {
+  this.backgroundObjects.forEach(bo => bo.draw(ctx, this.cameraX));
+},
+
+/**
+ * Draws all dynamic game entities affected by camera movement.
+ * @param {CanvasRenderingContext2D} ctx - Canvas rendering context
+ */
+drawEntitiesLayer(ctx) {
+  ctx.save();
+  ctx.translate(-this.cameraX, 0);
+  this.coins.forEach(c => this.addToMap(c));
+  this.bottles.forEach(b => this.addToMap(b));
+  this.addToMap(this.character);
+  this.opponents.forEach(o => this.addToMap(o));
+  this.projectiles.forEach(p => this.addToMap(p));
+  ctx.restore();
+  this.clouds.forEach(c => c.draw?.(ctx));
+},
+
+/**
+ * Draws the HUD overlay elements.
+ * @param {CanvasRenderingContext2D} ctx - Canvas rendering context
+ */
+drawHudLayer(ctx) {
+  this.hud?.draw(ctx, this);
+},
+
+/**
+ * Renders the end screen if the game is over.
+ */
+drawEndScreenIfNeeded() {
+  if (this.gameOver) this.drawEndScreenSequence();
+},
+
+/**
+ * Draws the appropriate end screen depending on the game over reason.
+ */
 drawEndScreenSequence() {
        let img = window.IMG_GAME_OVER; 
     if (this.gameOverReason === 'lost_boss') img = window.IMG_LOST_BOSS;
@@ -59,59 +72,78 @@ drawEndScreenSequence() {
     obj.y = this.groundY - obj.height + (obj.footOffset || 0);
   },
 
-  addToMap(mo) {
-    if (!mo) return;
-    const im = mo.img,
-      ok = im && im.complete && im.naturalWidth > 0 && !im._broken;
-    if (!ok) {
-      if (im?._broken && !mo._warned) {
-        console.warn("Broken image:", mo.constructor?.name, im?.src);
-        mo._warned = true;
-      }
-      if (mo === this.character) {
-        const c = this.ctx;
-        c.save();
-        c.fillStyle = "rgba(200,40,40,.6)";
-        c.fillRect(mo.x, mo.y, mo.width, mo.height);
-        c.restore();
-      }
-      return;
-    }
-    const c = this.ctx,
-      flip = mo.facing === -1 || mo.otherDirection === true;
-    c.save();
-    if (mo.state !== "dead")
-      mo.drawGroundShadow?.(c, this.groundY, { alpha: 0.12, ryFactor: 0.1 });
-    if (typeof mo.alpha === "number") c.globalAlpha = mo.alpha;
-    if (flip) {
-      c.translate(mo.x + mo.width, mo.y);
-      c.scale(-1, 1);
-      c.drawImage(im, 0, 0, mo.width, mo.height);
-    } else {
-      c.drawImage(im, mo.x, mo.y, mo.width, mo.height);
-    }
-    c.restore();
-  },
+/**
+ * Draws a movable object onto the canvas if its image is valid.
+ * @param {Object} mo - Movable object to draw
+ */
+addToMap(mo) {
+  if (!this.isDrawable(mo)) return;
+  const ctx = this.ctx;
+  const flip = mo.facing === -1 || mo.otherDirection === true;
 
-drawEndScreens() {
-    const ctx = this.ctx;
-    const canvas = this.canvas;
-    const fade = Math.min(1, (performance.now() - this.gameOverAt) / 800);
-    
-    ctx.save();
-    ctx.globalAlpha = fade;
+  ctx.save();
+  this.applyObjectAlpha(ctx, mo);
+  this.drawObjectShadow(ctx, mo);
 
-    if (this.gameOverReason === 'win') {
-      this.drawCenteredImage(window.IMG_WON_BOSS);
-    } else {
-      this.drawCenteredImage(window.IMG_GAME_OVER);
-      if (this.gameOverReason === 'boss' && fade > 0.8) {
-        this.drawCenteredImage(window.IMG_LOST_BOSS);
-      }
-    }
-    ctx.restore();
-  },
+  flip ? this.drawFlipped(ctx, mo) : this.drawNormal(ctx, mo);
+  ctx.restore();
+},
 
+/**
+ * Checks whether an object can be drawn.
+ * @param {Object} mo
+ * @returns {boolean}
+ */
+isDrawable(mo) {
+  const img = mo?.img;
+  return !!(img && img.complete && img.naturalWidth > 0 && !img._broken);
+},
+
+/**
+ * Applies alpha transparency if defined.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {Object} mo
+ */
+applyObjectAlpha(ctx, mo) {
+  if (typeof mo.alpha === "number") ctx.globalAlpha = mo.alpha;
+},
+
+/**
+ * Draws ground shadow for living objects.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {Object} mo
+ */
+drawObjectShadow(ctx, mo) {
+  if (mo.state !== "dead") {
+    mo.drawGroundShadow?.(ctx, this.groundY, { alpha: 0.12, ryFactor: 0.1 });
+  }
+},
+
+/**
+ * Draws an object facing the normal direction.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {Object} mo
+ */
+drawNormal(ctx, mo) {
+  ctx.drawImage(mo.img, mo.x, mo.y, mo.width, mo.height);
+},
+
+/**
+ * Draws an object flipped horizontally.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {Object} mo
+ */
+drawFlipped(ctx, mo) {
+  ctx.translate(mo.x + mo.width, mo.y);
+  ctx.scale(-1, 1);
+  ctx.drawImage(mo.img, 0, 0, mo.width, mo.height);
+},
+
+/**
+ * Draws an image centered on the canvas while keeping its aspect ratio.
+ * The image is scaled down to fit within the canvas width if necessary.
+ * @param {HTMLImageElement} img - Image to render
+ */
   drawCenteredImage(img) {
     if (!img || !img.complete) return;
     const canvas = this.canvas;
@@ -128,6 +160,10 @@ drawEndScreens() {
     );
   },
 
+  /**
+ * Hides the DOM-based HUD overlay.
+ * Used when switching to full-canvas end screens.
+ */
   hideDomHud() {
     const hud = document.getElementById('hud');
     if (hud) hud.style.display = 'none';

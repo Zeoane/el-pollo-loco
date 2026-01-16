@@ -1,4 +1,4 @@
-// cloud.class.js
+// classes/cloud.class.js
 class Cloud extends MovableObject {
   constructor(x, y, speed = 0.3) {
     super();

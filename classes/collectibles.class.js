@@ -1,4 +1,4 @@
-// models/collectibles.class.js
+// classes/collectibles.class.js
 class Coin extends MovableObject {
   constructor(x,y){
     super();

@@ -1,4 +1,4 @@
-// models/world.combat.js
+// classes/world.combat.js
 Object.assign(World.prototype, {
   handleThrow() {
     const KB = window.keyboard || this.keyboard || {};

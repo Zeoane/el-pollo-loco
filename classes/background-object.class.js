@@ -1,4 +1,4 @@
-// background-object.class.js
+// classes/background-object.class.js
 class BackgroundObject extends MovableObject {
   constructor(folder, y = 0, h = null, flow = 0, parallax = 0) {
     super();

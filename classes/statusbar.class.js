@@ -1,4 +1,4 @@
-// models/statusbar.class.js
+// classes/statusbar.class.js
 class StatusBar extends MovableObject {
   width = 160;
   height = 50;
