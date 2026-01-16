@@ -1,101 +1,151 @@
 // classes/movable-object.class.js
 class MovableObject {
+  static CFG = {
+    tickMs: 16,
+    walkFrameMs: 100,
+  };
+
   imageCache = {};
   img = null;
   imageLoaded = false;
+
   x = 0;
   y = 0;
   width = 50;
   height = 50;
+
   vx = 0;
   vy = 0;
+
   footOffset = 0;
   speed = 0;
   _groundY = null;
 
-/**
- * Sets the object's render size.
- * @param {number} w
- * @param {number} h
- * @returns {this}
- */
-setSize(w, h) {
-  this.width = w;
-  this.height = h;
-  return this;
-}
+  /**
+   * Sets the object's render size.
+   * @param {number} w
+   * @param {number} h
+   * @returns {this}
+   */
+  setSize(w, h) {
+    this.width = w;
+    this.height = h;
+    return this;
+  }
 
-/**
- * Sets the movement speed (used by stepLeft/stepRight).
- * @param {number} s
- * @returns {this}
- */
+  /**
+   * Sets the movement speed (used by stepLeft/stepRight).
+   * @param {number} s
+   * @returns {this}
+   */
+  setSpeed(s) {
+    this.speed = s || 0;
+    return this;
+  }
 
-setSpeed(s) {
-  this.speed = s || 0;
-  return this;
-}
+  /**
+   * Sets the ground Y position used by placeOnGround().
+   * @param {number} gy
+   * @returns {this}
+   */
+  setGround(gy) {
+    this._groundY = gy;
+    return this;
+  }
 
-/**
- * Sets the ground Y position used by placeOnGround().
- * @param {number} gy
- * @returns {this}
- */
-setGround(gy) {
-  this._groundY = gy;
-  return this;
-}
+  /**
+   * Stores a simple state label (optional, used by subclasses).
+   * @param {string} name
+   * @returns {this}
+   */
+  setState(name) {
+    this.state = name;
+    return this;
+  }
 
-/**
- * Stores a simple state label (optional, used by subclasses).
- * @param {string} name
- * @returns {this}
- */
-setState(name) {
-  this.state = name;
-  return this;
-}
+  /**
+   * Converts dt milliseconds into a 60fps factor.
+   * @param {number} dtMs
+   * @returns {number}
+   */
+  dtFactor(dtMs = MovableObject.CFG.tickMs) {
+    return dtMs / MovableObject.CFG.tickMs;
+  }
 
+  /**
+   * Places object on stored ground Y using footOffset.
+   * @returns {this}
+   */
   placeOnGround() {
     const gy = this._groundY ?? 0;
     this.y = gy - this.height + (this.footOffset || 0);
     return this;
   }
 
-  stepLeft(dtMs = 16) {
-    this.x -= (this.speed || 0) * (dtMs / 16);
+  /**
+   * Moves object left by speed.
+   * @param {number} dtMs
+   */
+  stepLeft(dtMs = MovableObject.CFG.tickMs) {
+    this.x -= (this.speed || 0) * this.dtFactor(dtMs);
     this.facing = -1;
   }
-  stepRight(dtMs = 16) {
-    this.x += (this.speed || 0) * (dtMs / 16);
+
+  /**
+   * Moves object right by speed.
+   * @param {number} dtMs
+   */
+  stepRight(dtMs = MovableObject.CFG.tickMs) {
+    this.x += (this.speed || 0) * this.dtFactor(dtMs);
     this.facing = 1;
   }
 
-  setWalkFrames(paths = [], frameMs = 100) {
+  /**
+   * Sets walk animation frames and timing.
+   * @param {string[]} paths
+   * @param {number} frameMs
+   * @returns {this}
+   */
+  setWalkFrames(paths = [], frameMs = MovableObject.CFG.walkFrameMs) {
     this.frames = this.loadImages(paths);
     this.frameIndex = 0;
     this.frameElapsedMs = 0;
     this.frameDurationMs = frameMs;
-    if (this.frames?.length) {
-      this.img = this.frames[0];
-      this.imageLoaded = true;
-    }
+    this._applyFirstFrame();
     return this;
   }
 
-  updateWalkAnimation(dtMs = 16, moving = false) {
-    if (!moving || !this.frames?.length) {
-      this.frameIndex = 0;
-      this.img = this.frames?.[0];
-      this.frameElapsedMs = 0;
-      return;
-    }
+  /**
+   * Applies the first animation frame (if available).
+   */
+  _applyFirstFrame() {
+    if (!this.frames?.length) return;
+    this.img = this.frames[0];
+    this.imageLoaded = true;
+  }
+
+  /**
+   * Updates walk animation based on movement state.
+   * @param {number} dtMs
+   * @param {boolean} moving
+   */
+  updateWalkAnimation(dtMs = MovableObject.CFG.tickMs, moving = false) {
+    if (!moving || !this.frames?.length) return this._resetWalkAnim();
     this.frameElapsedMs += dtMs;
-    if (this.frameElapsedMs >= (this.frameDurationMs || 100)) {
-      this.frameElapsedMs = 0;
-      this.frameIndex = (this.frameIndex + 1) % this.frames.length;
-      this.img = this.frames[this.frameIndex];
-    }
+    const dur = this.frameDurationMs || MovableObject.CFG.walkFrameMs;
+    if (this.frameElapsedMs < dur) return;
+    this.frameElapsedMs = 0;
+    this.frameIndex = (this.frameIndex + 1) % this.frames.length;
+    this.img = this.frames[this.frameIndex];
+  }
+
+  /**
+   * Resets walk animation to first frame.
+   */
+  _resetWalkAnim() {
+    this.frameIndex = 0;
+    this.img = this.frames?.[0];
+    this.frameElapsedMs = 0;
   }
 
   /**
@@ -142,13 +192,11 @@ setState(name) {
    */
   loadImageFromCandidates(paths = []) {
     if (!paths.length) return;
-
     let i = 0;
+
     const tryNext = () => {
       if (i >= paths.length) return this._markCandidateFail();
-
-      const path = paths[i++];
-      this._loadCandidate(path, tryNext);
+      this._loadCandidate(paths[i++], tryNext);
     };
 
     tryNext();
@@ -166,6 +214,7 @@ setState(name) {
       () => this._useLoadedCandidate(im),
       onFail
     );
+    return im;
   }
 
   /**
@@ -184,70 +233,94 @@ setState(name) {
     this.loadFailed = true;
   }
 
-/**
- * Defines a hitbox offset and size relative to x/y and width/height.
- * @param {number} [ox=0]
- * @param {number} [oy=0]
- * @param {number|null} [w=null]
- * @param {number|null} [h=null]
- * @returns {this}
- */
-setHitbox(ox = 0, oy = 0, w = null, h = null) {
-  this.hb = { ox, oy, w, h };
-  return this;
-}
+  /**
+   * Defines a hitbox offset and size relative to x/y and width/height.
+   * @param {number} [ox=0]
+   * @param {number} [oy=0]
+   * @param {number|null} [w=null]
+   * @param {number|null} [h=null]
+   * @returns {this}
+   */
+  setHitbox(ox = 0, oy = 0, w = null, h = null) {
+    this.hb = { ox, oy, w, h };
+    return this;
+  }
 
-/**
- * Returns the current collision bounds (hitbox if set, otherwise full size).
- * @returns {{x:number,y:number,width:number,height:number}}
- */
-getBounds() {
-  const hb = this.hb || {};
-  const w = hb.w ?? this.width,
-    h = hb.h ?? this.height;
-  return {
-    x: this.x + (hb.ox || 0),
-    y: this.y + (hb.oy || 0),
-    width: w,
-    height: h,
-  };
-}
+  /**
+   * Returns the current collision bounds (hitbox if set, otherwise full size).
+   * @returns {{x:number,y:number,width:number,height:number}}
+   */
+  getBounds() {
+    const hb = this.hb || {};
+    const w = hb.w ?? this.width;
+    const h = hb.h ?? this.height;
+    return {
+      x: this.x + (hb.ox || 0),
+      y: this.y + (hb.oy || 0),
+      width: w,
+      height: h,
+    };
+  }
 
-/**
- * Checks AABB intersection with another object or bounds.
- * @param {any} other
- * @returns {boolean}
- */
-intersects(other) {
-  const aabb = window.AABB;
-  if (!other || typeof aabb !== "function") return false;
-  const b = other.getBounds?.() || other;
-  return aabb(this.getBounds(), b);
-}
+  /**
+   * Checks AABB intersection with another object or bounds.
+   * @param {any} other
+   * @returns {boolean}
+   */
+  intersects(other) {
+    const aabb = window.AABB;
+    if (!other || typeof aabb !== "function") return false;
+    const b = other.getBounds?.() || other;
+    return aabb(this.getBounds(), b);
+  }
 
+  /**
+   * Loads multiple images and returns them as frames (cached).
+   * @param {string[]} paths
+   * @returns {HTMLImageElement[]}
+   */
   loadImages(paths = []) {
     const frames = [];
-    paths.forEach((path) => {
-      if (this.imageCache[path]) {
-        frames.push(this.imageCache[path]);
-        return;
-      }
-      const im = new Image();
-      im.onerror = () => {
-        im._broken = true;
-        this.loadFailed = true;
-      };
-      im.src = path;
-      this.imageCache[path] = im;
-      frames.push(im);
-    });
+    paths.forEach((path) => frames.push(this._getCachedImage(path)));
     return frames;
   }
 
+  /**
+   * Returns cached image or creates and caches it.
+   * @param {string} path
+   * @returns {HTMLImageElement}
+   */
+  _getCachedImage(path) {
+    if (this.imageCache[path]) return this.imageCache[path];
+    const im = this._createImage(path, () => {}, () => this._markBroken(im));
+    this.imageCache[path] = im;
+    return im;
+  }
+
+  /**
+   * Marks an image as broken and sets loadFailed.
+   * @param {HTMLImageElement} im
+   */
+  _markBroken(im) {
+    im._broken = true;
+    this.loadFailed = true;
+  }
+
+  /**
+   * Checks whether current image can be drawn.
+   * @returns {boolean}
+   */
+  canDraw() {
+    return !!(this.img && this.img.complete && this.img.naturalWidth > 0);
+  }
+
+  /**
+   * Draws current sprite.
+   * @param {CanvasRenderingContext2D} ctx
+   */
   draw(ctx) {
-    if (this.img && this.img.complete && this.img.naturalWidth > 0) {
-      ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
-    }
+    if (!this.canDraw()) return;
+    ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
   }
 
   /**
@@ -299,3 +372,4 @@ intersects(other) {
     return { cx, cy, rx, ry };
   }
 }
+

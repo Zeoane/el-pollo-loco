@@ -34,56 +34,118 @@ class Endboss extends MovableObject {
   initFrames() {
     const base = "img/4_enemie_boss_chicken";
     this.frames = {
-      walk: this.loadImages([
-        `${base}/1_walk/G1.png`,
-        `${base}/1_walk/G2.png`,
-        `${base}/1_walk/G3.png`,
-        `${base}/1_walk/G4.png`,
-      ]),
-      alert: this.loadImages([
-        `${base}/2_alert/G5.png`,
-        `${base}/2_alert/G6.png`,
-        `${base}/2_alert/G7.png`,
-        `${base}/2_alert/G8.png`,
-        `${base}/2_alert/G9.png`,
-        `${base}/2_alert/G10.png`,
-        `${base}/2_alert/G11.png`,
-        `${base}/2_alert/G12.png`,
-      ]),
-      attack: this.loadImages([
-        `${base}/3_attack/G13.png`,
-        `${base}/3_attack/G14.png`,
-        `${base}/3_attack/G15.png`,
-        `${base}/3_attack/G16.png`,
-        `${base}/3_attack/G17.png`,
-        `${base}/3_attack/G18.png`,
-        `${base}/3_attack/G19.png`,
-        `${base}/3_attack/G20.png`,
-      ]),
-      hurt: this.loadImages([
-        `${base}/4_hurt/G21.png`,
-        `${base}/4_hurt/G22.png`,
-        `${base}/4_hurt/G23.png`,
-      ]),
-      dead: this.loadImages([
-        `${base}/5_dead/G24.png`,
-        `${base}/5_dead/G25.png`,
-        `${base}/5_dead/G26.png`,
-      ]),
+      walk: this.loadImages(this.walkFrames(base)),
+      alert: this.loadImages(this.alertFrames(base)),
+      attack: this.loadImages(this.attackFrames(base)),
+      hurt: this.loadImages(this.hurtFrames(base)),
+      dead: this.loadImages(this.deadFrames(base)),
     };
   }
 
   /**
-   * Switches boss animation/state and resets frame timers.
+   * @param {string} base
+   * @returns {string[]}
+   */
+  walkFrames(base) {
+    return [
+      `${base}/1_walk/G1.png`,
+      `${base}/1_walk/G2.png`,
+      `${base}/1_walk/G3.png`,
+      `${base}/1_walk/G4.png`,
+    ];
+  }
+
+  /**
+   * @param {string} base
+   * @returns {string[]}
+   */
+  alertFrames(base) {
+    return [
+      `${base}/2_alert/G5.png`,
+      `${base}/2_alert/G6.png`,
+      `${base}/2_alert/G7.png`,
+      `${base}/2_alert/G8.png`,
+      `${base}/2_alert/G9.png`,
+      `${base}/2_alert/G10.png`,
+      `${base}/2_alert/G11.png`,
+      `${base}/2_alert/G12.png`,
+    ];
+  }
+
+  /**
+   * @param {string} base
+   * @returns {string[]}
+   */
+  attackFrames(base) {
+    return [
+      `${base}/3_attack/G13.png`,
+      `${base}/3_attack/G14.png`,
+      `${base}/3_attack/G15.png`,
+      `${base}/3_attack/G16.png`,
+      `${base}/3_attack/G17.png`,
+      `${base}/3_attack/G18.png`,
+      `${base}/3_attack/G19.png`,
+      `${base}/3_attack/G20.png`,
+    ];
+  }
+
+  /**
+   * @param {string} base
+   * @returns {string[]}
+   */
+  hurtFrames(base) {
+    return [
+      `${base}/4_hurt/G21.png`,
+      `${base}/4_hurt/G22.png`,
+      `${base}/4_hurt/G23.png`,
+    ];
+  }
+
+  /**
+   * @param {string} base
+   * @returns {string[]}
+   */
+  deadFrames(base) {
+    return [
+      `${base}/5_dead/G24.png`,
+      `${base}/5_dead/G25.png`,
+      `${base}/5_dead/G26.png`,
+    ];
+  }
+
+  /**
    * @param {string} s
    */
   setState(s) {
     if (this.state === s) return;
     this.state = s;
+    this.resetFrameState();
+    this.applyStateSprite(s);
+    this.applyStateEffects(s);
+  }
+
+  /**
+   * @private
+   */
+  resetFrameState() {
     this.frameIndex = 0;
     this.frameElapsedMs = 0;
+  }
+
+  /**
+   * @param {string} s
+   * @private
+   */
+  applyStateSprite(s) {
     const arr = this.frames?.[s];
     if (arr?.length) this.img = arr[0];
+  }
+
+  /**
+   * @param {string} s
+   * @private
+   */
+  applyStateEffects(s) {
     if (s === "attack") this.armAttack();
     if (s === "hurt") this.invT = 500;
   }
@@ -130,7 +192,6 @@ class Endboss extends MovableObject {
   }
 
   /**
-   * Updates the boss logic per frame.
    * @param {World} world
    * @param {number} dtMs
    */
@@ -141,25 +202,33 @@ class Endboss extends MovableObject {
     this.animateState(dtMs);
   }
 
+  /**
+   * @param {number} dtMs
+   */
   updateInvulnerability(dtMs) {
     if (this.invT > 0) this.invT = Math.max(0, this.invT - dtMs);
   }
 
+  /**
+   * @param {World} world
+   * @param {number} dist
+   * @param {number} dtMs
+   */
   updateState(world, dist, dtMs) {
-    const k = dtMs / 16;
+    const k = this.getFrameScale(dtMs);
+    if (this.state === "walk") return this.updateWalk(dist, dtMs, k);
+    if (this.state === "alert") return this.updateAlert(dist, dtMs, k);
+    if (this.state === "attack") return this.updateAttack(dist, dtMs, k);
+    if (this.state === "hurt") return this.updateHurt(dist, k);
+    if (this.state === "dead") return this.updateDead(dtMs);
+  }
 
-    switch (this.state) {
-      case "walk":
-        return this.updateWalk(dist, dtMs, k);
-      case "alert":
-        return this.updateAlert(dist, dtMs, k);
-      case "attack":
-        return this.updateAttack(dist, dtMs, k);
-      case "hurt":
-        return this.updateHurt(dist, k);
-      case "dead":
-        return this.updateDead(dtMs);
-    }
+  /**
+   * @param {number} dtMs
+   * @returns {number}
+   */
+  getFrameScale(dtMs) {
+    return dtMs / 16;
   }
 
   updateWalk(dist, dtMs, k) {
@@ -201,23 +270,42 @@ class Endboss extends MovableObject {
   }
 
   /**
-   * Advances animation frames.
    * @param {number} dtMs
    */
   animateState(dtMs) {
-    const arr = this.frames[this.state];
+    const arr = this.frames?.[this.state];
     if (!arr?.length) return;
-    this.frameElapsedMs += dtMs;
-    if (this.frameElapsedMs < (this.frameMs[this.state] || 100)) return;
-    this.frameElapsedMs = 0;
-    this.frameIndex =
-      this.state === "dead"
-        ? Math.min(this.frameIndex + 1, arr.length - 1)
-        : (this.frameIndex + 1) % arr.length;
+    if (!this.isNextFrameDue(dtMs)) return;
+    this.advanceFrameIndex(arr);
     this.img = arr[this.frameIndex];
+  }
+
+  /**
+   * @param {number} dtMs
+   * @returns {boolean}
+   */
+  isNextFrameDue(dtMs) {
+    this.frameElapsedMs += dtMs;
+    const ms = this.frameMs?.[this.state] || 100;
+    if (this.frameElapsedMs < ms) return false;
+    this.frameElapsedMs = 0;
+    return true;
+  }
+
+  /**
+   * @param {any[]} arr
+   */
+  advanceFrameIndex(arr) {
+    if (this.state === "dead") return this.advanceDeadFrame(arr);
+    this.frameIndex = (this.frameIndex + 1) % arr.length;
+  }
+
+  /**
+   * @param {any[]} arr
+   */
+  advanceDeadFrame(arr) {
+    this.frameIndex = Math.min(this.frameIndex + 1, arr.length - 1);
   }
 }
 
 window.Endboss = Endboss;
-
-

@@ -74,8 +74,8 @@ class SoundManager {
 
   /**
    * Loads a single sound file and decodes it into an AudioBuffer.
-   * @param {string} name - Sound identifier.
-   * @param {string} url - File path.
+   * @param {string} name 
+   * @param {string} url 
    * @returns {Promise<void>}
    */
   async load(name, url) {
@@ -142,8 +142,8 @@ class SoundManager {
 
   /**
    * Plays a one-shot sound.
-   * @param {string} name - Sound identifier.
-   * @param {SoundOptions} [opt] - Playback options.
+   * @param {string} name 
+   * @param {SoundOptions} [opt] 
    * @returns {{src: AudioBufferSourceNode, gain: GainNode}|null}
    */
   play(name, opt = {}) {
@@ -166,9 +166,9 @@ class SoundManager {
 
   /**
    * Updates volume and spec of an existing loop.
-   * @param {string} key - Loop key.
-   * @param {string} name - Sound identifier.
-   * @param {SoundOptions} opt - Playback options.
+   * @param {string} key 
+   * @param {string} name 
+   * @param {SoundOptions} opt 
    */
   updateExistingLoop(key, name, opt) {
     const h = this.loops[key];
@@ -179,9 +179,9 @@ class SoundManager {
 
   /**
    * Queues a loop until playback is possible.
-   * @param {string} name - Sound identifier.
-   * @param {string} key - Loop key.
-   * @param {SoundOptions} opt - Playback options.
+   * @param {string} name 
+   * @param {string} key 
+   * @param {SoundOptions} opt 
    */
   queueLoop(name, key, opt) {
     this._loopSpecs[key] = { name, opt };
@@ -190,9 +190,9 @@ class SoundManager {
 
   /**
    * Starts or updates a looping sound.
-   * @param {string} name - Sound identifier.
-   * @param {string} [key=name] - Loop key.
-   * @param {SoundOptions} [opt] - Playback options.
+   * @param {string} name 
+   * @param {string} [key=name] 
+   * @param {SoundOptions} [opt] 
    * @returns {{src: AudioBufferSourceNode, gain: GainNode}|null}
    */
   loop(name, key = name, opt = {}) {

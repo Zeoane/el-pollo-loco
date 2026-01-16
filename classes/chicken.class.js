@@ -27,29 +27,74 @@ class Chicken extends MovableObject {
     this.deadFadeMs = 1000;
   }
 
-  die(){
-    if (this.state === 'dead') return;
-    this.state = 'dead';
-    this.speed = 0; this.vx = 0; this.vy = 0;
-    this.img = this.deadImg;
-    this.deadT = 0;
-    this.alpha = 1;
+/**
+ * Kills the enemy and switches to dead state.
+ */
+die() {
+  if (this.state === "dead") return;
+  this._setDeadState();
+  this._setDeadSprite();
+  this._resetDeadTimers();
   }
-  onDie(){ this.die(); }
 
-  update(dtMs=16){
-    if (this.state === 'dead'){
-      this.deadT += dtMs;
-      if (this.deadT > this.deadHoldMs){
-        const t = this.deadT - this.deadHoldMs;
-        const a = 1 - Math.min(1, t / this.deadFadeMs);
-        this.alpha = a;
-        if (a <= 0) this._dead = true;
-      }
-      return;
-    }
-    this.updateWalkAnimation?.(dtMs, true);
-  }
+/**
+ * @private
+ */
+_setDeadState() {
+  this.state = "dead";
+  this.speed = 0;
+  this.vx = 0;
+  this.vy = 0;
+}
+
+/**
+ * @private
+ */
+_setDeadSprite() {
+  this.img = this.deadImg;
+}
+
+/**
+ * @private
+ */
+_resetDeadTimers() {
+  this.deadT = 0;
+  this.alpha = 1;
+}
+
+/**
+ * Alias for die().
+ */
+onDie() {
+  this.die();
+}
+
+/**
+ * @param {number} dtMs
+ */
+update(dtMs = 16) {
+  if (this.state === "dead") return this._updateDead(dtMs);
+  this.updateWalkAnimation?.(dtMs, true);
+}
+
+/**
+ * @param {number} dtMs
+ * @private
+ */
+_updateDead(dtMs) {
+  this.deadT += dtMs;
+  if (this.deadT <= this.deadHoldMs) return;
+  this._fadeOutDead();
+}
+
+/**
+ * @private
+ */
+_fadeOutDead() {
+  const t = this.deadT - this.deadHoldMs;
+  this.alpha = 1 - Math.min(1, t / this.deadFadeMs);
+  if (this.alpha <= 0) this._dead = true;
+}
 }
 window.Chicken = Chicken;
 

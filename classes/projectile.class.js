@@ -1,45 +1,129 @@
 // classes/projectile.class.js
 class Projectile extends MovableObject {
+  static CFG = {
+    size: { w: 54, h: 74 },
+    hitbox: { x: 6, y: 6, w: 32, h: 32 },
+    baseVX: 6,
+    baseVY: -4,
+    gravity: 0.5,
+    flyFrameMs: 90,
+    splashFrameMs: 60,
+    minFlyFrameMs: 40,
+  };
+
   constructor(x, y, dir, opt = {}) {
     super();
-    this.setSize(54, 74);
-    this.setHitbox(6, 6, 32, 32);
+    this.initBody(x, y);
+    const mul = this.getSpeedMul(opt);
+    this.initMotion(dir, mul);
+    this.initAnim();
+    this.initTiming(mul);
+    this.setStateFly();
+  }
+
+  /**
+   * Initializes size, hitbox, and spawn position.
+   * @param {number} x
+   * @param {number} y
+   */
+  initBody(x, y) {
+    const c = Projectile.CFG;
+    this.setSize(c.size.w, c.size.h);
+    this.setHitbox(c.hitbox.x, c.hitbox.y, c.hitbox.w, c.hitbox.h);
     this.x = x;
     this.y = y;
+  }
 
-    const mul = opt.speedMul || 1;
-    this.vx = 6 * dir * mul;
-    this.vy = -4 * mul;
-    this.gravity = 0.5;
+  /**
+   * Returns a safe speed multiplier.
+   * @param {{speedMul?: number}} opt
+   * @returns {number}
+   */
+  getSpeedMul(opt) {
+    const mul = Number(opt?.speedMul ?? 1);
+    return Number.isFinite(mul) ? Math.max(0.1, mul) : 1;
+  }
 
-    // Animations
-    this.framesFly = this.loadImages([
+  /**
+   * Initializes projectile velocity and gravity.
+   * @param {number} dir
+   * @param {number} mul
+   */
+  initMotion(dir, mul) {
+    const c = Projectile.CFG;
+    this.vx = c.baseVX * dir * mul;
+    this.vy = c.baseVY * mul;
+    this.gravity = c.gravity;
+  }
+
+  /**
+   * Loads animation frames for fly and splash.
+   */
+  initAnim() {
+    this.framesFly = this.loadImages(this.getFlyFrames());
+    this.framesSplash = this.loadImages(this.getSplashFrames());
+  }
+
+  /** @returns {string[]} */
+  getFlyFrames() {
+    return [
       "img/6_salsa_bottle/bottle_rotation/1_bottle_rotation.png",
       "img/6_salsa_bottle/bottle_rotation/2_bottle_rotation.png",
       "img/6_salsa_bottle/bottle_rotation/3_bottle_rotation.png",
       "img/6_salsa_bottle/bottle_rotation/4_bottle_rotation.png",
-    ]);
-    this.framesSplash = this.loadImages([
+    ];
+  }
+
+  /** @returns {string[]} */
+  getSplashFrames() {
+    return [
       "img/6_salsa_bottle/bottle_rotation/bottle_splash/1_bottle_splash.png",
       "img/6_salsa_bottle/bottle_rotation/bottle_splash/2_bottle_splash.png",
       "img/6_salsa_bottle/bottle_rotation/bottle_splash/3_bottle_splash.png",
       "img/6_salsa_bottle/bottle_rotation/bottle_splash/4_bottle_splash.png",
       "img/6_salsa_bottle/bottle_rotation/bottle_splash/5_bottle_splash.png",
       "img/6_salsa_bottle/bottle_rotation/bottle_splash/6_bottle_splash.png",
-    ]);
+    ];
+  }
 
-    this.state = "fly";
+  /**
+   * Initializes animation timing.
+   * @param {number} mul
+   */
+  initTiming(mul) {
+    const c = Projectile.CFG;
     this.frameIndex = 0;
     this.frameElapsedMs = 0;
-    this.flyFrameMs = Math.max(40, 90 / mul);
-    this.splashFrameMs = 60;
+    this.flyFrameMs = Math.max(c.minFlyFrameMs, c.flyFrameMs / mul);
+    this.splashFrameMs = c.splashFrameMs;
+  }
 
+  /**
+   * Sets projectile into fly state.
+   */
+  setStateFly() {
+    this.state = "fly";
     this.img = this.framesFly[0];
     this.imageLoaded = true;
   }
 
+  /**
+   * Triggers splash animation and stops movement.
+   * @param {number|null} groundY
+   */
   hitAndSplash(groundY = null) {
-    if (this.state !== "fly") return;
+    if (!this.canSplash()) return;
+    this.applySplash(groundY);
+    this.playSplashSfx();
+  }
+
+  /** @returns {boolean} */
+  canSplash() {
+    return this.state === "fly";
+  }
+
+  /** @param {number|null} groundY */
+  applySplash(groundY) {
     this.state = "splash";
     this.vx = 0;
     this.vy = 0;
@@ -47,36 +131,83 @@ class Projectile extends MovableObject {
     this.frameIndex = 0;
     this.frameElapsedMs = 0;
     this.img = this.framesSplash[0];
+  }
+
+  /**
+   * Plays splash sound effect if available.
+   */
+  playSplashSfx() {
     SFX.play?.("bottle_hit", { vol: 0.9 });
   }
 
+  /**
+   * Updates projectile physics and animation.
+   * @param {number} dtMs
+   */
   update(dtMs = 16) {
+    if (this.isDead()) return;
     const k = dtMs / 16;
+    if (this.state === "fly") return this.updateFly(dtMs, k);
+    if (this.state === "splash") return this.updateSplash(dtMs);
+  }
 
-    if (this.state === "fly") {
-      this.vy += this.gravity * k;
-      this.x += this.vx * k;
-      this.y += this.vy * k;
+  /** @returns {boolean} */
+  isDead() {
+    return this.state === "dead" || this._dead === true;
+  }
 
-      this.frameElapsedMs += dtMs;
-      if (this.frameElapsedMs >= this.flyFrameMs) {
-        this.frameElapsedMs = 0;
-        this.frameIndex = (this.frameIndex + 1) % this.framesFly.length;
-        this.img = this.framesFly[this.frameIndex];
-      }
-    } else if (this.state === "splash") {
-      this.frameElapsedMs += dtMs;
-      if (this.frameElapsedMs >= this.splashFrameMs) {
-        this.frameElapsedMs = 0;
-        this.frameIndex++;
-        if (this.frameIndex >= this.framesSplash.length) {
-          this.state = "dead";
-          this._dead = true;
-        } else {
-          this.img = this.framesSplash[this.frameIndex];
-        }
-      }
-    }
+  /**
+   * Fly state update (gravity, movement, looping animation).
+   * @param {number} dtMs
+   * @param {number} k
+   */
+  updateFly(dtMs, k) {
+    this.vy += this.gravity * k;
+    this.x += this.vx * k;
+    this.y += this.vy * k;
+    this.stepAnim(dtMs, this.flyFrameMs, this.framesFly, true);
+  }
+
+  /**
+   * Splash state update (non-looping animation, then die).
+   * @param {number} dtMs
+   */
+  updateSplash(dtMs) {
+    const done = this.stepAnim(dtMs, this.splashFrameMs, this.framesSplash, false);
+    if (!done) return;
+    this.state = "dead";
+    this._dead = true;
+  }
+
+  /**
+   * Steps animation frames by elapsed time.
+   * @param {number} dtMs
+   * @param {number} frameMs
+   * @param {HTMLImageElement[]} frames
+   * @param {boolean} loop
+   * @returns {boolean} true if non-loop animation finished
+   */
+  stepAnim(dtMs, frameMs, frames, loop) {
+    this.frameElapsedMs += dtMs;
+    if (this.frameElapsedMs < frameMs) return false;
+    this.frameElapsedMs = 0;
+    return loop ? this.stepLoop(frames) : this.stepOnce(frames);
+  }
+
+  /** @param {HTMLImageElement[]} frames */
+  stepLoop(frames) {
+    this.frameIndex = (this.frameIndex + 1) % frames.length;
+    this.img = frames[this.frameIndex];
+    return false;
+  }
+
+  /** @param {HTMLImageElement[]} frames */
+  stepOnce(frames) {
+    this.frameIndex++;
+    if (this.frameIndex >= frames.length) return true;
+    this.img = frames[this.frameIndex];
+    return false;
   }
 }
 window.Projectile = Projectile;
+

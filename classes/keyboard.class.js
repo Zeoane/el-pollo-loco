@@ -4,5 +4,5 @@ class GameKeyboard {
     this.LEFT = this.RIGHT = this.UP = this.DOWN = this.SPACE = this.F = false;
   }
 }
-window.GameKeyboard = GameKeyboard;   // global verfügbar
+window.GameKeyboard = GameKeyboard;  
 
