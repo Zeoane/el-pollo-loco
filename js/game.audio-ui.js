@@ -212,6 +212,7 @@ function wireToolbar() {
     .getElementById("btnStop")
     ?.addEventListener("click", () => window.world?.stop?.());
   document.getElementById("btnRestart")?.addEventListener("click", restartGame);
+  window.wireFullscreen?.();
   if (!toolbarKeysBound) {
   addEventListener("keydown", handleToolbarKeys);
   toolbarKeysBound = true;

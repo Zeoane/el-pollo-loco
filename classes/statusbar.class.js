@@ -10,11 +10,15 @@ class StatusBar extends MovableObject {
   /**
    * @param {string} basePath
    * @param {string} iconPath
+   * @param {string} [prefix] - Optional prefix for image filenames (e.g., "orange")
    */
-  constructor(basePath, iconPath) {
+  constructor(basePath, iconPath, prefix = "") {
     super();
+    const prefixPart = prefix ? `${prefix}` : "";
     this.IMAGES = [0, 20, 40, 60, 80, 100].map(
-      (pct) => `${basePath}/${pct}.png`
+      (pct) => prefixPart 
+        ? `${basePath}/${prefixPart}${pct}.png`
+        : `${basePath}/${pct}.png`
     );
     this.loadImages(this.IMAGES);
     this.set(100);
@@ -93,6 +97,13 @@ class HUD {
       "img/7_statusbars/3_icons/icon_health.png"
     );
 
+    const endbossBase = "img/7_statusbars/2_statusbar_endboss/orange";
+    this.endbossBar = new StatusBar(
+      endbossBase,
+      "img/7_statusbars/3_icons/icon_health_endboss.png",
+      "orange"
+    );
+
     this.counts = { coins: 0, bottles: 0 };
   }
 
@@ -108,6 +119,15 @@ class HUD {
     this.bottleBar.set((100 * (inv.bottles || 0)) / (cfg.items?.bottles || 5));
     this.healthBar.set(hpPct);
 
+    // Update endboss statusbar if boss exists
+    if (world.bossSpawned) {
+      const endboss = world.opponents?.find(o => o instanceof Endboss && !o._dead);
+      if (endboss) {
+        const endbossHpPct = endboss.hpPercent?.() ?? 100;
+        this.endbossBar.set(endbossHpPct);
+      }
+    }
+
     this.counts.coins = inv.coins || 0;
     this.counts.bottles = inv.bottles || 0;
   }
@@ -120,6 +140,16 @@ class HUD {
     this.sync(world);
     let x = this.left;
     let y = this.top;
+
+    // Draw endboss statusbar if boss is spawned (top left)
+    if (world.bossSpawned) {
+      const endboss = world.opponents?.find(o => o instanceof Endboss && !o._dead);
+      if (endboss) {
+        const endbossHpPct = Math.round(endboss.hpPercent?.() ?? 100);
+        this._row(ctx, this.endbossBar, x, y, endbossHpPct + "%");
+        y += this.gap;
+      }
+    }
 
     this._row(ctx, this.bottleBar, x, y, "×" + this.counts.bottles);
     y += this.gap;

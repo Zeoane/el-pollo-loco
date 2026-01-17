@@ -3,7 +3,7 @@ class Endboss extends MovableObject {
   constructor() {
     super();
 
-    this.setSize(280, 280).setSpeed(0.6);
+    this.setSize(280, 280).setSpeed(1.0);
     this.footOffset = 14;
     this.setHitbox(22, 10, this.width - 44, this.height - 24);
 
@@ -154,7 +154,7 @@ class Endboss extends MovableObject {
    * Prepares attack movement settings.
    */
   armAttack() {
-    this.chargeVel = 3.0;
+    this.chargeVel = 3.5;
     this.attackTimer = 600;
   }
 
@@ -189,6 +189,17 @@ class Endboss extends MovableObject {
     this.setState("dead");
     this._deadline = 800;
     setTimeout(() => window.world?.triggerGameOver?.("win"), 1000);
+  }
+
+  /**
+   * Returns current health as percentage (0–100).
+   * @returns {number}
+   */
+  hpPercent() {
+    const current = this.hp ?? 0;
+    const max = this.hpMax ?? 300;
+    const pct = (100 * current) / max;
+    return Math.max(0, Math.min(100, pct));
   }
 
   /**
@@ -233,21 +244,21 @@ class Endboss extends MovableObject {
 
   updateWalk(dist, dtMs, k) {
     const moveDir = dist >= 0 ? 1 : -1;
-    this.x += this.speed * moveDir * k * 2;
-    if (Math.abs(dist) < 360) this.setState("alert");
+    this.x += this.speed * moveDir * k * 2.5;
+    if (Math.abs(dist) < 400) this.setState("alert");
     this.attackCooldown = Math.max(0, this.attackCooldown - dtMs);
   }
 
   updateAlert(dist, dtMs, k) {
     const moveDir = dist >= 0 ? 1 : -1;
-    if (this.attackCooldown === 0 && Math.abs(dist) < 260) {
+    if (this.attackCooldown === 0 && Math.abs(dist) < 300) {
       this.setState("attack");
-      this.attackCooldown = 1400;
+      this.attackCooldown = 1200;
       return;
     }
-    this.x += this.speed * 0.4 * moveDir * k * 2;
+    this.x += this.speed * 0.8 * moveDir * k * 2.5;
     this.attackCooldown = Math.max(0, this.attackCooldown - dtMs);
-    if (Math.abs(dist) > 420) this.setState("walk");
+    if (Math.abs(dist) > 450) this.setState("walk");
   }
 
   updateAttack(dist, dtMs, k) {
@@ -260,7 +271,7 @@ class Endboss extends MovableObject {
   updateHurt(dist, k) {
     const moveDir = dist >= 0 ? 1 : -1;
     this.x -= 0.6 * moveDir * k * 2;
-    if (this.invT === 0) this.setState(Math.abs(dist) > 420 ? "walk" : "alert");
+    if (this.invT === 0) this.setState(Math.abs(dist) > 450 ? "walk" : "alert");
   }
 
   updateDead(dtMs) {
