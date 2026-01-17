@@ -80,17 +80,44 @@ class BackgroundObject extends MovableObject {
   }
 
   /**
+   * Resets tile dimensions to force recalculation.
+   */
+  resetDimensions() {
+    this._tileW = 0;
+    this._tileH = 0;
+    // Reset Y position for recalculation
+    if (this._originalY !== undefined) {
+      this.y = this._originalY;
+    }
+  }
+
+  /**
    * Ensures tile dimensions are calculated based on canvas size.
    * @param {CanvasRenderingContext2D} ctx
    * @param {HTMLImageElement} img
    */
   _ensureDims(ctx, img) {
     if (this._tileW && this._tileH) return;
-    const H = this.height ?? ctx.canvas.height;
+    
+    // Save original Y position if not already saved
+    if (this._originalY === undefined) {
+      this._originalY = this.y;
+    }
+    
+    const canvasH = ctx.canvas.height;
+    const H = this.height ?? canvasH;
     const s = H / (img.naturalHeight || H);
     const W = (img.naturalWidth || H) * s;
     this._tileW = Math.max(2, Math.round(W / 2) * 2);
     this._tileH = Math.max(1, Math.round(H));
+    
+    // Position background layers at bottom of canvas for fullscreen
+    const originalCanvasH = 480;
+    if (canvasH > originalCanvasH && this._originalY === 0) {
+      this.y = canvasH - this._tileH;
+    } else if (this._originalY !== undefined) {
+      this.y = this._originalY;
+    }
   }
 
   /**
@@ -267,6 +294,14 @@ class SkyLayer extends MovableObject {
     if (!this._ok) return;
     this._ensureDims(ctx);
     this._drawTiles(ctx, cameraX);
+  }
+
+  /**
+   * Resets tile dimensions to force recalculation.
+   */
+  resetDimensions() {
+    this._tileW = 0;
+    this._tileH = 0;
   }
 
   /**

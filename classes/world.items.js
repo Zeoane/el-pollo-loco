@@ -61,7 +61,15 @@ spawnPickups() {
  * @param {number} count
  */
 spawnRandomCoins(count) {
-  for (let i = 0; i < count; i++) this.coins.push(Coin.rand(this));
+  for (let i = 0; i < count; i++) {
+    const coin = Coin.rand(this);
+    // If we're in scaled mode, save the original offset (relative to original groundY)
+    if (this._originalGroundY !== undefined && this.groundY !== this._originalGroundY && coin._originalOffset === undefined) {
+      const offsetFromGround = coin.y - this.groundY;
+      coin._originalOffset = offsetFromGround; // keep fixed pixel offset
+    }
+    this.coins.push(coin);
+  }
 },
 
 /**
@@ -114,7 +122,13 @@ getBottleClusterSpec(baseX) {
  */
 spawnOneBottle(cfg, i) {
   const v = Math.random() < 0.5 ? 1 : 2;
-  const b = new Bottle(cfg.firstX + i * cfg.dx, this.groundY - 60, v);
+  const y = this.groundY - 60;
+  const b = new Bottle(cfg.firstX + i * cfg.dx, y, v);
+  // If we're in scaled mode, save the original offset (relative to original groundY)
+  if (this._originalGroundY !== undefined && this.groundY !== this._originalGroundY) {
+    const offsetFromGround = y - this.groundY; // e.g. -60
+    b._originalOffset = offsetFromGround; // keep fixed pixel offset
+  }
   this.bottles.push(b);
 },
 

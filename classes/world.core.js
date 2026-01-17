@@ -323,7 +323,15 @@ Object.assign(World.prototype, {
     const cnt = 3 + Math.floor(Math.random() * 4);
     const dx = 34;
     const y = this.groundY - 120 - Math.random() * 60;
-    for (let i = 0; i < cnt; i++) this.coins.push(new Coin(baseX + i * dx, y));
+    for (let i = 0; i < cnt; i++) {
+      const coin = new Coin(baseX + i * dx, y);
+      // If we're in scaled mode, save the original offset (relative to original groundY)
+      if (this._originalGroundY !== undefined && this.groundY !== this._originalGroundY) {
+        const offsetFromGround = y - this.groundY;
+        coin._originalOffset = offsetFromGround; // keep fixed pixel offset
+      }
+      this.coins.push(coin);
+    }
   },
 });
 

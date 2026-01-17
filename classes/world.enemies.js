@@ -29,20 +29,34 @@ shouldEnterBossPhase(t) {
 },
 
 /**
- * Transitions to the big phase: removes small enemies and spawns regular chickens.
+ * Transitions to the big phase: marks transition and spawns regular chickens.
+ * Living SmallChickens are allowed to finish moving off-screen naturally.
  */
 enterBigPhase() {
   this.phase = "big";
-  this.opponents = this.opponents.filter(o => !(o instanceof SmallChicken));
+  // Mark all SmallChickens to be removed when they leave the screen
+  // They will continue their normal movement until they're off-screen
+  this.opponents.forEach(o => {
+    if (o instanceof SmallChicken && !o._dead && o.state !== "dead") {
+      o._phaseTransitionRemoval = true; // Mark for removal when off-screen
+    }
+  });
   this.spawnRegularChickens();
 },
 
 /**
- * Transitions to the boss phase: clears opponents and spawns the endboss.
+ * Transitions to the boss phase: marks transition and spawns the endboss.
+ * Living enemies are allowed to finish moving off-screen naturally.
  */
 enterBossPhase() {
   this.phase = "boss";
-  this.opponents.length = 0;
+  // Mark all non-Endboss enemies to be removed when they leave the screen
+  // They will continue their normal movement until they're off-screen
+  this.opponents.forEach(o => {
+    if (!(o instanceof Endboss) && !o._dead && o.state !== "dead") {
+      o._phaseTransitionRemoval = true; // Mark for removal when off-screen
+    }
+  });
   this.spawnBoss();
 },
 
@@ -69,14 +83,20 @@ maintainSmallPhase() {
  */
 maintainBigPhase() {
   while (this.countEnemies(Chicken) < this.maxBig) this.spawnEnemy("big");
-  this.opponents = this.opponents.filter(o => !(o instanceof SmallChicken));
+  // Keep leftover SmallChickens so they can walk off-screen
+  // (they'll be removed once they leave the left bound)
 },
 
 /**
  * Keeps only the living endboss during the "boss" phase.
  */
 maintainBossPhase() {
-  this.opponents = this.opponents.filter(o => o instanceof Endboss && !o._dead);
+  // Keep endboss plus any transition-marked enemies until off-screen
+  this.opponents = this.opponents.filter(o => {
+    if (o instanceof Endboss) return !o._dead;
+    if (o._phaseTransitionRemoval) return !o._dead;
+    return false;
+  });
 },
 
 /**
@@ -151,7 +171,12 @@ countEnemies(Cls) {
   spawnBoss(/* ... */) {
     if (this.bossSpawned) return;
     const b = new Endboss().setGround?.(this.groundY).placeOnGround?.();
-    b.x = this.character.x + 800;
+    // Spawn boss off-screen to the right, relative to canvas width
+    // Use cameraX + canvas width + additional offset to ensure boss starts off-screen
+    const canvasWidth = this.canvas?.width || 1920;
+    const cameraRight = (this.cameraX || 0) + canvasWidth;
+    const offset = Math.max(800, canvasWidth * 0.8); // At least 800px, or 80% of canvas width
+    b.x = Math.max(cameraRight + 200, (this.character.x || 0) + offset);
     this.opponents.push(b);
     this.bossSpawned = true;
     this.phase = "boss";
@@ -238,6 +263,13 @@ moveOpponent(o) {
  */
 respawnOpponentIfNeeded(o, bounds, far) {
   if (o.x + o.width >= bounds.left) return;
+  
+  // If enemy is marked for phase transition removal, don't respawn - mark as dead instead
+  if (o._phaseTransitionRemoval) {
+    o._dead = true;
+    return;
+  }
+  
   o.x = this._respawnX(bounds.ahead, far);
   this._rerollSpeed(o);
 },
