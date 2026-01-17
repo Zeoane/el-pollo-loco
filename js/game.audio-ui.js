@@ -17,6 +17,7 @@ await SFX.loadAll({
   lost: "audio/sounds/sadwhisle.wav",
   win: "audio/sounds/groovy-winner.wav",
   heal_chimes: "audio/sounds/heal-chimes.wav",
+  snoring: "audio/sounds/snoring.wav",
 }).catch(handleAudioLoadError);
   initStaticImages();
   armStartScreenSound();

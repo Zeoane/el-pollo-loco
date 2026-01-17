@@ -79,6 +79,8 @@ class Character extends MovableObject {
     this.onGround = false;
     this.facing = 1;
     this.idleElapsed = 0;
+    this.snoringTimer = 0;
+    this.snoringStarted = false;
     this.hasGroundShadow = false;
   }
 
@@ -148,6 +150,15 @@ hpPercent() {
     this.hurtT = Math.max(0, (this.hurtT || 0) - dtMs);
     const isIdle = this.state === "idle" || this.state === "long_idle";
     this.idleElapsed = isIdle ? (this.idleElapsed || 0) + dtMs : 0;
+    
+    // Update snoring timer and start sound after 2 seconds in idle
+    if (isIdle && !this.snoringStarted) {
+      this.snoringTimer = (this.snoringTimer || 0) + dtMs;
+      if (this.snoringTimer >= 2000) {
+        window.SFX?.loop?.("snoring", "character_idle", { vol: 0.95 });
+        this.snoringStarted = true;
+      }
+    }
   }
 
   determineState(moving) {
@@ -163,9 +174,36 @@ hpPercent() {
   }
 
   resetFrame(next) {
+    const prevState = this.state;
     this.state = next;
     this.frameIndex = 0;
     this.frameElapsedMs = 0;
+    this.updateIdleSound(prevState, next);
+  }
+
+  /**
+   * Updates the snoring sound based on idle state changes.
+   * Only resets timer after game has started (prevState is not undefined).
+   * @param {string} prevState - Previous state (undefined on initial setup)
+   * @param {string} nextState - New state
+   */
+  updateIdleSound(prevState, nextState) {
+    // Don't reset timer on initial setup (when prevState is undefined)
+    if (prevState === undefined) return;
+
+    const wasIdle = prevState === "idle" || prevState === "long_idle";
+    const isIdle = nextState === "idle" || nextState === "long_idle";
+
+    if (isIdle && !wasIdle) {
+      // Reset timer when entering idle state (sound will start after 2 seconds in updateTimers)
+      this.snoringTimer = 0;
+      this.snoringStarted = false;
+    } else if (!isIdle && wasIdle) {
+      // Stop snoring when leaving idle state
+      window.SFX?.stop?.("character_idle");
+      this.snoringTimer = 0;
+      this.snoringStarted = false;
+    }
   }
 
 /**
