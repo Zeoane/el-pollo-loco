@@ -154,6 +154,62 @@ function setupStartScreen() {
   btn.addEventListener("click", () => startGame(scr));
 }
 
+let endControlsBound = false;
+
+/**
+ * Shows the end screen controls.
+ */
+function showEndControls() {
+  document.getElementById("endScreen")?.classList.remove("hidden");
+}
+
+/**
+ * Hides the end screen controls.
+ */
+function hideEndControls() {
+  document.getElementById("endScreen")?.classList.add("hidden");
+}
+
+/**
+ * Shows the start screen and pauses the game.
+ */
+function showStartScreen() {
+  const scr = document.getElementById("startScreen");
+  if (!scr) return;
+  scr.classList.remove("hidden");
+  startStartScreenIfAvailable();
+  window.world?.pause?.(true);
+}
+
+/**
+ * Restarts the game and returns to the start screen.
+ */
+function goHomeFromEndScreen() {
+  hideEndControls();
+  window.restartGame?.();
+  showStartScreen();
+}
+
+/**
+ * Restarts the game from the end screen.
+ */
+function restartFromEndScreen() {
+  hideEndControls();
+  window.restartGame?.();
+}
+
+/**
+ * Wires the end screen buttons once it exists in the DOM.
+ */
+function setupEndControls() {
+  if (endControlsBound) return;
+  const scr = document.getElementById("endScreen");
+  if (!scr) return;
+  onClick("endRestart", restartFromEndScreen);
+  onClick("endHome", goHomeFromEndScreen);
+  endControlsBound = true;
+}
+
 /**
  * Applies a background image to the #bg element after it is ready.
  * @param {string} url
@@ -175,3 +231,7 @@ function applyDivBackground(url) {
 }
 
 window.applyDivBackground = applyDivBackground;
+window.showEndControls = showEndControls;
+window.hideEndControls = hideEndControls;
+window.setupEndControls = setupEndControls;
+window.showStartScreen = showStartScreen;

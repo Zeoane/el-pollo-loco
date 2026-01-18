@@ -239,7 +239,8 @@ function handleToolbarKeys(e) {
 function isUiBlockingInput() {
   return (
     document.getElementById("howtoModal")?.classList.contains("hidden") === false ||
-    document.getElementById("startScreen")?.classList.contains("hidden") === false
+    document.getElementById("startScreen")?.classList.contains("hidden") === false ||
+    document.getElementById("endScreen")?.classList.contains("hidden") === false
   );
 }
 
@@ -269,6 +270,7 @@ function updatePauseBtn() {
  * Restarts the game world without reloading the page.
  */
 function restartGame() {
+  window.hideEndControls?.();
   showHud();
   stopAllAudio();
   window.resetStartScreenLoopFlag?.();

@@ -94,6 +94,7 @@ window.init = function init() {
 
   injectTemplates?.();
   setupStartScreen?.();
+  setupEndControls?.();
   wireHowTo?.();
   setupTouchControls?.();
 

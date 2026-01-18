@@ -120,12 +120,32 @@ body {
   padding-bottom: var(--game-pad-bottom);
   box-sizing: border-box;
   background: rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(3px) brightness(1.15);
   -webkit-backdrop-filter: blur(3px) brightness(1.15);
+  backdrop-filter: blur(3px) brightness(1.15);
   pointer-events: auto;
 }
 
 .modal-backdrop.hidden {
+  display: none !important;
+}
+
+.end-controls {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 1200;
+  display: flex;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.25);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  pointer-events: auto;
+}
+
+.end-controls.hidden {
   display: none !important;
 }
 
@@ -281,6 +301,7 @@ h1 {
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   touch-action: none;
+  -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
 }
@@ -309,8 +330,8 @@ h1 {
   background: rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 14px;
-  backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   color: rgb(255, 255, 255);
   font-size: clamp(18px, 5vw, 24px);
   display: flex;
@@ -399,6 +420,7 @@ h1 {
   display: grid;
   place-items: center;
   background: rgba(0, 0, 0, 0.8);
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
 }
 

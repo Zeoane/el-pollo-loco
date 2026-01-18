@@ -26,10 +26,16 @@ function setupTouchControls() {
       btn.classList.remove("active");
     };
 
+    const blockContextMenu = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
     btn.addEventListener("pointerdown", press);
     btn.addEventListener("pointerup", release);
     btn.addEventListener("pointerleave", release);
     btn.addEventListener("pointercancel", release);
+    btn.addEventListener("contextmenu", blockContextMenu);
   });
 
   addEventListener("blur", () => resetTouchKeys(kb));

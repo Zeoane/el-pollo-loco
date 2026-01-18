@@ -221,6 +221,7 @@ Object.assign(World.prototype, {
     this.pause(true);
     SFX.stop?.("menu");
     window.playEndSound?.(reason);
+    window.showEndControls?.();
   },
 
   /**
