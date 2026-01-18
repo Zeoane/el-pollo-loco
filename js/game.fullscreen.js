@@ -29,6 +29,36 @@ function isFullscreen() {
 }
 
 /**
+ * Checks if the viewport is effectively fullscreen (e.g. F11).
+ * @returns {boolean}
+ */
+function isViewportFullscreen() {
+  const vw = window.innerWidth || 0;
+  const vh = window.innerHeight || 0;
+  const sw = screen.width || 0;
+  const sh = screen.height || 0;
+  if (!vw || !vh || !sw || !sh) return false;
+  return vw / sw > 0.95 && vh / sh > 0.95;
+}
+
+/**
+ * Determines if fullscreen layout should be applied.
+ * @returns {boolean}
+ */
+function shouldUseFullscreenLayout() {
+  return isFullscreen() || isViewportFullscreen();
+}
+
+/**
+ * Toggles fullscreen layout class on root elements.
+ * @param {boolean} active
+ */
+function setFullscreenLayoutActive(active) {
+  document.body?.classList.toggle("fullscreen-layout", active);
+  document.documentElement?.classList.toggle("fullscreen-layout", active);
+}
+
+/**
  * Enters fullscreen mode for the specified element (or body by default).
  * @param {HTMLElement} [element=document.body]
  * @returns {Promise<void>}
@@ -106,31 +136,39 @@ function saveOriginalCanvasSize(canvas) {
  * @param {HTMLElement} gameContainer
  */
 function setCanvasToFullscreen(canvas, gameContainer) {
-  const fullscreenEl = document.fullscreenElement || 
-    document.webkitFullscreenElement || 
-    document.mozFullScreenElement || 
-    document.msFullscreenElement;
-  
-  const container = fullscreenEl || gameContainer || document.documentElement;
-  const w = Math.max(
-    container.clientWidth || 0,
-    window.innerWidth || 0,
-    screen.width || 0
-  );
-  const h = Math.max(
-    container.clientHeight || 0,
-    window.innerHeight || 0,
-    screen.height || 0
-  );
-  
-  canvas.width = w || 1920;
-  canvas.height = h || 1080;
+  const baseW = canvas._originalWidth || canvas.width || 720;
+  const baseH = canvas._originalHeight || canvas.height || 480;
+  const vw = Math.max(1, window.innerWidth || screen.width || baseW);
+  const vh = Math.max(1, window.innerHeight || screen.height || baseH);
+
+  canvas.width = Math.round(vw);
+  canvas.height = Math.round(vh);
+  const cssW = Math.round(vw);
+  const cssH = Math.round(vh);
+
+  if (gameContainer) {
+    gameContainer.style.position = "fixed";
+    gameContainer.style.left = "0";
+    gameContainer.style.top = "0";
+    gameContainer.style.width = `${vw}px`;
+    gameContainer.style.height = `${vh}px`;
+    gameContainer.style.maxWidth = "none";
+    gameContainer.style.maxHeight = "none";
+    gameContainer.style.display = "flex";
+    gameContainer.style.alignItems = "center";
+    gameContainer.style.justifyContent = "center";
+  }
+
+  canvas.style.width = `${cssW}px`;
+  canvas.style.height = `${cssH}px`;
+  canvas.style.maxWidth = "none";
+  canvas.style.maxHeight = "none";
   
   // Scale groundY and all game elements proportionally to new canvas height
   const world = window.world;
   if (world && canvas._originalHeight) {
     const originalH = canvas._originalHeight;
-    const scale = h / originalH;
+    const scale = vh / originalH;
     
     if (world._originalGroundY === undefined) {
       world._originalGroundY = world.groundY;
@@ -152,6 +190,10 @@ function restoreOriginalCanvasSize(canvas) {
   canvas.height = canvas._originalHeight;
   canvas._originalWidth = null;
   canvas._originalHeight = null;
+  canvas.style.width = "";
+  canvas.style.height = "";
+  canvas.style.maxWidth = "";
+  canvas.style.maxHeight = "";
   
   // Restore original groundY and game elements
   const world = window.world;
@@ -332,16 +374,23 @@ function adjustCanvasForFullscreen() {
   const gameContainer = document.getElementById("game");
   if (!canvas || !gameContainer) return;
 
-  const world = window.world;
-  if (!world) return;
+  const useFullscreenLayout = shouldUseFullscreenLayout();
+  setFullscreenLayoutActive(useFullscreenLayout);
 
-  if (isFullscreen()) {
+  if (useFullscreenLayout) {
     saveOriginalCanvasSize(canvas);
     setCanvasToFullscreen(canvas, gameContainer);
-    updateWorldCanvas(world, canvas);
+    if (window.world) updateWorldCanvas(window.world, canvas);
   } else {
+    gameContainer.style.position = "";
+    gameContainer.style.left = "";
+    gameContainer.style.top = "";
+    gameContainer.style.width = "";
+    gameContainer.style.height = "";
+    gameContainer.style.maxWidth = "";
+    gameContainer.style.maxHeight = "";
     restoreOriginalCanvasSize(canvas);
-    updateWorldCanvas(world, canvas);
+    if (window.world) updateWorldCanvas(window.world, canvas);
   }
 }
 
@@ -407,9 +456,7 @@ function wireFullscreen() {
 
   // Handle window resize in fullscreen
   window.addEventListener("resize", () => {
-    if (isFullscreen()) {
-      adjustCanvasForFullscreen();
-    }
+    adjustCanvasForFullscreen();
   });
 
   // Initial icon update

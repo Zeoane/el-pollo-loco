@@ -12,6 +12,8 @@ const START_SCREEN_HTML = `
       z-index: 1000;
       display: grid;
       place-items: center;
+      padding: var(--game-pad-top, 32px) 0 var(--game-pad-bottom, 24px);
+      box-sizing: border-box;
       background: rgba(0, 0, 0, 0.8);
       backdrop-filter: blur(4px);
     }

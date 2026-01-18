@@ -19,6 +19,9 @@ function injectTemplates() {
   insertOnce("startScreen", window.startScreenTemplate());
   insertOnce("howtoModal", window.howtoModalTemplate());
   insertOnce("endScreen", window.endScreenTemplate());
+  if (window.touchControlsTemplate) {
+    insertOnce("touchControls", window.touchControlsTemplate());
+  }
 }
 
 /**

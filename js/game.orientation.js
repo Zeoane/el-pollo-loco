@@ -6,8 +6,10 @@ function isPortraitMode() {
 }
 
 function isMobileLike() {
-  // iPhone/Android + Tablets – üblich für die Abgabe
-  return Math.min(window.innerWidth, window.innerHeight) <= 820;
+  // Mobile/Tablet (coarse pointer) + typische Portrait-Breiten
+  const isCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
+  const minSide = Math.min(window.innerWidth, window.innerHeight);
+  return isCoarsePointer && minSide <= 768;
 }
 
 function toggleRotateOverlay(show) {

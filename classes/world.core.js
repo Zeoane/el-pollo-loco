@@ -214,9 +214,10 @@ Object.assign(World.prototype, {
     this.checkCharEnemyCollisions?.(dtMs);
 
     const moving = !!(this.keyboard?.LEFT || this.keyboard?.RIGHT);
-    this.character?.updateAnimation?.(dtMs, moving);
+    const bossFight = !!this.isBossFightActive?.();
+    this.character?.updateAnimation?.(dtMs, moving, bossFight);
     if ((this.character?.hp ?? 1) <= 0)
-      this.character?.updateAnimation?.(dtMs, false);
+      this.character?.updateAnimation?.(dtMs, false, bossFight);
   },
 
   /**

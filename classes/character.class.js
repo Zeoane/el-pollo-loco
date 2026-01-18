@@ -128,9 +128,9 @@ _loadFrames(paths) {
   return this.loadImages(paths);
 }
 
-updateAnimation(dtMs, moving) {
+updateAnimation(dtMs, moving, blockIdle = false) {
   this.updateTimers(dtMs);
-  this.determineState(moving);
+  this.determineState(moving, blockIdle);
   if (this.isDead()) return this.playCurrentAnimation(dtMs);
   this.playCurrentAnimation(dtMs);
 }
@@ -155,22 +155,23 @@ hpPercent() {
     if (isIdle && !this.snoringStarted) {
       this.snoringTimer = (this.snoringTimer || 0) + dtMs;
       if (this.snoringTimer >= 2000) {
-        window.SFX?.loop?.("snoring", "character_idle", { vol: 0.95 });
+        window.SFX?.loop?.("snoring", "character_idle", { vol: 1.0 });
         this.snoringStarted = true;
       }
     }
   }
 
-  determineState(moving) {
-    const next = this.calculateNextState(moving);
+  determineState(moving, blockIdle) {
+    const next = this.calculateNextState(moving, blockIdle);
     if (next !== this.state) this.resetFrame(next);
   }
 
-  calculateNextState(moving) {
+  calculateNextState(moving, blockIdle) {
     if (this.hp <= 0) return "dead";
     if (this.hurtT > 0) return "hurt";
     if (!this.onGround) return "jump";
-    return moving ? "walk" : this.idleElapsed > 3000 ? "long_idle" : "idle";
+    if (moving || blockIdle) return "walk";
+    return this.idleElapsed > 3000 ? "long_idle" : "idle";
   }
 
   resetFrame(next) {

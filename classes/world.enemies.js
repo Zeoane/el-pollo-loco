@@ -1,6 +1,17 @@
 // classes/world.enemies.js
 Object.assign(World.prototype, {
 /**
+ * Returns true while the endboss fight is active.
+ * @returns {boolean}
+ */
+isBossFightActive() {
+  if (this.phase !== "boss") return false;
+  return this.opponents?.some(
+    (o) => o instanceof Endboss && !(o._dead || o.state === "dead")
+  );
+},
+
+/**
  * Switches enemy phases based on elapsed time (small -> big -> boss).
  * Spawns/removes enemies when phase thresholds are reached.
  */

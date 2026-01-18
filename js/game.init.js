@@ -92,11 +92,29 @@ window.init = function init() {
   window.keyboard = window.keyboard ?? createKeyboardState();
   bindKeyboard(window.keyboard);
 
+  injectTemplates?.();
+  setupStartScreen?.();
+  wireHowTo?.();
+  setupTouchControls?.();
+
   window.world = createWorld();
   window.world.pause?.(true);
 
-  injectTemplates?.();
   startHudRAF?.();
-  setupStartScreen?.();
-  wireHowTo?.();
+  checkOrientation?.();
 };
+
+/**
+ * Boots the game as soon as the DOM is ready.
+ */
+function bootWhenReady() {
+  if (window.__initDone) return;
+  window.__initDone = true;
+  window.init();
+}
+
+if (document.readyState === "loading") {
+  addEventListener("DOMContentLoaded", bootWhenReady);
+} else {
+  bootWhenReady();
+}

@@ -17,6 +17,7 @@ class Endboss extends MovableObject {
     this.state = "walk";
     this.frameIndex = 0;
     this.frameElapsedMs = 0;
+    this.stateElapsedMs = 0;
 
     this.attackCooldown = 1200;
     this.attackTimer = 0;
@@ -24,6 +25,7 @@ class Endboss extends MovableObject {
 
     this.initFrames();
     this.frameMs = { walk: 120, alert: 90, attack: 80, hurt: 110, dead: 160 };
+    this.stateMinMs = { walk: 2000, alert: 4000 };
 
     this.setState("walk");
   }
@@ -130,6 +132,7 @@ class Endboss extends MovableObject {
   resetFrameState() {
     this.frameIndex = 0;
     this.frameElapsedMs = 0;
+    this.stateElapsedMs = 0;
   }
 
   /**
@@ -209,6 +212,7 @@ class Endboss extends MovableObject {
   updateBoss(world, dtMs = 16) {
     this.updateInvulnerability(dtMs);
     const dist = this.updateFacing(world);
+    this.stateElapsedMs += dtMs;
     this.updateState(world, dist, dtMs);
     this.animateState(dtMs);
   }
@@ -245,13 +249,17 @@ class Endboss extends MovableObject {
   updateWalk(dist, dtMs, k) {
     const moveDir = dist >= 0 ? 1 : -1;
     this.x += this.speed * moveDir * k * 2.5;
-    if (Math.abs(dist) < 400) this.setState("alert");
+    if (Math.abs(dist) < 400 && this.stateElapsedMs >= this.stateMinMs.walk) this.setState("alert");
     this.attackCooldown = Math.max(0, this.attackCooldown - dtMs);
   }
 
   updateAlert(dist, dtMs, k) {
     const moveDir = dist >= 0 ? 1 : -1;
-    if (this.attackCooldown === 0 && Math.abs(dist) < 300) {
+    if (
+      this.attackCooldown === 0 &&
+      Math.abs(dist) < 300 &&
+      this.stateElapsedMs >= this.stateMinMs.alert
+    ) {
       this.setState("attack");
       this.attackCooldown = 1200;
       return;
