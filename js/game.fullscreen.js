@@ -46,7 +46,28 @@ function isViewportFullscreen() {
  * @returns {boolean}
  */
 function shouldUseFullscreenLayout() {
-  return isFullscreen() || isViewportFullscreen();
+  return (
+    isFullscreen() ||
+    (isViewportFullscreen() && !isCoarsePointer() && isLargeScreen())
+  );
+}
+
+/**
+ * Returns true on touch-first devices (prevents false fullscreen on mobile).
+ * @returns {boolean}
+ */
+function isCoarsePointer() {
+  return !!window.matchMedia?.("(hover: none) and (pointer: coarse)")?.matches;
+}
+
+/**
+ * Returns true for larger screens (avoid false fullscreen on mobile sizes).
+ * @returns {boolean}
+ */
+function isLargeScreen() {
+  const vw = window.innerWidth || 0;
+  const vh = window.innerHeight || 0;
+  return Math.max(vw, vh) >= 900;
 }
 
 /**

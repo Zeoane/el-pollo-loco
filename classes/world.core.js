@@ -12,9 +12,10 @@ class World {
   elapsedMs = 0;
 
   phase = "small";
-  phase2AtMs = 90_000;
-  bossAtMs = 180_000;
+  phase2AtMs = 20_000;
+  bossAtMs = 40_000;
   bossSpawned = false;
+  bossPending = false;
 
   cameraX = 0;
   gravity = 0.6;
@@ -93,10 +94,11 @@ class World {
     else this._hudMissing = true;
 
     this.phase = "small";
-    this.phase2AtMs = this.cfg.phase2AtMs ?? 90_000;
-    this.bossAtMs = this.cfg.bossAtMs ?? 180_000;
+    this.phase2AtMs = this.cfg.phase2AtMs ?? 20_000;
+    this.bossAtMs = this.cfg.bossAtMs ?? 40_000;
     this.maxSmall = this.cfg.maxSmall ?? 5;
     this.maxBig = this.cfg.maxBig ?? 5;
+    this.bossPending = false;
 
     this.healCfg = { coinCost: 3, hpPct: 20, cdMs: 1000 };
     this._healLock = false;

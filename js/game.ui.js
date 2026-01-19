@@ -14,21 +14,16 @@ function insertOnce(id, html) {
 function injectTemplates() {
   if (!window.startScreenTemplate) return;
   if (!window.howtoModalTemplate) return;
+  if (!window.impressumModalTemplate) return;
   if (!window.endScreenTemplate) return;
 
   insertOnce("startScreen", window.startScreenTemplate());
   insertOnce("howtoModal", window.howtoModalTemplate());
+  insertOnce("impressumModal", window.impressumModalTemplate());
   insertOnce("endScreen", window.endScreenTemplate());
   if (window.touchControlsTemplate) {
     insertOnce("touchControls", window.touchControlsTemplate());
   }
-}
-
-/**
- * Starts the start screen animation loop if available.
- */
-function startStartScreenIfAvailable() {
-  window.startStartScreenLoop?.();
 }
 
 /**
@@ -132,13 +127,83 @@ function wireHowTo() {
 }
 
 /**
+ * Opens the Impressum modal.
+ */
+function openImpressum() {
+  closeHowTo();
+  document.getElementById("impressumModal")?.classList.remove("hidden");
+}
+
+/**
+ * Closes the Impressum modal.
+ */
+function closeImpressum() {
+  document.getElementById("impressumModal")?.classList.add("hidden");
+}
+
+/**
+ * Closes the Impressum modal when clicking the backdrop.
+ * @param {MouseEvent} e
+ */
+function closeImpressumOnBackdrop(e) {
+  if (e.target?.id === "impressumModal") closeImpressum();
+}
+
+/**
+ * Handles opening the Impressum modal.
+ * @param {Event} e
+ */
+function handleImpressumOpen(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  openImpressum();
+}
+
+/**
+ * Binds buttons that open the Impressum modal.
+ */
+function bindImpressumOpeners() {
+  onClick("impressumLinkStart", handleImpressumOpen);
+  onClick("impressumLinkHowto", handleImpressumOpen);
+}
+
+let impressumKeysBound = false;
+
+/**
+ * Closes modal on Escape key.
+ * @param {KeyboardEvent} e
+ */
+function handleImpressumEscape(e) {
+  if (e.code === "Escape") closeImpressum();
+}
+
+/**
+ * Binds buttons that close the Impressum modal and Escape listener once.
+ */
+function bindImpressumClosers() {
+  if (impressumKeysBound) return;
+
+  onClick("impressumClose", closeImpressum);
+  onClick("impressumClose2", closeImpressum);
+  onClick("impressumModal", closeImpressumOnBackdrop);
+
+  addEventListener("keydown", handleImpressumEscape);
+  impressumKeysBound = true;
+}
+
+/**
+ * Wires all Impressum related event listeners.
+ */
+function wireImpressum() {
+  bindImpressumOpeners();
+  bindImpressumClosers();
+}
+
+/**
  * Starts the game and hides the start screen.
  * @param {HTMLElement} scr
  */
 function startGame(scr) {
-  SFX.stop?.("start_screen");
-  window.resetStartScreenLoopFlag?.();
-
   scr.classList.add("hidden");
   window.world?.pause?.(false);
 }
@@ -150,7 +215,6 @@ function setupStartScreen() {
   const scr = document.getElementById("startScreen");
   const btn = document.getElementById("btnStartGame");
   if (!scr || !btn) return;
-  startStartScreenIfAvailable();
   btn.addEventListener("click", () => startGame(scr));
 }
 
@@ -177,7 +241,6 @@ function showStartScreen() {
   const scr = document.getElementById("startScreen");
   if (!scr) return;
   scr.classList.remove("hidden");
-  startStartScreenIfAvailable();
   window.world?.pause?.(true);
 }
 

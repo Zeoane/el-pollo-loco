@@ -63,7 +63,7 @@ function buildOpponents(n = 3, startX = 500) {
     const c = new Chicken();
     c.width = 70;
     c.height = 70;
-    c.speed = 1.6 + Math.random() * 0.8;
+    c.speed = 1.1 + Math.random() * 0.6;
     c.x = x;
     arr.push(c);
     x += 280 + Math.random() * 420;
@@ -94,8 +94,10 @@ function createLevel1() {
 const LEVEL1 = {
   lengthPx: 5200,
   bossAtPx: 3800,
+  phase2AtMs: 20_000,
+  bossAtMs: 40_000,
   player: {
-    speed: 3.0,
+    speed: 3.3,
     jumpVy: -12,
     health: 3,
     bottlesMax: 6,
@@ -104,8 +106,10 @@ const LEVEL1 = {
     chickens: 6,
     gapMin: 260,
     gapMax: 520,
-    speedMin: 1.4,
-    speedMax: 2.4,
+    speedMin: 1.1,
+    speedMax: 1.7,
+    smallSpeedMin: 0.8,
+    smallSpeedMax: 1.3,
   },
   items: {
     coins: 20,

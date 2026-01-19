@@ -48,10 +48,13 @@ Object.assign(World.prototype, {
    * @param {number} pow 
    */
   spawnProjectile(dir, pow) {
+    const c = this.character;
+    const spawnX = c.x + c.width / 2;
+    const spawnY = c.y + c.height * 0.45;
     this.projectiles.push(
       new Projectile(
-        this.character.x + this.character.width / 2,
-        this.character.y + 20,
+        spawnX,
+        spawnY,
         dir,
         { speedMul: pow }
       )
@@ -177,7 +180,14 @@ Object.assign(World.prototype, {
    * @returns {boolean}
    */
   isStomp(c, e) {
-    return c.prevY + c.height <= e.y + 8 && c.vy > 0;
+    const cb = c.getBounds?.() || c;
+    const eb = e.getBounds?.() || e;
+    const cbOffsetY = (cb.y ?? 0) - (c.y ?? cb.y ?? 0);
+    const cbHeight = cb.height ?? c.height ?? 0;
+    const prevBottom = (c.prevY ?? c.y ?? 0) + cbOffsetY + cbHeight;
+    const currBottom = (cb.y ?? c.y ?? 0) + cbHeight;
+    const enemyTop = eb.y ?? e.y ?? 0;
+    return c.vy > 0 && prevBottom <= enemyTop + 10 && currBottom >= enemyTop - 2;
   },
 
   /**

@@ -96,6 +96,7 @@ window.init = function init() {
   setupStartScreen?.();
   setupEndControls?.();
   wireHowTo?.();
+  wireImpressum?.();
   setupTouchControls?.();
 
   window.world = createWorld();

@@ -10,6 +10,12 @@ html,
 body {
   --game-pad-top: clamp(28px, 6vh, 64px);
   --game-pad-bottom: clamp(20px, 4vh, 52px);
+  --game-max-h: calc(100vh - var(--game-pad-top) - var(--game-pad-bottom) - 180px);
+  --game-max-w: min(90vw, 800px);
+  --game-max-w-from-h: calc(var(--game-max-h) * 1.5);
+  --panel-w: min(var(--game-max-w), var(--game-max-w-from-h));
+  --panel-h: min(var(--game-max-h), calc(var(--panel-w) / 1.5));
+  --game-radius: 12px;
   margin: 0;
   height: 100%;
   background-color: black;
@@ -23,10 +29,8 @@ body {
 #game {
   position: relative;
   z-index: 10;
-  width: fit-content;
-  height: fit-content;
-  max-width: min(90vw, 800px);
-  max-height: calc(100vh - var(--game-pad-top) - var(--game-pad-bottom) - 180px);
+  width: min(var(--game-max-w), var(--game-max-w-from-h));
+  height: auto;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -58,14 +62,14 @@ body {
 }
 
 #canvas {
-  width: min(90vw, 800px);
+  width: 100%;
   height: auto;
-  max-height: calc(100vh - var(--game-pad-top) - var(--game-pad-bottom) - 180px);
+  max-height: var(--game-max-h);
   max-width: 100%;
   object-fit: contain;
   justify-self: center;
   display: block;
-  border-radius: 12px;
+  border-radius: var(--game-radius);
 }
 
 /* Canvas in fullscreen mode - maintains aspect ratio and centers */
@@ -119,9 +123,9 @@ body {
   padding-top: var(--game-pad-top);
   padding-bottom: var(--game-pad-bottom);
   box-sizing: border-box;
-  background: rgba(0, 0, 0, 0.35);
-  -webkit-backdrop-filter: blur(3px) brightness(1.15);
-  backdrop-filter: blur(3px) brightness(1.15);
+  background: rgba(0, 0, 0, 0.2);
+  -webkit-backdrop-filter: blur(2px) brightness(1.25);
+  backdrop-filter: blur(2px) brightness(1.25);
   pointer-events: auto;
 }
 
@@ -152,7 +156,8 @@ body {
 .modal-h {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: clamp(8px, 2vw, 12px);
+  padding: clamp(12px, 2.4vw, 18px);
 }
 
 .modal-h h2 {
@@ -160,9 +165,51 @@ body {
 }
 
 .modal {
-  width: min(900px, 92vw);
-  max-height: calc(100vh - var(--game-pad-top) - var(--game-pad-bottom));
+  width: var(--panel-w);
+  min-height: var(--panel-h);
+  max-height: var(--panel-h);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  border-radius: var(--game-radius);
+  background: rgba(245, 233, 200, 0.96);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45);
+}
+
+.modal-h h2 {
+  font-size: clamp(18px, 3.6vw, 26px);
+}
+
+.modal-b {
+  flex: 1 1 auto;
   overflow: auto;
+  padding: 0 clamp(12px, 2.4vw, 18px) clamp(12px, 2.4vw, 18px);
+  font-size: clamp(12px, 2.2vw, 16px);
+  line-height: 1.45;
+}
+
+.modal-b h3 {
+  margin: 0 0 8px;
+  font-size: clamp(14px, 3vw, 18px);
+}
+
+.modal-b ul {
+  margin: 0;
+  padding-left: clamp(16px, 4vw, 24px);
+}
+
+.modal-b li + li {
+  margin-top: 6px;
+}
+
+.modal-f {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(8px, 2vw, 12px);
+  padding: 0 clamp(12px, 2.4vw, 18px) clamp(12px, 2.4vw, 18px);
 }
 
 .modal-h .chip,
@@ -436,9 +483,9 @@ h1 {
 }
 
 .start-art {
-  width: min(90vw, 800px);
-  max-height: calc(100vh - var(--game-pad-top) - var(--game-pad-bottom) - 180px);
-  border-radius: 20px;
+  width: var(--panel-w);
+  max-height: var(--panel-h);
+  border-radius: var(--game-radius);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
   object-fit: contain;
 }
@@ -454,6 +501,37 @@ h1 {
 .impressum-link:hover {
   color: #0e0d0d;
   text-decoration: underline;
+}
+
+.impressum-content {
+  background: rgb(239, 204, 138);
+  color: #111;
+  padding: 18px;
+  border-radius: 12px;
+  font: 500 clamp(12px, 2.2vw, 14px) / 1.6 system-ui, sans-serif;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+
+.impressum-content h3 {
+  margin: 14px 0 8px;
+}
+
+.impressum-content p {
+  margin: 0 0 10px;
+}
+
+@media (max-width: 900px), (max-height: 520px) {
+  .modal-b.impressum-content {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .modal-b.impressum-content::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
 }
 
 .rotate-device-overlay {
@@ -495,13 +573,47 @@ h1 {
   }
 }
 
-@media (max-width: 900px), (max-height: 520px) {
+@media (max-width: 600px), (max-height: 520px) {
+  #game {
+    width: min(
+      calc(var(--game-max-w) * 1.38),
+      calc(var(--game-max-w-from-h) * 1.38)
+    );
+  }
+
+  #canvas {
+    max-height: min(calc(var(--game-max-h) * 1.38), 100vh);
+  }
+
+  .start-art {
+    width: min(calc(var(--panel-w) * 1.38), 100vw);
+    max-height: min(calc(var(--panel-h) * 1.38), 100vh);
+  }
+
   .touch-controls {
     display: block;
   }
 
   .hud-fab-container {
     display: none;
+  }
+}
+
+@media (min-width: 601px) and (max-width: 1024px) {
+  #game {
+    width: min(
+      calc(var(--game-max-w) * 1.38),
+      calc(var(--game-max-w-from-h) * 1.38)
+    );
+  }
+
+  #canvas {
+    max-height: min(calc(var(--game-max-h) * 1.38), 100vh);
+  }
+
+  .start-art {
+    width: min(calc(var(--panel-w) * 1.38), 100vw);
+    max-height: min(calc(var(--panel-h) * 1.38), 100vh);
   }
 }
 

@@ -47,10 +47,9 @@ const START_SCREEN_HTML = `
     </div>
   </div>
 
-  <a href="impressum.html"
-     class="impressum-link"
-     target="_blank"
-     rel="noopener">
+  <a id="impressumLinkStart"
+     href="impressum.html"
+     class="impressum-link">
     Impressum
   </a>
 </div>

@@ -6,10 +6,16 @@ function isPortraitMode() {
 }
 
 function isMobileLike() {
-  // Mobile/Tablet (coarse pointer) + typische Portrait-Breiten
+  // Mobile/Tablet (Touch/Coarse Pointer) + typische kleinere Viewports
   const isCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
+  const hasTouchPoints = navigator.maxTouchPoints > 0;
+  const hasTouchEvent = "ontouchstart" in window;
   const minSide = Math.min(window.innerWidth, window.innerHeight);
-  return isCoarsePointer && minSide <= 768;
+  const maxSide = Math.max(window.innerWidth, window.innerHeight);
+  const isSmallViewport = minSide <= 768 || maxSide <= 900;
+  const isTabletViewport = minSide <= 1024 && maxSide <= 1366;
+  const isTouchCapable = isCoarsePointer || hasTouchPoints || hasTouchEvent;
+  return (isSmallViewport || isTabletViewport) && isTouchCapable;
 }
 
 function toggleRotateOverlay(show) {

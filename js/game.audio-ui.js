@@ -5,7 +5,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   applyDivBackground("img/5_background/desert-landscape.jpg");
   SFX.unlockOnGesture();
 await SFX.loadAll({
-  start_screen: "audio/sounds/start-screen.wav",
   coin: "audio/sounds/coin-ca-ching.mp3",
   bottle_pick: "audio/sounds/bottle-pickup.wav",
   bottle_throw: "audio/sounds/bottle-throw.wav",
@@ -20,48 +19,9 @@ await SFX.loadAll({
   snoring: "audio/sounds/snoring.wav",
 }).catch(handleAudioLoadError);
   initStaticImages();
-  armStartScreenSound();
   armMenuMusic();
   wireToolbar();
 });
-
-let startScreenLoopRunning = false;
-
-/**
- * Starts the start-screen loop when the start screen is visible.
- */
-function startStartScreenLoop() {
-  const scr = document.getElementById("startScreen");
-  if (!scr || scr.classList.contains("hidden")) return;
-  if (startScreenLoopRunning) return;
-
-  startScreenLoopRunning = true;
-  SFX.loop?.("start_screen", "start_screen", { vol: 0.25 });
-}
-
-let startSoundArmed = false;
-
-/**
- * Arms the start-screen sound to start on first user interaction.
- */
-function armStartScreenSound() {
-  if (startSoundArmed) return;
-  startSoundArmed = true;
-  addEventListener("pointerdown", onStartSoundGesture, true);
-  addEventListener("keydown", onStartSoundGesture, true);
-}
-
-/**
- * Starts start-screen sound after a gesture not on the Start button.
- * @param {Event} e
- */
-async function onStartSoundGesture(e) {
-  if (e?.target?.closest?.("#btnStartGame")) return;
-  try { await SFX.ctx?.resume?.(); } catch {}
-  startStartScreenLoop();
-  removeEventListener("pointerdown", onStartSoundGesture, true);
-  removeEventListener("keydown", onStartSoundGesture, true);
-}
 
 window.endSoundPlayed = false;
 
@@ -273,7 +233,6 @@ function restartGame() {
   window.hideEndControls?.();
   showHud();
   stopAllAudio();
-  window.resetStartScreenLoopFlag?.();
   disposeWorld();
   recreateWorld();
   rearmHudAndUi();
@@ -371,6 +330,4 @@ function updateVolumeUI() {
 /**
  * Public functions used across scripts.
  */
-window.startStartScreenLoop = startStartScreenLoop;
 window.playEndSound = playEndSound;
-window.resetStartScreenLoopFlag = () => (startScreenLoopRunning = false);

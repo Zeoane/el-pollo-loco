@@ -24,7 +24,7 @@ const HOWTO_MODAL_HTML = `
           <li><b>Flasche werfen:</b> F (halten = Power-Wurf)</li>
           <li><b>Heilen:</b> H (3 Münzen oder 3 Flaschen → +20% Leben)</li>
           <li>Phasen: Kleine Hühner → reguläre Hühner → Endboss</li>
-          <li><b>Mute/Pause/Stop/Restart:</b> Buttons oben rechts oder M / P / Esc / R</li>
+          <li><b>Mute/Pause/Stop/Restart:</b> Buttons unten rechts oder M / P / Esc / R</li>
         </ul>
       </div>
 
@@ -36,13 +36,13 @@ const HOWTO_MODAL_HTML = `
           <li><b>Throw bottle:</b> F (hold for power)</li>
           <li><b>Heal:</b> H (3 coins or 3 bottles → +20% HP)</li>
           <li>Phases: Small chickens → regular chickens → End boss</li>
-          <li><b>Mute/Pause/Stop/Restart:</b> top-right buttons or M / P / Esc / R</li>
+          <li><b>Mute/Pause/Stop/Restart:</b> bottom-right buttons or M / P / Esc / R</li>
         </ul>
       </div>
     </div>
 
     <footer class="modal-f">
-      <a href="impressum.html" target="_blank" rel="noopener" class="impressum-link">Impressum</a>
+      <a id="impressumLinkHowto" href="impressum.html" class="impressum-link">Impressum</a>
       <button id="howtoClose2" class="btn" type="button">OK</button>
     </footer>
   </div>

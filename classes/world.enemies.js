@@ -18,7 +18,8 @@ isBossFightActive() {
 managePhases() {
   const t = this.elapsedMs | 0;
   if (this.shouldEnterBigPhase(t)) this.enterBigPhase();
-  if (this.shouldEnterBossPhase(t)) this.enterBossPhase();
+  if (this.shouldEnterBossPhase(t)) this.bossPending = true;
+  if (this.shouldSpawnBossNow?.()) this.enterBossPhase();
 },
 
 /**
@@ -37,6 +38,17 @@ shouldEnterBigPhase(t) {
  */
 shouldEnterBossPhase(t) {
   return this.phase === "big" && t >= this.bossAtMs && !this.bossSpawned;
+},
+
+/**
+ * Returns true when boss is pending and no chickens are left.
+ * @returns {boolean}
+ */
+shouldSpawnBossNow() {
+  if (!this.bossPending || this.phase !== "big" || this.bossSpawned) return false;
+  return !this.opponents?.some(
+    (o) => o instanceof Chicken || o instanceof SmallChicken
+  );
 },
 
 /**
@@ -61,6 +73,7 @@ enterBigPhase() {
  */
 enterBossPhase() {
   this.phase = "boss";
+  this.bossPending = false;
   // Mark all non-Endboss enemies to be removed when they leave the screen
   // They will continue their normal movement until they're off-screen
   this.opponents.forEach(o => {
@@ -93,6 +106,7 @@ maintainSmallPhase() {
  * Maintains enemies for the "big" phase.
  */
 maintainBigPhase() {
+  if (this.bossPending) return;
   while (this.countEnemies(Chicken) < this.maxBig) this.spawnEnemy("big");
   // Keep leftover SmallChickens so they can walk off-screen
   // (they'll be removed once they leave the left bound)
@@ -127,7 +141,7 @@ countEnemies(Cls) {
     const Klass = kind === "small" ? SmallChicken : Chicken;
     const e = new Klass().setGround?.(this.groundY).placeOnGround?.();
     e.speed =
-      kind === "small" ? 1.2 + Math.random() * 0.7 : 1.6 + Math.random() * 0.9;
+      kind === "small" ? 0.8 + Math.random() * 0.5 : 1.1 + Math.random() * 0.6;
 
     const left = this.cameraX - 150;
     const ahead = this.cameraX + this.canvas.width + 220;
@@ -146,8 +160,8 @@ countEnemies(Cls) {
     for (let i = 0; i < n; i++) {
       const h = new SmallChicken().setGround?.(this.groundY).placeOnGround?.();
       h.speed =
-        (c.smallSpeedMin ?? 1.2) +
-        Math.random() * ((c.smallSpeedMax ?? 2.0) - (c.smallSpeedMin ?? 1.2));
+        (c.smallSpeedMin ?? 0.8) +
+        Math.random() * ((c.smallSpeedMax ?? 1.3) - (c.smallSpeedMin ?? 0.8));
       h.x = x;
       this.opponents.push(h);
       x +=
@@ -166,8 +180,8 @@ countEnemies(Cls) {
     for (let i = 0; i < n; i++) {
       const h = new Chicken().setGround?.(this.groundY).placeOnGround?.();
       h.speed =
-        (c.speedMin ?? 1.4) +
-        Math.random() * ((c.speedMax ?? 2.4) - (c.speedMin ?? 1.4));
+        (c.speedMin ?? 1.1) +
+        Math.random() * ((c.speedMax ?? 1.7) - (c.speedMin ?? 1.1));
       h.x = x;
       this.opponents.push(h);
       x +=
@@ -280,6 +294,12 @@ respawnOpponentIfNeeded(o, bounds, far) {
     o._dead = true;
     return;
   }
+
+  // When boss is pending, let remaining chickens leave without respawn
+  if (this.bossPending && (o instanceof Chicken || o instanceof SmallChicken)) {
+    o._dead = true;
+    return;
+  }
   
   o.x = this._respawnX(bounds.ahead, far);
   this._rerollSpeed(o);
@@ -303,12 +323,12 @@ respawnOpponentIfNeeded(o, bounds, far) {
   _rerollSpeed(o) {
     const E = this.cfg.enemies || {};
     if (o instanceof SmallChicken) {
-      const a = E.smallSpeedMin ?? 1.2,
-        b = E.smallSpeedMax ?? 2.0;
+      const a = E.smallSpeedMin ?? 0.8,
+        b = E.smallSpeedMax ?? 1.3;
       o.speed = a + Math.random() * (b - a);
     } else {
-      const a = E.speedMin ?? 1.6,
-        b = E.speedMax ?? 2.5;
+      const a = E.speedMin ?? 1.1,
+        b = E.speedMax ?? 1.7;
       o.speed = a + Math.random() * (b - a);
     }
   }
