@@ -200,10 +200,12 @@ function wireImpressum() {
 }
 
 /**
- * Starts the game and hides the start screen.
+ * Starts the game and hides the start screen after assets are ready.
  * @param {HTMLElement} scr
  */
-function startGame(scr) {
+async function startGame(scr) {
+  window.world?.pause?.(true);
+  await window.ensureEssentialAssets?.();
   scr.classList.add("hidden");
   window.world?.pause?.(false);
 }

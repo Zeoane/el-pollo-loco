@@ -337,9 +337,9 @@ h1 {
 .touch-btn {
   width: clamp(52px, 14vw, 70px);
   height: clamp(52px, 14vw, 70px);
-  border-radius: 16px;
+  border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.25);
-  background: rgba(0, 0, 0, 0.33);
+  background: rgba(58, 203, 14, 0.33);
   color: #fff;
   font-size: clamp(20px, 6vw, 28px);
   display: inline-flex;
@@ -374,9 +374,9 @@ h1 {
 .htp-fab {
   width: clamp(44px, 10vw, 56px);
   height: clamp(44px, 10vw, 56px);
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 14px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(58, 203, 14, 0.33);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   color: rgb(255, 255, 255);
@@ -566,6 +566,16 @@ h1 {
 @media (hover: none) and (pointer: coarse) {
   .touch-controls {
     display: block;
+  }
+
+  .touch-btn {
+    border-radius: 50%;
+    background: rgba(34, 197, 94, 0.7);
+    border-color: rgba(0, 0, 0, 0.25);
+  }
+
+  .touch-btn.active {
+    background: rgba(22, 163, 74, 0.85);
   }
 
   .hud-fab-container {

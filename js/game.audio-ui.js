@@ -1,10 +1,71 @@
+const ESSENTIAL_IMAGE_PATHS = [
+  "img/5_background/desert-landscape.jpg",
+  "img/5_background/layers/air.png",
+  "img/5_background/layers/4_clouds/1.png",
+  "img/5_background/layers/4_clouds/2.png",
+  "img/5_background/layers/4_clouds/full.png",
+  "img/5_background/layers/3_third_layer/1.png",
+  "img/5_background/layers/3_third_layer/2.png",
+  "img/5_background/layers/3_third_layer/full.png",
+  "img/5_background/layers/2_second_layer/1.png",
+  "img/5_background/layers/2_second_layer/2.png",
+  "img/5_background/layers/2_second_layer/full.png",
+  "img/5_background/layers/1_first_layer/1.png",
+  "img/5_background/layers/1_first_layer/2.png",
+  "img/5_background/layers/1_first_layer/full.png",
+  "img/2_character_pepe/1_idle/idle/I-1.png",
+];
+
+let essentialAssetsPromise = null;
+
+/**
+ * Preloads images and resolves when they are decoded or loaded.
+ * @param {string[]} paths
+ * @returns {Promise<void>}
+ */
+function preloadImages(paths = []) {
+  const unique = [...new Set(paths.filter(Boolean))];
+  return Promise.all(
+    unique.map(
+      (path) =>
+        new Promise((resolve) => {
+          const img = new Image();
+          let settled = false;
+          const done = () => {
+            if (settled) return;
+            settled = true;
+            resolve();
+          };
+          img.onload = done;
+          img.onerror = done;
+          img.src = path;
+          if (img.decode) img.decode().then(done).catch(done);
+        })
+    )
+  ).then(() => {});
+}
+
+/**
+ * Ensures essential images are preloaded once.
+ * @returns {Promise<void>}
+ */
+function ensureEssentialAssets() {
+  if (!essentialAssetsPromise) {
+    essentialAssetsPromise = preloadImages(ESSENTIAL_IMAGE_PATHS);
+  }
+  return essentialAssetsPromise;
+}
+
+window.ensureEssentialAssets = ensureEssentialAssets;
+
 /**
  * Loads all game sounds and initial images.
  */
 window.addEventListener("DOMContentLoaded", async () => {
   applyDivBackground("img/5_background/desert-landscape.jpg");
+  ensureEssentialAssets();
   SFX.unlockOnGesture();
-await SFX.loadAll({
+  await SFX.loadAll({
   coin: "audio/sounds/coin-ca-ching.mp3",
   bottle_pick: "audio/sounds/bottle-pickup.wav",
   bottle_throw: "audio/sounds/bottle-throw.wav",
@@ -17,7 +78,7 @@ await SFX.loadAll({
   win: "audio/sounds/groovy-winner.wav",
   heal_chimes: "audio/sounds/heal-chimes.wav",
   snoring: "audio/sounds/snoring.wav",
-}).catch(handleAudioLoadError);
+  }).catch(handleAudioLoadError);
   initStaticImages();
   armMenuMusic();
   wireToolbar();
@@ -229,12 +290,16 @@ function updatePauseBtn() {
 /**
  * Restarts the game world without reloading the page.
  */
-function restartGame() {
+async function restartGame() {
   window.hideEndControls?.();
   showHud();
   stopAllAudio();
   disposeWorld();
+  const assetsReady = window.ensureEssentialAssets?.();
   recreateWorld();
+  window.world?.pause?.(true);
+  await assetsReady;
+  window.world?.pause?.(false);
   rearmHudAndUi();
   window.endSoundPlayed = false;
 }

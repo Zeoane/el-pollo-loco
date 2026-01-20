@@ -21,7 +21,7 @@ const IMPRESSUM_MODAL_HTML = `
       </p>
 
       <p><strong>Kontakt:</strong><br>
-        E-Mail: gabriele-lerch@outlook.de
+        E-Mail: kontakt-gl@outlook.de
       </p>
 
       <h3>Haftungsausschluss (Disclaimer)</h3>
