@@ -391,7 +391,6 @@ function updateVolumeUI() {
   updateMuteIcon();
 }
 
-
 /**
  * Public functions used across scripts.
  */

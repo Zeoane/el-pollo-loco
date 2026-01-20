@@ -206,11 +206,13 @@ countEnemies(Cls) {
     this.bossSpawned = true;
     this.phase = "boss";
     SFX.stop?.("chicken");
+    this.ensureAudioState?.();
+    // Play entry roar and schedule 1-2 extra roars during the fight.
+    SFX.play?.("rooster", { vol: 0.85 });
     if (this.audio) {
-      this.audio.roosterLeft = 2;
-      this.audio.nextRooster = this.elapsedMs + 1000;
+      this.audio.roosterLeft = 1 + Math.round(Math.random());
+      this.audio.nextRooster = (this.elapsedMs || 0) + 8000 + Math.random() * 8000;
     }
-    SFX.play?.("boss", { vol: 0.8 });
   },
 
 /**

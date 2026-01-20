@@ -12,6 +12,40 @@ function setupTouchControls() {
     const key = btn.dataset.key;
     if (!key) return;
 
+    if (key === "PAUSE") {
+      const pressPause = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const pauseBtn = document.getElementById("btnPause");
+        if (pauseBtn) {
+          pauseBtn.click();
+        } else if (typeof togglePauseUI === "function") {
+          togglePauseUI();
+        } else {
+          window.world?.pause?.();
+        }
+        btn.classList.add("active");
+      };
+
+      const releasePause = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        btn.classList.remove("active");
+      };
+
+      const blockContextMenu = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      };
+
+      btn.addEventListener("pointerdown", pressPause);
+      btn.addEventListener("pointerup", releasePause);
+      btn.addEventListener("pointerleave", releasePause);
+      btn.addEventListener("pointercancel", releasePause);
+      btn.addEventListener("contextmenu", blockContextMenu);
+      return;
+    }
+
     const press = (e) => {
       e.preventDefault();
       e.stopPropagation();

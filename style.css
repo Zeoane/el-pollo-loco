@@ -38,7 +38,6 @@ body {
   box-sizing: border-box;
 }
 
-/* Fullscreen mode - game container fills entire screen and centers content */
 :fullscreen#game,
 :-webkit-full-screen#game,
 :-moz-full-screen#game,
@@ -72,7 +71,6 @@ body {
   border-radius: var(--game-radius);
 }
 
-/* Canvas in fullscreen mode - maintains aspect ratio and centers */
 :fullscreen#game #canvas,
 :-webkit-full-screen#game #canvas,
 :-moz-full-screen#game #canvas,
@@ -89,7 +87,6 @@ body {
   align-self: center !important;
 }
 
-/* Fullscreen fallback when browser UI fullscreen is used (F11) */
 .fullscreen-layout #game {
   position: fixed !important;
   left: 0 !important;
@@ -309,55 +306,6 @@ h1 {
   text-shadow: 1px 1px 2px #000;
 }
 
-.touch-controls {
-  position: fixed;
-  inset: 0;
-  z-index: 120;
-  pointer-events: none;
-  display: none;
-}
-
-.touch-controls-left,
-.touch-controls-right {
-  position: absolute;
-  bottom: max(0px, env(safe-area-inset-bottom, 0px));
-  display: flex;
-  gap: clamp(8px, 3vw, 16px);
-  pointer-events: auto;
-}
-
-.touch-controls-left {
-  left: max(4px, env(safe-area-inset-left, 0px));
-}
-
-.touch-controls-right {
-  right: max(4px, env(safe-area-inset-right, 0px));
-}
-
-.touch-btn {
-  width: clamp(52px, 14vw, 70px);
-  height: clamp(52px, 14vw, 70px);
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  background: rgba(58, 203, 14, 0.33);
-  color: #fff;
-  font-size: clamp(20px, 6vw, 28px);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-  touch-action: none;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-.touch-btn.active {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
-}
-
 .hud-fab-container {
   position: absolute;
   bottom: clamp(10px, 4vw, 20px);
@@ -564,20 +512,6 @@ h1 {
 }
 
 @media (hover: none) and (pointer: coarse) {
-  .touch-controls {
-    display: block;
-  }
-
-  .touch-btn {
-    border-radius: 50%;
-    background: rgba(34, 197, 94, 0.7);
-    border-color: rgba(0, 0, 0, 0.25);
-  }
-
-  .touch-btn.active {
-    background: rgba(22, 163, 74, 0.85);
-  }
-
   .hud-fab-container {
     display: none;
   }
@@ -598,10 +532,6 @@ h1 {
   .start-art {
     width: min(calc(var(--panel-w) * 1.38), 100vw);
     max-height: min(calc(var(--panel-h) * 1.38), 100vh);
-  }
-
-  .touch-controls {
-    display: block;
   }
 
   .hud-fab-container {

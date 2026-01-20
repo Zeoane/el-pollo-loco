@@ -190,6 +190,7 @@ class Endboss extends MovableObject {
    */
   die() {
     this.setState("dead");
+    SFX.play?.("rooster", { vol: 0.9 });
     this._deadline = 800;
     setTimeout(() => window.world?.triggerGameOver?.("win"), 1000);
   }

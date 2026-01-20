@@ -170,7 +170,8 @@ hpPercent() {
     if (this.hp <= 0) return "dead";
     if (this.hurtT > 0) return "hurt";
     if (!this.onGround) return "jump";
-    if (moving || blockIdle) return "walk";
+    if (moving) return "walk";
+    if (blockIdle) return "idle";
     return this.idleElapsed > 3000 ? "long_idle" : "idle";
   }
 
