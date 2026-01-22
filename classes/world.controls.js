@@ -1,8 +1,7 @@
-// classes/world.controls.js
 Object.assign(World.prototype, {
   /**
    * Handles player input and applies movement/jump to the character.
-   * @param {number} dtMs 
+   * @param {number} dtMs
    */
   handleInput(dtMs) {
     const c = this.character;
@@ -14,7 +13,7 @@ Object.assign(World.prototype, {
 
   /**
    * Applies left/right movement input.
-   * @param {Object} c 
+   * @param {Object} c
    * @param {number} dtMs
    */
   _applyMoveInput(c, dtMs) {
@@ -27,7 +26,7 @@ Object.assign(World.prototype, {
    * Performs one movement step and updates facing.
    * @param {Object} c
    * @param {number} dtMs
-   * @param {number} dir 
+   * @param {number} dir
    */
   _step(c, dtMs, dir) {
     if (dir > 0) c.stepRight?.(dtMs);
@@ -51,9 +50,9 @@ Object.assign(World.prototype, {
     }
   },
 
-/**
- * Updates camera x-position based on the character position.
- */
+  /**
+   * Updates camera x-position based on the character position.
+   */
   updateCamera() {
     const leftOffset = 100;
     if (!this.character) return;

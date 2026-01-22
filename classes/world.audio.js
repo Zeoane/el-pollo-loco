@@ -1,4 +1,3 @@
-// classes/world.audio.js
 (function attachAmbient() {
   const W = window.World;
   if (!W?.prototype) return setTimeout(attachAmbient, 0);
@@ -6,7 +5,7 @@
   Object.assign(W.prototype, {
     /**
      * Plays ambient enemy sounds based on the current phase and timers.
-     * @param {number} dtMs 
+     * @param {number} dtMs
      */
     tickAmbientAudio(dtMs) {
       this.ensureAudioState();
@@ -32,7 +31,7 @@
     /**
      * Plays random chicken ambience outside the boss phase.
      * Resets boss rooster state when leaving the boss phase.
-     * @param {number} t 
+     * @param {number} t
      */
     tickChickenAmbient(t) {
       const a = this.audio;
@@ -46,7 +45,7 @@
 
     /**
      * Plays rooster ambience during the boss phase for a limited number of times.
-     * @param {number} t 
+     * @param {number} t
      */
     tickBossRoosterAmbient(t) {
       const a = this.audio;
@@ -59,4 +58,3 @@
     },
   });
 })();
-

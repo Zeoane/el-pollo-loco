@@ -9,6 +9,23 @@ function insertOnce(id, html) {
 }
 
 /**
+ * Toggles a body class while the start screen is visible.
+ * @param {boolean} active
+ */
+function setStartScreenActive(active) {
+  document.body?.classList.toggle("startscreen-active", active);
+}
+
+/**
+ * Syncs the body class with the current start screen visibility.
+ */
+function syncStartScreenState() {
+  const scr = document.getElementById("startScreen");
+  if (!scr) return;
+  setStartScreenActive(!scr.classList.contains("hidden"));
+}
+
+/**
  * Injects all UI templates into the DOM once.
  */
 function injectTemplates() {
@@ -24,6 +41,7 @@ function injectTemplates() {
   if (window.touchControlsTemplate) {
     insertOnce("touchControls", window.touchControlsTemplate());
   }
+  syncStartScreenState();
 }
 
 /**
@@ -207,6 +225,7 @@ async function startGame(scr) {
   window.world?.pause?.(true);
   await window.ensureEssentialAssets?.();
   scr.classList.add("hidden");
+  setStartScreenActive(false);
   window.world?.pause?.(false);
 }
 
@@ -243,6 +262,7 @@ function showStartScreen() {
   const scr = document.getElementById("startScreen");
   if (!scr) return;
   scr.classList.remove("hidden");
+  setStartScreenActive(true);
   window.world?.pause?.(true);
 }
 

@@ -1,8 +1,7 @@
-// classes/world.combat.js
 Object.assign(World.prototype, {
   /**
    * Handles bottle throwing with a charge mechanic (hold to increase speed).
-   * @param {number} dtMs 
+   * @param {number} dtMs
    */
   updateThrow(dtMs) {
     const KB = window.keyboard || this.keyboard || {};
@@ -17,7 +16,7 @@ Object.assign(World.prototype, {
 
   /**
    * Updates the charge timer while the throw key is held down.
-   * @param {Object} ts 
+   * @param {Object} ts
    * @param {number} dtMs
    */
   chargeThrow(ts, dtMs) {
@@ -30,7 +29,7 @@ Object.assign(World.prototype, {
 
   /**
    * Releases a charged throw and spawns a projectile if ammo is available.
-   * @param {Object} ts 
+   * @param {Object} ts
    */
   releaseThrow(ts) {
     if (!ts.charging) return;
@@ -44,20 +43,15 @@ Object.assign(World.prototype, {
 
   /**
    * Spawns a projectile with optional speed multiplier and consumes one bottle.
-   * @param {number} dir 
-   * @param {number} pow 
+   * @param {number} dir
+   * @param {number} pow
    */
   spawnProjectile(dir, pow) {
     const c = this.character;
     const spawnX = c.x + c.width / 2;
     const spawnY = c.y + c.height * 0.45;
     this.projectiles.push(
-      new Projectile(
-        spawnX,
-        spawnY,
-        dir,
-        { speedMul: pow }
-      )
+      new Projectile(spawnX, spawnY, dir, { speedMul: pow }),
     );
     this.inventory.bottles--;
     SFX.play?.("bottle_throw", { vol: 0.8 });
@@ -65,7 +59,7 @@ Object.assign(World.prototype, {
 
   /**
    * Updates all projectiles, resolves impacts, and removes dead entities.
-   * @param {number} dtMs 
+   * @param {number} dtMs
    */
   updateProjectiles(dtMs) {
     this.updateProjectileFlight(dtMs);
@@ -109,20 +103,20 @@ Object.assign(World.prototype, {
 
   /**
    * Finds the first opponent hit by a projectile.
-   * @param {Object} p 
+   * @param {Object} p
    * @returns {Object|null}
    */
   findProjectileHit(p) {
     return (
       this.opponents.find(
-        (o) => !(o.state === "dead" || o._dead) && AABB(p, o)
+        (o) => !(o.state === "dead" || o._dead) && AABB(p, o),
       ) || null
     );
   },
 
   /**
    * Applies damage to a hit opponent (supports custom onHit handlers).
-   * @param {Object} target 
+   * @param {Object} target
    */
   applyHitDamage(target) {
     if (typeof target.onHit === "function") {
@@ -136,7 +130,7 @@ Object.assign(World.prototype, {
   /**
    * Resolves collisions between the character and living opponents.
    * Supports stomp kills and damage hits with invulnerability frames.
-   * @param {number} dtMs 
+   * @param {number} dtMs
    */
   checkCharEnemyCollisions(dtMs) {
     if (!this.canProcessCharHit(dtMs)) return;
@@ -187,7 +181,19 @@ Object.assign(World.prototype, {
     const prevBottom = (c.prevY ?? c.y ?? 0) + cbOffsetY + cbHeight;
     const currBottom = (cb.y ?? c.y ?? 0) + cbHeight;
     const enemyTop = eb.y ?? e.y ?? 0;
-    return c.vy > 0 && prevBottom <= enemyTop + 10 && currBottom >= enemyTop - 2;
+    const stompInsetX = 3;
+    const footLeft = (cb.x ?? c.x ?? 0) + stompInsetX;
+    const footRight =
+      (cb.x ?? c.x ?? 0) + (cb.width ?? c.width ?? 0) - stompInsetX;
+    const enemyLeft = eb.x ?? e.x ?? 0;
+    const enemyRight = enemyLeft + (eb.width ?? e.width ?? 0);
+    const overlapX = footRight > enemyLeft && footLeft < enemyRight;
+    return (
+      c.vy > 0 &&
+      prevBottom <= enemyTop + 10 &&
+      currBottom >= enemyTop - 2 &&
+      overlapX
+    );
   },
 
   /**
@@ -221,7 +227,7 @@ Object.assign(World.prototype, {
 
   /**
    * Ends the game, freezes gameplay, and triggers end screen + sounds.
-   * @param {"enemy"|"boss"|"win"} reason 
+   * @param {"enemy"|"boss"|"win"} reason
    */
   triggerGameOver(reason = "enemy") {
     if (this.gameOver) return;
@@ -236,7 +242,7 @@ Object.assign(World.prototype, {
 
   /**
    * Handles character healing using coins with cooldown and validation checks.
-   * @param {number} dtMs 
+   * @param {number} dtMs
    */
   handleHeal(dtMs) {
     this.updateHealCooldown(dtMs);
@@ -245,7 +251,7 @@ Object.assign(World.prototype, {
     this.applyHeal();
     this.startHealCooldown();
   },
-  
+
   /**
    * Updates the heal cooldown timer.
    * @param {number} dtMs

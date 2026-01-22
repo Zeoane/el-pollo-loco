@@ -25,24 +25,17 @@ let essentialAssetsPromise = null;
  */
 function preloadImages(paths = []) {
   const unique = [...new Set(paths.filter(Boolean))];
-  return Promise.all(
-    unique.map(
-      (path) =>
-        new Promise((resolve) => {
-          const img = new Image();
-          let settled = false;
-          const done = () => {
-            if (settled) return;
-            settled = true;
-            resolve();
-          };
-          img.onload = done;
-          img.onerror = done;
-          img.src = path;
-          if (img.decode) img.decode().then(done).catch(done);
-        })
-    )
-  ).then(() => {});
+  const load = (path) =>
+    new Promise((resolve) => {
+      const img = new Image();
+      let settled = false;
+      const done = () => (settled ? undefined : ((settled = true), resolve()));
+      img.onload = done;
+      img.onerror = done;
+      img.src = path;
+      img.decode?.().then(done).catch(done);
+    });
+  return Promise.all(unique.map(load)).then(() => {});
 }
 
 /**
@@ -66,18 +59,18 @@ window.addEventListener("DOMContentLoaded", async () => {
   ensureEssentialAssets();
   SFX.unlockOnGesture();
   await SFX.loadAll({
-  coin: "audio/sounds/coin-ca-ching.mp3",
-  bottle_pick: "audio/sounds/bottle-pickup.wav",
-  bottle_throw: "audio/sounds/bottle-throw.wav",
-  bottle_hit: "audio/sounds/bottle-hit.wav",
-  jump: "audio/sounds/jumpbounce.wav",
-  hit: "audio/sounds/punch.wav",
-  chicken: "audio/sounds/chickens.wav",
-  rooster: "audio/sounds/rooster1.wav",
-  lost: "audio/sounds/sadwhisle.wav",
-  win: "audio/sounds/groovy-winner.wav",
-  heal_chimes: "audio/sounds/heal-chimes.wav",
-  snoring: "audio/sounds/snoring.wav",
+    coin: "audio/sounds/coin-ca-ching.mp3",
+    bottle_pick: "audio/sounds/bottle-pickup.wav",
+    bottle_throw: "audio/sounds/bottle-throw.wav",
+    bottle_hit: "audio/sounds/bottle-hit.wav",
+    jump: "audio/sounds/jumpbounce.wav",
+    hit: "audio/sounds/punch.wav",
+    chicken: "audio/sounds/chickens.wav",
+    rooster: "audio/sounds/rooster1.wav",
+    lost: "audio/sounds/sadwhisle.wav",
+    win: "audio/sounds/groovy-winner.wav",
+    heal_chimes: "audio/sounds/heal-chimes.wav",
+    snoring: "audio/sounds/snoring.wav",
   }).catch(handleAudioLoadError);
   initStaticImages();
   armMenuMusic();
@@ -195,9 +188,8 @@ function onVolumeInput(e) {
  * @param {WheelEvent} e
  */
 function onVolumeWheel(e) {
-  const slider = e.target === document.getElementById("volSlider")
-    ? e.target
-    : null;
+  const slider =
+    e.target === document.getElementById("volSlider") ? e.target : null;
   if (!slider) return;
 
   e.preventDefault();
@@ -235,9 +227,9 @@ function wireToolbar() {
   document.getElementById("btnRestart")?.addEventListener("click", restartGame);
   window.wireFullscreen?.();
   if (!toolbarKeysBound) {
-  addEventListener("keydown", handleToolbarKeys);
-  toolbarKeysBound = true;
-}
+    addEventListener("keydown", handleToolbarKeys);
+    toolbarKeysBound = true;
+  }
 }
 
 /**
@@ -259,8 +251,10 @@ function handleToolbarKeys(e) {
  */
 function isUiBlockingInput() {
   return (
-    document.getElementById("howtoModal")?.classList.contains("hidden") === false ||
-    document.getElementById("startScreen")?.classList.contains("hidden") === false ||
+    document.getElementById("howtoModal")?.classList.contains("hidden") ===
+      false ||
+    document.getElementById("startScreen")?.classList.contains("hidden") ===
+      false ||
     document.getElementById("endScreen")?.classList.contains("hidden") === false
   );
 }
@@ -348,11 +342,10 @@ function rearmHudAndUi() {
  */
 function toggleMute() {
   SFX.toggleMute?.();
-  if (SFX.muted) SFX.stopAll?.();  
+  if (SFX.muted) SFX.stopAll?.();
   localStorage.setItem("audio.muted", SFX.muted ? "1" : "0");
   updateMuteIcon();
 }
-
 
 /**
  * Helper to update the mute button icon.

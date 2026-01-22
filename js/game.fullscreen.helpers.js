@@ -89,7 +89,8 @@ function resetContainerStyles(gameContainer) {
 function updateWorldForFullscreen(world, vh, originalH) {
   if (!world || !originalH) return;
   const scale = vh / originalH;
-  if (world._originalGroundY === undefined) world._originalGroundY = world.groundY;
+  if (world._originalGroundY === undefined)
+    world._originalGroundY = world.groundY;
   world.groundY = Math.round(world._originalGroundY * scale);
   scaleGameElements(world, scale);
 }
@@ -194,7 +195,8 @@ function placeCharacterOnGround(character) {
  */
 function scaleItems(items, originalGroundY, newGroundY) {
   items?.forEach((item) => {
-    if (item._originalOffset === undefined) item._originalOffset = item.y - originalGroundY;
+    if (item._originalOffset === undefined)
+      item._originalOffset = item.y - originalGroundY;
     item.y = newGroundY + item._originalOffset;
   });
 }
@@ -206,7 +208,8 @@ function scaleItems(items, originalGroundY, newGroundY) {
  */
 function ensureEndbossOffscreen(opponent, world) {
   const isEndboss =
-    opponent.constructor?.name === "Endboss" || opponent instanceof window.Endboss;
+    opponent.constructor?.name === "Endboss" ||
+    opponent instanceof window.Endboss;
   if (!isEndboss) return;
   const canvasWidth = world.canvas?.width || 1920;
   const cameraRight = (world.cameraX || 0) + canvasWidth;

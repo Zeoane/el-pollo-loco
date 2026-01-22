@@ -1,4 +1,3 @@
-// classes/world.core.js
 class World {
   canvas;
   ctx;
@@ -52,31 +51,61 @@ class World {
   hud = null;
   _hudMissing = false;
 
+  /** @param {HTMLCanvasElement} canvas @param {Keyboard} keyboard @param {Level} level */
   constructor(canvas, keyboard, level) {
+    this.initCore(canvas, keyboard);
+    const L = this.initLevel(level);
+    this.initPlayer();
+    this.initWorldData(L);
+    this.initGameOver();
+    this.normalizeBackgroundFlow();
+    this.initOpponents();
+    this.initStartup();
+    this.animate();
+  }
+
+  /** @param {HTMLCanvasElement} canvas @param {Keyboard} keyboard */
+  initCore(canvas, keyboard) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
     this.keyboard = keyboard || null;
+  }
 
+  /** @param {Level} level @returns {any} */
+  initLevel(level) {
     this.cfg = level?.config || window.LEVEL1 || {};
-    this.character = new Character()
-      .setGround?.(this.groundY)
-      .placeOnGround?.();
-    this.character.setSpeed?.(this.cfg.player?.speed ?? 3.4);
-
-    const L = level ||
+    return (
+      level ||
       createLevel1?.() || {
         backgroundObjects: BackgroundLayers.defaultSet(),
         opponents: [],
         clouds: [],
-      };
+      }
+    );
+  }
 
-    this.backgroundObjects = L.backgroundObjects || [];
-    this.opponents = L.opponents || [];
-    this.clouds = L.clouds || [];
+  /** @returns {void} */
+  initPlayer() {
+    this.character = new Character()
+      .setGround?.(this.groundY)
+      .placeOnGround?.();
+    this.character.setSpeed?.(this.cfg.player?.speed ?? 3.4);
+  }
 
+  /** @param {any} level */
+  initWorldData(level) {
+    this.backgroundObjects = level.backgroundObjects || [];
+    this.opponents = level.opponents || [];
+    this.clouds = level.clouds || [];
+  }
+
+  /** @returns {void} */
+  initGameOver() {
     this.imgGameOver = window.IMG_GAME_OVER || null;
+  }
 
-    // ensure non-cloud layers do not auto-flow (no console output)
+  /** @returns {void} */
+  normalizeBackgroundFlow() {
     this.backgroundObjects.forEach((b) => {
       const isCloud = b && b.constructor && b.constructor.name === "CloudLayer";
       if (!isCloud && (b?.flowSpeed || 0) !== 0) {
@@ -85,25 +114,48 @@ class World {
         b._forcedFlowZero = true;
       }
     });
+  }
 
-    this.initOpponents();
+  /** @returns {void} */
+  initStartup() {
+    this.initSpawns();
+    this.initHud();
+    this.initPhaseConfig();
+    this.initHealConfig();
+    this.initAudioState();
+  }
+
+  /** @returns {void} */
+  initSpawns() {
     this.spawnSmallChickens?.();
     this.spawnPickups?.();
+  }
 
+  /** @returns {void} */
+  initHud() {
     if (typeof HUD !== "undefined") this.hud = new HUD();
     else this._hudMissing = true;
+  }
 
+  /** @returns {void} */
+  initPhaseConfig() {
     this.phase = "small";
     this.phase2AtMs = this.cfg.phase2AtMs ?? 20_000;
     this.bossAtMs = this.cfg.bossAtMs ?? 40_000;
     this.maxSmall = this.cfg.maxSmall ?? 5;
     this.maxBig = this.cfg.maxBig ?? 5;
     this.bossPending = false;
+  }
 
+  /** @returns {void} */
+  initHealConfig() {
     this.healCfg = { coinCost: 3, hpPct: 20, cdMs: 1000 };
     this._healLock = false;
     this._healCdMs = 0;
+  }
 
+  /** @returns {void} */
+  initAudioState() {
     this.audio = {
       chickenInt: 30000,
       roosterInt: 30000,
@@ -111,23 +163,16 @@ class World {
       nextRooster: 0,
       roosterLeft: 2,
     };
-
-    this.animate();
   }
 
-  /**
-   * Initializes existing opponents by placing them on the ground.
-   */
+  /** Initializes existing opponents by placing them on the ground. */
   initOpponents() {
     this.opponents.forEach((o) =>
-      o.setGround?.(this.groundY).placeOnGround?.()
+      o.setGround?.(this.groundY).placeOnGround?.(),
     );
   }
 
-  /**
-   * Animation loop driven by requestAnimationFrame.
-   * @param {number} now
-   */
+  /** @param {number} now */
   animate = (now = performance.now()) => {
     const dtMs = Math.min(50, now - this.lastTime);
     this.lastTime = now;
@@ -139,17 +184,12 @@ class World {
     this._raf = requestAnimationFrame(this.animate);
   };
 
-  /**
-   * Toggles pause or sets pause explicitly.
-   * @param {boolean=} v
-   */
+  /** @param {boolean=} v */
   pause(v) {
     this.paused = v === undefined ? !this.paused : !!v;
   }
 
-  /**
-   * Stops the animation loop.
-   */
+  /** @returns {void} */
   stop() {
     this.stopped = true;
     if (!this._raf) return;
@@ -157,26 +197,19 @@ class World {
     this._raf = 0;
   }
 
-  /**
-   * Resumes gameplay if not stopped.
-   */
+  /** @returns {void} */
   resume() {
     if (!this.stopped) this.paused = false;
   }
 
-  /**
-   * Disposes world resources (currently stops the loop).
-   */
+  /** @returns {void} */
   dispose() {
     this.stop();
   }
 }
 
 Object.assign(World.prototype, {
-  /**
-   * Advances the game simulation by one frame.
-   * @param {number} dtMs - Delta time in milliseconds
-   */
+  /** @param {number} dtMs */
   update(dtMs) {
     this.advanceTimers(dtMs);
     this.updatePrePhysics(dtMs);
@@ -186,30 +219,21 @@ Object.assign(World.prototype, {
     this.updateGameplaySystems(dtMs);
   },
 
-  /**
-   * Updates global timers and phase logic.
-   * @param {number} dtMs
-   */
+  /** @param {number} dtMs */
   advanceTimers(dtMs) {
     this.elapsedMs += dtMs;
     this.tSinceStartMs += dtMs;
     this.managePhases?.();
   },
 
-  /**
-   * Handles input, ambient audio, and animation prep before physics.
-   * @param {number} dtMs
-   */
+  /** @param {number} dtMs */
   updatePrePhysics(dtMs) {
     this.tickAmbientAudio?.(dtMs);
     this.handleInput?.(dtMs);
     if (this.character) this.character.prevY = this.character.y;
   },
 
-  /**
-   * Applies physics and resolves character/enemy collisions.
-   * @param {number} dtMs
-   */
+  /** @param {number} dtMs */
   updatePhysicsAndCollisions(dtMs) {
     this.applyPhysics?.(dtMs);
     this.handleGround?.();
@@ -222,10 +246,7 @@ Object.assign(World.prototype, {
       this.character?.updateAnimation?.(dtMs, false, bossFight);
   },
 
-  /**
-   * Updates camera, backgrounds, clouds, and opponents.
-   * @param {number} dtMs
-   */
+  /** @param {number} dtMs */
   updateWorldSimulation(dtMs) {
     const moving = !!(this.keyboard?.LEFT || this.keyboard?.RIGHT);
     this.updateCamera?.();
@@ -235,10 +256,7 @@ Object.assign(World.prototype, {
     this.distanceX = Math.max(this.distanceX, this.character?.x || 0);
   },
 
-  /**
-   * Updates combat, pickups, spawners, and maintenance systems.
-   * @param {number} dtMs
-   */
+  /** @param {number} dtMs */
   updateGameplaySystems(dtMs) {
     this.tickCollectibles?.(dtMs);
     this.updateThrow?.(dtMs);
@@ -251,9 +269,7 @@ Object.assign(World.prototype, {
     this.maintainEnemies?.();
   },
 
-  /**
-   * Renders the current world state to the canvas.
-   */
+  /** @returns {void} */
   draw() {
     const { ctx, canvas } = this;
     this.resetCanvasState(ctx, canvas);
@@ -262,11 +278,7 @@ Object.assign(World.prototype, {
     this.drawHudLayer(ctx);
   },
 
-  /**
-   * Resets canvas state to a known default before drawing.
-   * @param {CanvasRenderingContext2D} ctx
-   * @param {HTMLCanvasElement} canvas
-   */
+  /** @param {CanvasRenderingContext2D} ctx @param {HTMLCanvasElement} canvas */
   resetCanvasState(ctx, canvas) {
     ctx.setTransform?.(1, 0, 0, 1, 0, 0);
     ctx.globalAlpha = 1;
@@ -274,18 +286,12 @@ Object.assign(World.prototype, {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   },
 
-  /**
-   * Draws background layers.
-   * @param {CanvasRenderingContext2D} ctx
-   */
+  /** @param {CanvasRenderingContext2D} ctx */
   drawWorldLayer(ctx) {
     this.backgroundObjects.forEach((bo) => bo.draw(ctx, this.cameraX));
   },
 
-  /**
-   * Draws all entities affected by camera translation.
-   * @param {CanvasRenderingContext2D} ctx
-   */
+  /** @param {CanvasRenderingContext2D} ctx */
   drawEntitiesLayer(ctx) {
     ctx.save();
     ctx.translate(-this.cameraX, 0);
@@ -299,18 +305,12 @@ Object.assign(World.prototype, {
     this.clouds.forEach((c) => c.draw?.(ctx, this.cameraX));
   },
 
-  /**
-   * Draws HUD overlays.
-   * @param {CanvasRenderingContext2D} ctx
-   */
+  /** @param {CanvasRenderingContext2D} ctx */
   drawHudLayer(ctx) {
     this.hud?.draw?.(ctx, this);
   },
 
-  /**
-   * Ensures a minimum number of coins exist ahead of the camera by spawning new rows.
-   * @param {number} minAhead 
-   */
+  /** @param {number} minAhead */
   maintainCoinsAhead(minAhead = 6) {
     const from = this.cameraX + this.canvas.width * 0.6;
     const to = from + 1000;
@@ -318,20 +318,19 @@ Object.assign(World.prototype, {
     if (n < minAhead) this.spawnCoinRow(to - 200 + Math.random() * 300);
   },
 
-  /**
-   * Spawns a small horizontal row of coins around a base x-position.
-   * @param {number} baseX 
-   */
+  /** @param {number} baseX */
   spawnCoinRow(baseX) {
     const cnt = 3 + Math.floor(Math.random() * 4);
     const dx = 34;
     const y = this.groundY - 120 - Math.random() * 60;
     for (let i = 0; i < cnt; i++) {
       const coin = new Coin(baseX + i * dx, y);
-      // If we're in scaled mode, save the original offset (relative to original groundY)
-      if (this._originalGroundY !== undefined && this.groundY !== this._originalGroundY) {
+      if (
+        this._originalGroundY !== undefined &&
+        this.groundY !== this._originalGroundY
+      ) {
         const offsetFromGround = y - this.groundY;
-        coin._originalOffset = offsetFromGround; // keep fixed pixel offset
+        coin._originalOffset = offsetFromGround;
       }
       this.coins.push(coin);
     }

@@ -3,6 +3,9 @@
  * Handles loading, playing, looping, volume and mute state.
  */
 class SoundManager {
+  /**
+   * Create a new sound manager instance.
+   */
   constructor() {
     this.buffers = {};
     this.vol = 0.8;
@@ -17,11 +20,10 @@ class SoundManager {
 
   /**
    * @typedef {Object} SoundOptions
-   * @property {number} [vol] 
-   * @property {number} [rate] 
-   * @property {number} [offset] 
+   * @property {number} [vol]
+   * @property {number} [rate]
+   * @property {number} [offset]
    */
-
   /**
    * @typedef {Object} PendingJob
    * @property {"play"|"loop"} type
@@ -29,7 +31,6 @@ class SoundManager {
    * @property {string} [key]
    * @property {SoundOptions} [opt]
    */
-
   /**
    * Initializes the AudioContext and master gain node.
    * Safe to call multiple times.
@@ -38,7 +39,6 @@ class SoundManager {
   async init() {
     if (this.ctx) return;
     this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-
     this.master = this.ctx.createGain();
     this.master.gain.value = this.vol;
     this.master.connect(this.ctx.destination);
@@ -51,31 +51,79 @@ class SoundManager {
   unlockOnGesture() {
     if (this.unlocked) return;
     this.init();
+    const handler = this._createUnlockHandler();
+    this._addUnlockListeners(handler);
+  }
 
-    const tryResume = async (e) => {
-      if (!e?.isTrusted) return;
-      try {
-        if (this.ctx.state === "suspended") await this.ctx.resume();
-      } catch {}
-      if (this.ctx.state !== "running") return;
+  /**
+   * Build a reusable unlock event handler.
+   * @returns {(e: Event) => Promise<void>}
+   */
+  _createUnlockHandler() {
+    const handler = async (e) => this._handleUnlockEvent(e, handler);
+    return handler;
+  }
 
-      this.unlocked = true;
-      this._flushPending();
+  /**
+   * Handle the unlock event and enable audio playback.
+   * @param {Event} e
+   * @param {(e: Event) => Promise<void>} handler
+   */
+  async _handleUnlockEvent(e, handler) {
+    if (!e?.isTrusted) return;
+    await this._resumeContext();
+    if (!this._isContextRunning()) return;
+    this._onUnlocked();
+    this._removeUnlockListeners(handler);
+  }
 
-      window.removeEventListener("pointerdown", tryResume, true);
-      window.removeEventListener("click", tryResume, true);
-      window.removeEventListener("keydown", tryResume, true);
-    };
+  /**
+   * Resume the AudioContext if suspended.
+   * @returns {Promise<void>}
+   */
+  async _resumeContext() {
+    try {
+      if (this.ctx.state === "suspended") await this.ctx.resume();
+    } catch {}
+  }
 
-    window.addEventListener("pointerdown", tryResume, true);
-    window.addEventListener("click", tryResume, true);
-    window.addEventListener("keydown", tryResume, true);
+  /**
+   * @returns {boolean}
+   */
+  _isContextRunning() {
+    return this.ctx?.state === "running";
+  }
+
+  /**
+   * Mark audio as unlocked and flush pending jobs.
+   */
+  _onUnlocked() {
+    this.unlocked = true;
+    this._flushPending();
+  }
+
+  /**
+   * @param {(e: Event) => Promise<void>} handler
+   */
+  _addUnlockListeners(handler) {
+    window.addEventListener("pointerdown", handler, true);
+    window.addEventListener("click", handler, true);
+    window.addEventListener("keydown", handler, true);
+  }
+
+  /**
+   * @param {(e: Event) => Promise<void>} handler
+   */
+  _removeUnlockListeners(handler) {
+    window.removeEventListener("pointerdown", handler, true);
+    window.removeEventListener("click", handler, true);
+    window.removeEventListener("keydown", handler, true);
   }
 
   /**
    * Loads a single sound file and decodes it into an AudioBuffer.
-   * @param {string} name 
-   * @param {string} url 
+   * @param {string} name
+   * @param {string} url
    * @returns {Promise<void>}
    */
   async load(name, url) {
@@ -98,7 +146,6 @@ class SoundManager {
   }
 
   /**
-   * Returns whether audio playback is currently allowed.
    * @returns {boolean}
    */
   _canPlay() {
@@ -106,7 +153,6 @@ class SoundManager {
   }
 
   /**
-   * Queues an audio job until playback becomes possible.
    * @param {PendingJob} job
    */
   _queue(job) {
@@ -114,61 +160,125 @@ class SoundManager {
   }
 
   /**
-   * Executes all pending audio jobs once audio is available.
+   * Execute pending audio jobs when audio is available.
    */
   _flushPending() {
     if (!this._canPlay()) return;
+    this._drainPendingJobs();
+    this._syncLoopGains();
+  }
 
+  /**
+   * Run queued jobs that have loaded buffers.
+   */
+  _drainPendingJobs() {
     for (let i = 0; i < this._pending.length; ) {
       const job = this._pending[i];
-      if (!this.buffers[job.name]) {
+      if (!this._canRunJob(job)) {
         i++;
         continue;
       }
-
-      if (job.type === "play") this.play(job.name, job.opt);
-      else this.loop(job.name, job.key, job.opt);
-
+      this._runJob(job);
       this._pending.splice(i, 1);
     }
+  }
 
+  /**
+   * @param {PendingJob} job
+   * @returns {boolean}
+   */
+  _canRunJob(job) {
+    retur
+   !!this.buffers[job.name];
+  }
+
+  /**
+   * @param {PendingJob} job
+   */
+  _runJob(job) {
+    if (job.type === "play") this.play(job.name, job.opt);
+    else this.loop(job.name, job.key, job.opt);
+  }
+
+  /**
+   * Sync loop gain values to current volume/mute state.
+   */
+  _syncLoopGains() {
     Object.entries(this.loops).forEach(([key, h]) => {
       const spec = this._loopSpecs[key];
-      if (!spec) return;
-      const v = (spec.opt?.vol ?? 1) * this.vol;
-      if (h?.gain) h.gain.gain.value = this.muted ? 0 : v;
+      if (!spec || !h?.gain) return;
+      h.gain.gain.value = this._loopVolume(spec.opt);
     });
   }
 
   /**
    * Plays a one-shot sound.
-   * @param {string} name 
-   * @param {SoundOptions} [opt] 
+   * @param {string} name
+   * @param {SoundOptions} [opt]
    * @returns {{src: AudioBufferSourceNode, gain: GainNode}|null}
    */
   play(name, opt = {}) {
-    if (!this.buffers[name] || !this._canPlay()) {
-      this._queue({ type: "play", name, opt });
-      return null;
-    }
-
-    const src = this.ctx.createBufferSource();
-    const gain = this.ctx.createGain();
-
-    src.buffer = this.buffers[name];
-    src.playbackRate.value = opt.rate || 1;
-    gain.gain.value = this.muted ? 0 : (opt.vol ?? 1) * this.vol;
-
-    src.connect(gain).connect(this.master);
-    src.start(this.ctx.currentTime, opt.offset || 0);
+    if (!this._isSoundReady(name)) return this._queuePlay(name, opt);
+    const { src, gain } = this._createSourceNodes();
+    this._configureSource(src, gain, name, opt);
+    this._connectAndStart(src, gain, opt);
     return { src, gain };
   }
 
   /**
+   * @param {string} name
+   * @returns {boolean}
+   */
+  _isSoundReady(name) {
+    return !!this.buffers[name] && this._canPlay();
+  }
+
+  /**
+   * @param {string} name
+   * @param {SoundOptions} opt
+   * @returns {null}
+   */
+  _queuePlay(name, opt) {
+    this._queue({ type: "play", name, opt });
+    return null;
+  }
+
+  /**
+   * @returns {{src: AudioBufferSourceNode, gain: GainNode}}
+   */
+  _createSourceNodes() {
+    const src = this.ctx.createBufferSource();
+    const gain = this.ctx.createGain();
+    return { src, gain };
+  }
+
+  /**
+   * @param {AudioBufferSourceNode} src
+   * @param {GainNode} gain
+   * @param {string} name
+   * @param {SoundOptions} opt
+   */
+  _configureSource(src, gain, name, opt) {
+    src.buffer = this.buffers[name];
+    src.playbackRate.value = opt.rate || 1;
+    gain.gain.value = this._loopVolume(opt);
+  }
+
+  /**
+   * @param {AudioBufferSourceNode} src
+   * @param {GainNode} gain
+   * @param {SoundOptions} opt
+   */
+  _connectAndStart(src, gain, opt) {
+    src.connect(gain).connect(this.master);
+    src.start(this.ctx.currentTime, opt.offset || 0);
+  }
+
+  /**
    * Updates volume and spec of an existing loop.
-   * @param {string} key 
-   * @param {string} name 
-   * @param {SoundOptions} opt 
+   * @param {string} key
+   * @param {string} name
+   * @param {SoundOptions} opt
    */
   updateExistingLoop(key, name, opt) {
     const h = this.loops[key];
@@ -179,9 +289,9 @@ class SoundManager {
 
   /**
    * Queues a loop until playback is possible.
-   * @param {string} name 
-   * @param {string} key 
-   * @param {SoundOptions} opt 
+   * @param {string} name
+   * @param {string} key
+   * @param {SoundOptions} opt
    */
   queueLoop(name, key, opt) {
     this._loopSpecs[key] = { name, opt };
@@ -190,29 +300,60 @@ class SoundManager {
 
   /**
    * Starts or updates a looping sound.
-   * @param {string} name 
-   * @param {string} [key=name] 
-   * @param {SoundOptions} [opt] 
+   * @param {string} name
+   * @param {string} [key=name]
+   * @param {SoundOptions} [opt]
    * @returns {{src: AudioBufferSourceNode, gain: GainNode}|null}
    */
   loop(name, key = name, opt = {}) {
-    if (this.loops[key]) {
+    if (this._hasLoop(key)) {
       this.updateExistingLoop(key, name, opt);
       return this.loops[key];
     }
-
-    if (!this.buffers[name] || !this._canPlay()) {
-      this.queueLoop(name, key, opt);
-      return null;
-    }
-
+    if (!this._isSoundReady(name)) return this._queueLoopAndReturn(name, key, opt);
     const h = this.play(name, opt);
     if (!h) return null;
+    this._registerLoop(key, name, opt, h);
+    return h;
+  }
 
+  /**
+   * @param {string} key
+   * @returns {boolean}
+   */
+  _hasLoop(key) {
+    return !!this.loops[key];
+  }
+
+  /**
+   * @param {string} name
+   * @param {string} key
+   * @param {SoundOptions} opt
+   * @returns {null}
+   */
+  _queueLoopAndReturn(name, key, opt) {
+    this.queueLoop(name, key, opt);
+    return null;
+  }
+
+  /**
+   * @param {string} key
+   * @param {string} name
+   * @param {SoundOptions} opt
+   * @param {{src: AudioBufferSourceNode, gain: GainNode}} h
+   */
+  _registerLoop(key, name, opt, h) {
     h.src.loop = true;
     this.loops[key] = h;
     this._loopSpecs[key] = { name, opt };
-    return h;
+  }
+
+  /**
+   * @param {SoundOptions} opt
+   * @returns {number}
+   */
+  _loopVolume(opt) {
+    return this.muted ? 0 : (opt?.vol ?? 1) * this.vol;
   }
 
   /**
@@ -231,7 +372,7 @@ class SoundManager {
   }
 
   /**
-   * Applies current mute/volume state to the master gain node.
+   * Apply current mute/volume state to master gain.
    */
   _applyMasterGain() {
     if (!this.master) return;
@@ -243,13 +384,27 @@ class SoundManager {
    * @param {number} v - Volume (0–1).
    */
   setVolume(v) {
-    this.vol = Math.max(0, Math.min(1, v));
+    this.vol = this._clampVolume(v);
     this._applyMasterGain();
+    this._syncExistingLoopVolumes();
+  }
 
+  /**
+   * @param {number} v
+   * @returns {number}
+   */
+  _clampVolume(v) {
+    return Math.max(0, Math.min(1, v));
+  }
+
+  /**
+   * Update gains for all active loops.
+   */
+  _syncExistingLoopVolumes() {
     Object.entries(this.loops).forEach(([key, h]) => {
       const spec = this._loopSpecs[key];
-      const lv = (spec?.opt?.vol ?? 1) * this.vol;
-      if (h?.gain) h.gain.gain.value = this.muted ? 0 : lv;
+      if (!h?.gain || !spec) return;
+      h.gain.gain.value = this._loopVolume(spec.opt);
     });
   }
 
@@ -269,7 +424,7 @@ class SoundManager {
   toggleMute() {
     this.setMuted(!this.muted);
   }
-
+  
   /**
    * Stops all looping sounds and clears pending jobs.
    */

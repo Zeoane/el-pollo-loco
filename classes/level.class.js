@@ -1,5 +1,3 @@
-// classes/level.class.js
-
 /**
  * Represents a game level with background objects, enemies and clouds.
  */
@@ -31,7 +29,7 @@ function mkLayer(folder, flow, parallax, y = 0, h = null) {
     y,
     h,
     flow,
-    parallax
+    parallax,
   );
 }
 
@@ -97,7 +95,7 @@ const LEVEL1 = {
   phase2AtMs: 20_000,
   bossAtMs: 40_000,
   player: {
-    speed: 3.3,
+    speed: 3.6,
     jumpVy: -12,
     health: 3,
     bottlesMax: 6,
@@ -120,5 +118,3 @@ const LEVEL1 = {
 
 window.LEVEL1 = LEVEL1;
 window.createLevel1 = createLevel1;
-
-

@@ -1,4 +1,3 @@
-// classes/projectile.class.js
 class Projectile extends MovableObject {
   static CFG = {
     size: { w: 54, h: 74 },
@@ -173,7 +172,12 @@ class Projectile extends MovableObject {
    * @param {number} dtMs
    */
   updateSplash(dtMs) {
-    const done = this.stepAnim(dtMs, this.splashFrameMs, this.framesSplash, false);
+    const done = this.stepAnim(
+      dtMs,
+      this.splashFrameMs,
+      this.framesSplash,
+      false,
+    );
     if (!done) return;
     this.state = "dead";
     this._dead = true;
@@ -210,4 +214,3 @@ class Projectile extends MovableObject {
   }
 }
 window.Projectile = Projectile;
-

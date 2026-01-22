@@ -1,17 +1,6 @@
-// classes/background-object.class.js
-
-/**
- * Represents a scrolling background object using tiled images.
- * Supports parallax movement and optional horizontal flow.
- */
+/** Represents a scrolling background object. */
 class BackgroundObject extends MovableObject {
-  /**
-   * @param {string} folder - Folder path containing layer images
-   * @param {number} [y=0] - Vertical offset
-   * @param {number|null} [h=null] - Optional fixed height
-   * @param {number} [flow=0] - Horizontal flow speed
-   * @param {number} [parallax=0] - Parallax factor (0..1)
-   */
+  /** @param {string} folder @param {number} [y=0] @param {number|null} [h=null] @param {number} [flow=0] @param {number} [parallax=0] */
   constructor(folder, y = 0, h = null, flow = 0, parallax = 0) {
     super();
     this.x = 0;
@@ -27,19 +16,13 @@ class BackgroundObject extends MovableObject {
     this._loadTiles(folder);
   }
 
-  /**
-   * Loads tile images and fallback image from a folder.
-   * @param {string} folder
-   */
+  /** @param {string} folder */
   _loadTiles(folder) {
     ["1.png", "2.png"].forEach((n) => this._loadTile(`${folder}/${n}`));
     this._loadFallback(`${folder}/full.png`);
   }
 
-  /**
-   * Loads one tile image.
-   * @param {string} path
-   */
+  /** @param {string} path */
   _loadTile(path) {
     const img = new Image();
     img.onload = () => (img._ok = true);
@@ -48,20 +31,14 @@ class BackgroundObject extends MovableObject {
     this.tiles.push(img);
   }
 
-  /**
-   * Loads the fallback "full.png" image.
-   * @param {string} path
-   */
+  /** @param {string} path */
   _loadFallback(path) {
     this.fallback.onload = () => (this.fallback._ok = true);
     this.fallback.onerror = () => {};
     this.fallback.src = path;
   }
 
-  /**
-   * Returns the primary active tile image.
-   * @returns {HTMLImageElement|null}
-   */
+  /** @returns {HTMLImageElement|null} */
   _activeA() {
     return (
       this.tiles.find((t) => t._ok && t.naturalWidth > 0) ||
@@ -69,81 +46,73 @@ class BackgroundObject extends MovableObject {
     );
   }
 
-  /**
-   * Returns a secondary active tile image (if available).
-   * @param {HTMLImageElement} A
-   * @returns {HTMLImageElement}
-   */
+  /** @param {HTMLImageElement} A @returns {HTMLImageElement} */
   _activeB(A) {
     const b = this.tiles.find((t) => t !== A && t._ok && t.naturalWidth > 0);
     return b || A;
   }
 
-  /**
-   * Resets tile dimensions to force recalculation.
-   */
+  /** @returns {void} */
   resetDimensions() {
     this._tileW = 0;
     this._tileH = 0;
-    // Reset Y position for recalculation
     if (this._originalY !== undefined) {
       this.y = this._originalY;
     }
   }
 
-  /**
-   * Ensures tile dimensions are calculated based on canvas size.
-   * @param {CanvasRenderingContext2D} ctx
-   * @param {HTMLImageElement} img
-   */
+  /** @param {CanvasRenderingContext2D} ctx @param {HTMLImageElement} img */
   _ensureDims(ctx, img) {
     if (this._tileW && this._tileH) return;
-    
-    // Save original Y position if not already saved
+    this._rememberOriginalY();
+    const dims = this._calcTileDims(ctx, img);
+    this._tileW = dims.width;
+    this._tileH = dims.height;
+    this._applyCanvasY(ctx.canvas.height);
+  }
+
+  /** @returns {void} */
+  _rememberOriginalY() {
     if (this._originalY === undefined) {
       this._originalY = this.y;
     }
-    
+  }
+
+  /** @param {CanvasRenderingContext2D} ctx @param {HTMLImageElement} img @returns {{width: number, height: number}} */
+  _calcTileDims(ctx, img) {
     const canvasH = ctx.canvas.height;
     const H = this.height ?? canvasH;
     const s = H / (img.naturalHeight || H);
     const W = (img.naturalWidth || H) * s;
-    this._tileW = Math.max(2, Math.round(W / 2) * 2);
-    this._tileH = Math.max(1, Math.round(H));
-    
-    // Position background layers at bottom of canvas for fullscreen
+    return {
+      width: Math.max(2, Math.round(W / 2) * 2),
+      height: Math.max(1, Math.round(H)),
+    };
+  }
+
+  /** @param {number} canvasH */
+  _applyCanvasY(canvasH) {
     const originalCanvasH = 480;
     if (canvasH > originalCanvasH && this._originalY === 0) {
       this.y = canvasH - this._tileH;
-    } else if (this._originalY !== undefined) {
-      this.y = this._originalY;
+      return;
     }
+    if (this._originalY !== undefined) this.y = this._originalY;
   }
 
-  /**
-   * Updates horizontal flow offset.
-   * @param {number} cameraX
-   * @param {HTMLCanvasElement} canvas
-   * @param {number} [dtMs=16]
-   */
+  /** @param {number} cameraX @param {HTMLCanvasElement} canvas @param {number} [dtMs=16] */
   update(cameraX, canvas, dtMs = 16) {
     if (this.flowSpeed === 0) return this._resetFlow();
     const k = (dtMs || 16) / 16;
     this._flow += this.flowSpeed * k;
   }
 
-  /**
-   * Resets flow offset to zero.
-   */
+  /** @returns {void} */
   _resetFlow() {
     if (this._flow !== 0) this._flow = 0;
   }
 
-  /**
-   * Draws the tiled background layer.
-   * @param {CanvasRenderingContext2D} ctx
-   * @param {number} [cameraX=0]
-   */
+  /** @param {CanvasRenderingContext2D} ctx @param {number} [cameraX=0] */
   draw(ctx, cameraX = 0) {
     const img = this._activeA();
     if (!img) return;
@@ -152,12 +121,7 @@ class BackgroundObject extends MovableObject {
     this._drawTiles(ctx, img, cameraX);
   }
 
-  /**
-   * Draws all tiles with parallax + flow offset.
-   * @param {CanvasRenderingContext2D} ctx
-   * @param {HTMLImageElement} img
-   * @param {number} cameraX
-   */
+  /** @param {CanvasRenderingContext2D} ctx @param {HTMLImageElement} img @param {number} cameraX */
   _drawTiles(ctx, img, cameraX) {
     const off = this._getScrollOffset(cameraX);
     const start = this._getStartIndex(cameraX);
@@ -167,12 +131,7 @@ class BackgroundObject extends MovableObject {
     ctx.restore();
   }
 
-  /**
-   * Draws visible tile range.
-   * @param {CanvasRenderingContext2D} ctx
-   * @param {HTMLImageElement} img
-   * @param {number} startIdx
-   */
+  /** @param {CanvasRenderingContext2D} ctx @param {HTMLImageElement} img @param {number} startIdx */
   _drawTileRange(ctx, img, startIdx) {
     const count = Math.ceil(ctx.canvas.width / this._tileW) + 1;
     for (let i = -1; i <= count; i++) {
@@ -180,25 +139,14 @@ class BackgroundObject extends MovableObject {
     }
   }
 
-  /**
-   * Draws a single tile, mirrored every second tile index.
-   * @param {CanvasRenderingContext2D} ctx
-   * @param {HTMLImageElement} img
-   * @param {number} i
-   * @param {number} worldIdx
-   */
+  /** @param {CanvasRenderingContext2D} ctx @param {HTMLImageElement} img @param {number} i @param {number} worldIdx */
   _drawSingleTile(ctx, img, i, worldIdx) {
     const x = i * this._tileW;
     if (Math.abs(worldIdx) % 2) return this._drawMirrored(ctx, img, x);
     ctx.drawImage(img, x, this.y, this._tileW + 1, this._tileH);
   }
 
-  /**
-   * Draws a mirrored tile image.
-   * @param {CanvasRenderingContext2D} ctx
-   * @param {HTMLImageElement} img
-   * @param {number} x
-   */
+  /** @param {CanvasRenderingContext2D} ctx @param {HTMLImageElement} img @param {number} x */
   _drawMirrored(ctx, img, x) {
     ctx.save();
     ctx.translate(x + this._tileW, 0);
@@ -207,30 +155,18 @@ class BackgroundObject extends MovableObject {
     ctx.restore();
   }
 
-  /**
-   * Returns the scroll offset for the current camera position.
-   * @param {number} cameraX
-   * @returns {number}
-   */
+  /** @param {number} cameraX @returns {number} */
   _getScrollOffset(cameraX) {
     const total = this._getTotalPos(cameraX);
     return -((total % this._tileW) + this._tileW) % this._tileW;
   }
 
-  /**
-   * Returns start tile index for the current camera position.
-   * @param {number} cameraX
-   * @returns {number}
-   */
+  /** @param {number} cameraX @returns {number} */
   _getStartIndex(cameraX) {
     return Math.floor(this._getTotalPos(cameraX) / this._tileW);
   }
 
-  /**
-   * Computes total scroll position (parallax + flow).
-   * @param {number} cameraX
-   * @returns {number}
-   */
+  /** @param {number} cameraX @returns {number} */
   _getTotalPos(cameraX) {
     const par = Math.max(0, Math.min(1, this.parallax || 0));
     const flow = this.flowSpeed === 0 ? 0 : this._flow || 0;
@@ -238,16 +174,9 @@ class BackgroundObject extends MovableObject {
   }
 }
 
-/**
- * Represents a static sky background layer.
- */
+/** Represents a static sky background layer. */
 class SkyLayer extends MovableObject {
-  /**
-   * @param {string} path - Image path
-   * @param {number} [parallax=0.0] - Parallax factor
-   * @param {number} [y=0] - Vertical offset
-   * @param {number|null} [h=null] - Optional fixed height
-   */
+  /** @param {string} path @param {number} [parallax=0.0] @param {number} [y=0] @param {number|null} [h=null] */
   constructor(path, parallax = 0.0, y = 0, h = null) {
     super();
     this.y = y;
@@ -259,10 +188,7 @@ class SkyLayer extends MovableObject {
     this._loadImage(path);
   }
 
-  /**
-   * Loads sky image.
-   * @param {string} path
-   */
+  /** @param {string} path */
   _loadImage(path) {
     this.img = new Image();
     this.img.onload = () => (this._ok = true);
@@ -270,44 +196,29 @@ class SkyLayer extends MovableObject {
     this.img.src = path;
   }
 
-  /**
-   * Handles image loading errors.
-   * @param {string} path
-   * @param {any} e
-   */
+  /** @param {string} path @param {any} e */
   _onError(path, e) {
     console.error("[SkyLayer] failed:", path, e);
     this.img._broken = true;
   }
 
-  /**
-   * Updates sky layer (no-op).
-   */
+  /** @returns {void} */
   update() {}
 
-  /**
-   * Draws the sky layer.
-   * @param {CanvasRenderingContext2D} ctx
-   * @param {number} [cameraX=0]
-   */
+  /** @param {CanvasRenderingContext2D} ctx @param {number} [cameraX=0] */
   draw(ctx, cameraX = 0) {
     if (!this._ok) return;
     this._ensureDims(ctx);
     this._drawTiles(ctx, cameraX);
   }
 
-  /**
-   * Resets tile dimensions to force recalculation.
-   */
+  /** @returns {void} */
   resetDimensions() {
     this._tileW = 0;
     this._tileH = 0;
   }
 
-  /**
-   * Ensures sky tile dimensions.
-   * @param {CanvasRenderingContext2D} ctx
-   */
+  /** @param {CanvasRenderingContext2D} ctx */
   _ensureDims(ctx) {
     if (this._tileW && this._tileH) return;
     const H = this.h ?? ctx.canvas.height;
@@ -317,11 +228,7 @@ class SkyLayer extends MovableObject {
     this._tileH = Math.max(1, Math.round(H));
   }
 
-  /**
-   * Draws repeated sky tiles across the canvas width.
-   * @param {CanvasRenderingContext2D} ctx
-   * @param {number} cameraX
-   */
+  /** @param {CanvasRenderingContext2D} ctx @param {number} cameraX */
   _drawTiles(ctx, cameraX) {
     const off = this._getOffset(cameraX);
     ctx.save();
@@ -330,21 +237,14 @@ class SkyLayer extends MovableObject {
     ctx.restore();
   }
 
-  /**
-   * Draws a continuous strip of sky tiles.
-   * @param {CanvasRenderingContext2D} ctx
-   */
+  /** @param {CanvasRenderingContext2D} ctx */
   _drawStrip(ctx) {
     for (let x = -this._tileW; x < ctx.canvas.width + this._tileW; x += this._tileW) {
       ctx.drawImage(this.img, Math.round(x) - 0.5, this.y, this._tileW + 1, this._tileH);
     }
   }
 
-  /**
-   * Computes horizontal offset based on parallax.
-   * @param {number} cameraX
-   * @returns {number}
-   */
+  /** @param {number} cameraX @returns {number} */
   _getOffset(cameraX) {
     const par = Math.max(0, Math.min(1, this.parallax || 0));
     const W = this._tileW || 1;
@@ -352,17 +252,9 @@ class SkyLayer extends MovableObject {
   }
 }
 
-/**
- * Specialized background layer for clouds.
- */
+/** Specialized background layer for clouds. */
 class CloudLayer extends BackgroundObject {
-  /**
-   * @param {string} [folder]
-   * @param {number} [y=0]
-   * @param {number|null} [h=null]
-   * @param {number} [flow=0.06]
-   * @param {number} [parallax=0.05]
-   */
+  /** @param {string} [folder] @param {number} [y=0] @param {number|null} [h=null] @param {number} [flow=0.06] @param {number} [parallax=0.05] */
   constructor(
     folder = "img/5_background/layers/4_clouds",
     y = 0,
@@ -374,14 +266,9 @@ class CloudLayer extends BackgroundObject {
   }
 }
 
-/**
- * Factory for predefined background layer sets.
- */
+/** Factory for predefined background layer sets. */
 const BackgroundLayers = {
-  /**
-   * Returns the default background layer set.
-   * @returns {any[]}
-   */
+  /** @returns {any[]} */
   defaultSet() {
     return [
       new SkyLayer("img/5_background/layers/air.png", 0.0),

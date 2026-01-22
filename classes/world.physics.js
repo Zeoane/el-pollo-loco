@@ -1,4 +1,3 @@
-// classes/world.physics.js
 Object.assign(World.prototype, {
   /**
    * Updates background layers based on camera position.
@@ -102,10 +101,10 @@ Object.assign(World.prototype, {
     c.onGround = true;
   },
 
-/**
- * Updates all cloud layers.
- */
-updateClouds() {
-  this.clouds.forEach(cl => cl.update?.(this.canvas.width));
-},
+  /**
+   * Updates all cloud layers.
+   */
+  updateClouds() {
+    this.clouds.forEach((cl) => cl.update?.(this.canvas.width));
+  },
 });

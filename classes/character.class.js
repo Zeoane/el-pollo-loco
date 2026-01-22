@@ -1,4 +1,3 @@
-// classes/character.class.js
 const CHARACTER_SPRITES = {
   WALK: [
     "img/2_character_pepe/2_walk/W-21.png",
@@ -84,74 +83,72 @@ class Character extends MovableObject {
     this.hasGroundShadow = false;
   }
 
-/**
+  /**
 /**
  * Loads all character animation frames.
  */
-initImages() {
-  this.IMAGES_WALKING = CHARACTER_SPRITES.WALK;
-  this.IMAGES_JUMPING = CHARACTER_SPRITES.JUMP;
-  this.IMAGES_IDLE = CHARACTER_SPRITES.IDLE;
-  this.IMAGES_LONG_IDLE = CHARACTER_SPRITES.LONG_IDLE;
-  this.IMAGES_HURT = CHARACTER_SPRITES.HURT;
-  this.IMAGES_DEAD = CHARACTER_SPRITES.DEAD;
+  initImages() {
+    this.IMAGES_WALKING = CHARACTER_SPRITES.WALK;
+    this.IMAGES_JUMPING = CHARACTER_SPRITES.JUMP;
+    this.IMAGES_IDLE = CHARACTER_SPRITES.IDLE;
+    this.IMAGES_LONG_IDLE = CHARACTER_SPRITES.LONG_IDLE;
+    this.IMAGES_HURT = CHARACTER_SPRITES.HURT;
+    this.IMAGES_DEAD = CHARACTER_SPRITES.DEAD;
 
-  this._walkFrames = this._loadFrames(this.IMAGES_WALKING);
-  this._jumpFrames = this._loadFrames(this.IMAGES_JUMPING);
-  this._idleFrames = this._loadFrames(this.IMAGES_IDLE);
-  this._longIdleFrames = this._loadFrames(this.IMAGES_LONG_IDLE);
-  this._hurtFrames = this._loadFrames(this.IMAGES_HURT);
-  this._deadFrames = this._loadFrames(this.IMAGES_DEAD);
-  this._buildAnimMap();
-}
+    this._walkFrames = this._loadFrames(this.IMAGES_WALKING);
+    this._jumpFrames = this._loadFrames(this.IMAGES_JUMPING);
+    this._idleFrames = this._loadFrames(this.IMAGES_IDLE);
+    this._longIdleFrames = this._loadFrames(this.IMAGES_LONG_IDLE);
+    this._hurtFrames = this._loadFrames(this.IMAGES_HURT);
+    this._deadFrames = this._loadFrames(this.IMAGES_DEAD);
+    this._buildAnimMap();
+  }
 
-/**
- * Builds the animation map once after frames are loaded.
- */
-_buildAnimMap() {
-  this._animMap = {
-    dead: { frames: this._deadFrames, ms: 120, loop: false },
-    hurt: { frames: this._hurtFrames, ms: 120, loop: false },
-    jump: { frames: this._jumpFrames, ms: 90, loop: false },
-    walk: { frames: this._walkFrames, ms: 90, loop: true },
-    idle: { frames: this._idleFrames, ms: 120, loop: true },
-    long_idle: { frames: this._longIdleFrames, ms: 120, loop: true },
-  };
-}
+  /**
+   * Builds the animation map once after frames are loaded.
+   */
+  _buildAnimMap() {
+    this._animMap = {
+      dead: { frames: this._deadFrames, ms: 120, loop: false },
+      hurt: { frames: this._hurtFrames, ms: 120, loop: false },
+      jump: { frames: this._jumpFrames, ms: 90, loop: false },
+      walk: { frames: this._walkFrames, ms: 90, loop: true },
+      idle: { frames: this._idleFrames, ms: 120, loop: true },
+      long_idle: { frames: this._longIdleFrames, ms: 120, loop: true },
+    };
+  }
 
-/**
- * Loads animation frames from a sprite path list.
- * @param {string[]} paths
- * @returns {HTMLImageElement[]}
- */
-_loadFrames(paths) {
-  return this.loadImages(paths);
-}
+  /**
+   * Loads animation frames from a sprite path list.
+   * @param {string[]} paths
+   * @returns {HTMLImageElement[]}
+   */
+  _loadFrames(paths) {
+    return this.loadImages(paths);
+  }
 
-updateAnimation(dtMs, moving, blockIdle = false) {
-  this.updateTimers(dtMs);
-  this.determineState(moving, blockIdle);
-  if (this.isDead()) return this.playCurrentAnimation(dtMs);
-  this.playCurrentAnimation(dtMs);
-}
+  updateAnimation(dtMs, moving, blockIdle = false) {
+    this.updateTimers(dtMs);
+    this.determineState(moving, blockIdle);
+    if (this.isDead()) return this.playCurrentAnimation(dtMs);
+    this.playCurrentAnimation(dtMs);
+  }
 
-/**
- * Returns current health as percentage (0–100).
- * @returns {number}
- */
-hpPercent() {
-  const current = this.hp ?? 0;
-  const max = this.hpMax ?? 100;
-  const pct = (100 * current) / max;
-  return Math.max(0, Math.min(100, pct));
-}
+  /**
+   * Returns current health as percentage (0–100).
+   * @returns {number}
+   */
+  hpPercent() {
+    const current = this.hp ?? 0;
+    const max = this.hpMax ?? 100;
+    const pct = (100 * current) / max;
+    return Math.max(0, Math.min(100, pct));
+  }
 
   updateTimers(dtMs) {
     this.hurtT = Math.max(0, (this.hurtT || 0) - dtMs);
     const isIdle = this.state === "idle" || this.state === "long_idle";
     this.idleElapsed = isIdle ? (this.idleElapsed || 0) + dtMs : 0;
-    
-    // Update snoring timer and start sound after 2 seconds in idle
     if (isIdle && !this.snoringStarted) {
       this.snoringTimer = (this.snoringTimer || 0) + dtMs;
       if (this.snoringTimer >= 2000) {
@@ -186,53 +183,50 @@ hpPercent() {
   /**
    * Updates the snoring sound based on idle state changes.
    * Only resets timer after game has started (prevState is not undefined).
-   * @param {string} prevState - Previous state (undefined on initial setup)
-   * @param {string} nextState - New state
+   * @param {string} prevState
+   * @param {string} nextState
    */
   updateIdleSound(prevState, nextState) {
-    // Don't reset timer on initial setup (when prevState is undefined)
     if (prevState === undefined) return;
 
     const wasIdle = prevState === "idle" || prevState === "long_idle";
     const isIdle = nextState === "idle" || nextState === "long_idle";
 
     if (isIdle && !wasIdle) {
-      // Reset timer when entering idle state (sound will start after 2 seconds in updateTimers)
       this.snoringTimer = 0;
       this.snoringStarted = false;
     } else if (!isIdle && wasIdle) {
-      // Stop snoring when leaving idle state
       window.SFX?.stop?.("character_idle");
       this.snoringTimer = 0;
       this.snoringStarted = false;
     }
   }
 
-/**
- * Returns animation config for the current state.
- * @returns {{frames: HTMLImageElement[], ms: number, loop: boolean}|null}
- */
-_getAnimConfig() {
-  return this._animMap?.[this.state] || null;
-}
+  /**
+   * Returns animation config for the current state.
+   * @returns {{frames: HTMLImageElement[], ms: number, loop: boolean}|null}
+   */
+  _getAnimConfig() {
+    return this._animMap?.[this.state] || null;
+  }
 
-/**
- * Plays the animation for the current state.
- * @param {number} dtMs
- */
-playCurrentAnimation(dtMs) {
-  const cfg = this._getAnimConfig();
-  if (!cfg) return;
-  this._animateSequence(dtMs, cfg.frames, cfg.ms, cfg.loop);
-}
+  /**
+   * Plays the animation for the current state.
+   * @param {number} dtMs
+   */
+  playCurrentAnimation(dtMs) {
+    const cfg = this._getAnimConfig();
+    if (!cfg) return;
+    this._animateSequence(dtMs, cfg.frames, cfg.ms, cfg.loop);
+  }
 
-/**
- * Returns true if the character is dead.
- * @returns {boolean}
- */
-isDead() {
-  return (this.hp ?? 0) <= 0;
-}
+  /**
+   * Returns true if the character is dead.
+   * @returns {boolean}
+   */
+  isDead() {
+    return (this.hp ?? 0) <= 0;
+  }
 
   _animateSequence(dtMs, frames, ms, loop) {
     if (!frames || frames.length === 0) return;

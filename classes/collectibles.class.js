@@ -1,4 +1,3 @@
-// classes/collectibles.class.js
 class Coin extends MovableObject {
   static CFG = {
     size: { w: 52, h: 52 },

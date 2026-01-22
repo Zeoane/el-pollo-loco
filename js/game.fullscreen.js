@@ -44,6 +44,7 @@ function isViewportFullscreen() {
 function shouldUseFullscreenLayout() {
   return (
     isFullscreen() ||
+    isMobileViewport() ||
     (isViewportFullscreen() && !isCoarsePointer() && isLargeScreen())
   );
 }
@@ -64,6 +65,21 @@ function isLargeScreen() {
   const vw = window.innerWidth || 0;
   const vh = window.innerHeight || 0;
   return Math.max(vw, vh) >= 900;
+}
+
+/**
+ * Returns true for touch-first mobile/tablet viewports.
+ * @returns {boolean}
+ */
+function isMobileViewport() {
+  const minSide = Math.min(window.innerWidth || 0, window.innerHeight || 0);
+  const maxSide = Math.max(window.innerWidth || 0, window.innerHeight || 0);
+  const isSmallViewport = minSide <= 768 || maxSide <= 900;
+  const isTabletViewport = minSide <= 1024 && maxSide <= 1366;
+  const hasTouchPoints = navigator.maxTouchPoints > 0;
+  const hasTouchEvent = "ontouchstart" in window;
+  const isTouchCapable = isCoarsePointer() || hasTouchPoints || hasTouchEvent;
+  return isTouchCapable && (isSmallViewport || isTabletViewport);
 }
 
 /**
@@ -181,9 +197,10 @@ function adjustCanvasForFullscreen() {
  */
 function updateFullscreenIcon() {
   const btn = document.getElementById("btnFullscreen");
-  if (!btn) return;
-  btn.textContent = isFullscreen() ? "🗗" : "⛶";
-  btn.title = isFullscreen() ? "Vollbild beenden" : "Vollbild";
+  if (btn) {
+    btn.textContent = isFullscreen() ? "🗗" : "⛶";
+    btn.title = isFullscreen() ? "Vollbild beenden" : "Vollbild";
+  }
   adjustCanvasForFullscreen();
 }
 
@@ -263,17 +280,42 @@ function bindFullscreenClick(btn) {
   btn.addEventListener("click", handleFullscreenClick);
 }
 
+let autoFullscreenBound = false;
+
+/**
+ * Attempts to enter fullscreen on first user interaction (mobile/tablet).
+ */
+function bindAutoFullscreenOnFirstInteraction() {
+  if (autoFullscreenBound) return;
+  if (!isMobileViewport()) return;
+  if (!isFullscreenSupported()) return;
+  autoFullscreenBound = true;
+  const target = getFullscreenTarget();
+  const attempt = () => {
+    if (isFullscreen()) return;
+    enterFullscreen(target);
+  };
+  const opts = { passive: true, once: true };
+  document.addEventListener("touchstart", attempt, opts);
+  document.addEventListener("pointerdown", attempt, opts);
+  document.addEventListener("click", attempt, opts);
+}
+
 /**
  * Wires the fullscreen button and sets up event listeners.
  */
 function wireFullscreen() {
   const btn = document.getElementById("btnFullscreen");
   if (!btn) return;
-  if (!isFullscreenSupported()) return hideFullscreenButton(btn);
-  bindFullscreenClick(btn);
-  bindFullscreenEvents();
+  if (!isFullscreenSupported()) {
+    hideFullscreenButton(btn);
+  } else {
+    bindFullscreenClick(btn);
+    bindFullscreenEvents();
+  }
   bindFullscreenResize();
   updateFullscreenIcon();
+  bindAutoFullscreenOnFirstInteraction();
 }
 
 window.wireFullscreen = wireFullscreen;

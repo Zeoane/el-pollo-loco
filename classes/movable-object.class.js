@@ -1,4 +1,3 @@
-// classes/movable-object.class.js
 class MovableObject {
   static CFG = {
     tickMs: 16,
@@ -179,7 +178,7 @@ class MovableObject {
         this.imageLoaded = false;
         img._broken = true;
         this.loadFailed = true;
-      }
+      },
     );
 
     this.img = img;
@@ -212,7 +211,7 @@ class MovableObject {
     const im = this._createImage(
       path,
       () => this._useLoadedCandidate(im),
-      onFail
+      onFail,
     );
     return im;
   }
@@ -292,7 +291,11 @@ class MovableObject {
    */
   _getCachedImage(path) {
     if (this.imageCache[path]) return this.imageCache[path];
-    const im = this._createImage(path, () => {}, () => this._markBroken(im));
+    const im = this._createImage(
+      path,
+      () => {},
+      () => this._markBroken(im),
+    );
     this.imageCache[path] = im;
     return im;
   }
@@ -372,4 +375,3 @@ class MovableObject {
     return { cx, cy, rx, ry };
   }
 }
-

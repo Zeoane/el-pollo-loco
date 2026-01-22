@@ -1,5 +1,3 @@
-// classes/cloud.class.js
-
 /**
  * Represents a moving cloud entity in the game world.
  * Clouds move from right to left and respawn when leaving the screen.
@@ -7,9 +5,9 @@
 class Cloud extends MovableObject {
   /**
    * Creates a cloud instance.
-   * @param {number} x 
-   * @param {number} y 
-   * @param {number} [speed=0.3] 
+   * @param {number} x
+   * @param {number} y
+   * @param {number} [speed=0.3]
    */
   constructor(x, y, speed = 0.3) {
     super();
@@ -54,5 +52,3 @@ class Cloud extends MovableObject {
 }
 
 window.Cloud = Cloud;
-
-

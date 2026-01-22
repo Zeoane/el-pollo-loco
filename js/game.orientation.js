@@ -5,8 +5,10 @@ function isPortraitMode() {
   return window.matchMedia("(orientation: portrait)").matches;
 }
 
+/**
+ * Mobile/Tablet (Touch/Coarse Pointer)
+ * */
 function isMobileLike() {
-  // Mobile/Tablet (Touch/Coarse Pointer) + typische kleinere Viewports
   const isCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
   const hasTouchPoints = navigator.maxTouchPoints > 0;
   const hasTouchEvent = "ontouchstart" in window;
@@ -26,7 +28,7 @@ function toggleRotateOverlay(show) {
 
 /**
  * Enforces landscape play on mobile/tablet.
-*/
+ */
 function checkOrientation() {
   const mustRotate = isMobileLike() && isPortraitMode();
   toggleRotateOverlay(mustRotate);
@@ -35,7 +37,8 @@ function checkOrientation() {
 }
 
 function resumeIfStarted() {
-  const started = document.getElementById("startScreen")
+  const started = document
+    .getElementById("startScreen")
     ?.classList.contains("hidden");
   if (started) window.world?.pause?.(false);
 }
@@ -43,4 +46,3 @@ function resumeIfStarted() {
 addEventListener("resize", checkOrientation);
 addEventListener("orientationchange", checkOrientation);
 addEventListener("load", checkOrientation);
-
