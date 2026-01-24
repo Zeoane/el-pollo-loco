@@ -151,7 +151,7 @@ class Character extends MovableObject {
     this.idleElapsed = isIdle ? (this.idleElapsed || 0) + dtMs : 0;
     if (isIdle && !this.snoringStarted) {
       this.snoringTimer = (this.snoringTimer || 0) + dtMs;
-      if (this.snoringTimer >= 2000) {
+      if (this.snoringTimer >= 1000) {
         window.SFX?.loop?.("snoring", "character_idle", { vol: 1.0 });
         this.snoringStarted = true;
       }
@@ -169,7 +169,7 @@ class Character extends MovableObject {
     if (!this.onGround) return "jump";
     if (moving) return "walk";
     if (blockIdle) return "idle";
-    return this.idleElapsed > 3000 ? "long_idle" : "idle";
+    return this.idleElapsed > 1500 ? "long_idle" : "idle";
   }
 
   resetFrame(next) {
@@ -178,6 +178,24 @@ class Character extends MovableObject {
     this.frameIndex = 0;
     this.frameElapsedMs = 0;
     this.updateIdleSound(prevState, next);
+  }
+
+  /**
+   * Returns tighter bounds for pickup checks.
+   * @param {number} inset
+   * @returns {{x:number,y:number,width:number,height:number}}
+   */
+  getPickupBounds(inset = 6) {
+    const b = this.getBounds?.() || this;
+    const i = Math.max(0, inset || 0);
+    const w = Math.max(0, b.width - i * 2);
+    const h = Math.max(0, b.height - i * 2);
+    return {
+      x: b.x + i,
+      y: b.y + i,
+      width: w,
+      height: h,
+    };
   }
 
   /**

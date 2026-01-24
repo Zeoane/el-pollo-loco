@@ -9,13 +9,48 @@ Object.assign(World.prototype, {
   },
 
   /**
+   * Initializes the item budget from level config.
+   */
+  initItemBudget() {
+    const items = this.cfg?.items || {};
+    const coins = Number.isFinite(items.coins) ? items.coins : 0;
+    const bottles = Number.isFinite(items.bottles) ? items.bottles : 0;
+    this.itemBudget = { coins, bottles };
+    this.itemBudgetActive = false;
+  },
+
+  /**
+   * Consumes budget for a given item type.
+   * @param {"coins"|"bottles"} type
+   * @param {number} count
+   * @returns {number}
+   */
+  consumeItemBudget(type, count) {
+    if (!this.itemBudget) return count;
+    const bossActive = !!this.isBossFightActive?.();
+    if (!bossActive) return count;
+    if (!this.itemBudgetActive) return count;
+    const want = Math.max(0, count || 0);
+    const left = Math.max(0, this.itemBudget[type] ?? 0);
+    const take = Math.min(left, want);
+    this.itemBudget[type] = left - take;
+    return take;
+  },
+
+  /**
    * Checks collisions between the character and collectible items.
    * Updates inventory and removes collected items.
    */
   checkPickups() {
-    const cbb = this.character.getBounds?.() || this.character;
-    this.collectCoins(cbb);
-    this.collectBottles(cbb);
+    const base =
+      this.character.getBounds?.() ||
+      this.character;
+    const coinBounds =
+      this.character.getPickupBounds?.(34) || base;
+    const bottleBounds =
+      this.character.getPickupBounds?.(40) || base;
+    this.collectCoins(coinBounds);
+    this.collectBottles(bottleBounds);
   },
 
   /**
@@ -53,6 +88,7 @@ Object.assign(World.prototype, {
     const it = this.cfg.items || {};
     this.spawnRandomCoins(it.coins || 0);
     this.spawnBottleClusters(this.getBottleClusterCount(it));
+    this.itemBudgetActive = true;
   },
 
   /**
@@ -60,7 +96,9 @@ Object.assign(World.prototype, {
    * @param {number} count
    */
   spawnRandomCoins(count) {
-    for (let i = 0; i < count; i++) {
+    const total = this.consumeItemBudget?.("coins", count) ?? count;
+    if (total <= 0) return;
+    for (let i = 0; i < total; i++) {
       const coin = Coin.rand(this);
       if (
         this._originalGroundY !== undefined &&
@@ -80,7 +118,8 @@ Object.assign(World.prototype, {
    * @returns {number}
    */
   getBottleClusterCount(it) {
-    const bottles = it.bottles || 12;
+    const budget = this.itemBudget?.bottles;
+    const bottles = Number.isFinite(budget) ? budget : it.bottles || 12;
     return it.bottleClusters ?? Math.ceil(bottles / 2);
   },
 
@@ -89,6 +128,8 @@ Object.assign(World.prototype, {
    * @param {number} minAhead
    */
   maintainBottlesAhead(minAhead = 6) {
+    if (this.isBossFightActive?.()) return;
+    if ((this.itemBudget?.bottles ?? 1) <= 0) return;
     const from = this.cameraX + this.canvas.width * 0.6;
     const to = from + 1200;
     const count = this.bottles.filter((b) => b.x >= from && b.x <= to).length;
@@ -102,7 +143,9 @@ Object.assign(World.prototype, {
    */
   spawnBottleCluster(baseX) {
     const cfg = this.getBottleClusterSpec(baseX);
-    for (let i = 0; i < cfg.cnt; i++) this.spawnOneBottle(cfg, i);
+    const total = this.consumeItemBudget?.("bottles", cfg.cnt) ?? cfg.cnt;
+    if (total <= 0) return;
+    for (let i = 0; i < total; i++) this.spawnOneBottle(cfg, i);
   },
 
   /**
@@ -148,6 +191,27 @@ Object.assign(World.prototype, {
     for (let i = 0; i < total; i++) {
       const baseX = minX + Math.random() * Math.max(300, maxX - minX);
       this.spawnBottleCluster(baseX);
+    }
+  },
+
+  /**
+   * Triggers game over when no coins or bottles remain in the level.
+   */
+  checkResourceExhaustion() {
+    if (this.gameOver) return;
+    const cfgItems = this.cfg?.items || {};
+    const coinsTotal = cfgItems.coins ?? 0;
+    const bottlesTotal = cfgItems.bottles ?? 0;
+    const coinsLeft = (this.inventory?.coins || 0) + (this.coins?.length || 0);
+    const bottlesLeft =
+      (this.inventory?.bottles || 0) + (this.bottles?.length || 0);
+
+    if (coinsTotal > 0 && coinsLeft <= 0) {
+      this.triggerGameOver?.("no_coins");
+      return;
+    }
+    if (bottlesTotal > 0 && bottlesLeft <= 0) {
+      this.triggerGameOver?.("no_bottles");
     }
   },
 });

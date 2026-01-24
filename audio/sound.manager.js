@@ -71,6 +71,7 @@ class SoundManager {
    */
   async _handleUnlockEvent(e, handler) {
     if (!e?.isTrusted) return;
+    if (navigator.userActivation && !navigator.userActivation.isActive) return;
     await this._resumeContext();
     if (!this._isContextRunning()) return;
     this._onUnlocked();
@@ -83,6 +84,7 @@ class SoundManager {
    */
   async _resumeContext() {
     try {
+      if (navigator.userActivation && !navigator.userActivation.isActive) return;
       if (this.ctx.state === "suspended") await this.ctx.resume();
     } catch {}
   }
@@ -188,8 +190,7 @@ class SoundManager {
    * @returns {boolean}
    */
   _canRunJob(job) {
-    retur
-   !!this.buffers[job.name];
+    return !!this.buffers[job.name];
   }
 
   /**

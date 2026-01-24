@@ -83,6 +83,14 @@ function isMobileViewport() {
 }
 
 /**
+ * Returns true when auto fullscreen should be attempted on mobile.
+ * @returns {boolean}
+ */
+function shouldAutoFullscreenOnMobile() {
+  return false;
+}
+
+/**
  * Toggles fullscreen layout class on root elements.
  * @param {boolean} active
  */
@@ -131,13 +139,14 @@ function warnFullscreenUnsupported() {
  * @returns {Promise<void>}
  */
 async function enterFullscreen(element = document.body) {
+  if (fullscreenPermissionDenied) return;
   if (!isFullscreenSupported()) return warnFullscreenUnsupported();
   const request = getFullscreenRequestMethod(element);
   if (!request) return;
   try {
     await request.call(element);
   } catch (error) {
-    console.error("Error entering fullscreen:", error);
+    handleFullscreenPermissionError(error);
   }
 }
 
@@ -225,6 +234,7 @@ function getFullscreenTarget() {
  * @returns {Promise<void>}
  */
 async function handleFullscreenClick() {
+  if (fullscreenPermissionDenied) return adjustCanvasForFullscreen();
   await toggleFullscreen(getFullscreenTarget());
 }
 
@@ -281,6 +291,36 @@ function bindFullscreenClick(btn) {
 }
 
 let autoFullscreenBound = false;
+let fullscreenPermissionDenied = false;
+let fullscreenAutoBlocked = false;
+
+/**
+ * Handles fullscreen permission errors and disables further attempts.
+ * @param {any} error
+ */
+function handleFullscreenPermissionError(error) {
+  const msg = String(error?.message || "");
+  const name = String(error?.name || "");
+  const isGestureError =
+    /user gesture/i.test(msg) ||
+    /initiated by a user gesture/i.test(msg) ||
+    /gesture/i.test(msg);
+  const isDenied =
+    name === "NotAllowedError" ||
+    name === "SecurityError" ||
+    /permission|denied|not allowed/i.test(msg);
+  if (isGestureError) {
+    fullscreenAutoBlocked = true;
+    adjustCanvasForFullscreen();
+    return;
+  }
+  if (isDenied) {
+    fullscreenPermissionDenied = true;
+    adjustCanvasForFullscreen();
+    return;
+  }
+  console.error("Error entering fullscreen:", error);
+}
 
 /**
  * Attempts to enter fullscreen on first user interaction (mobile/tablet).
@@ -288,10 +328,12 @@ let autoFullscreenBound = false;
 function bindAutoFullscreenOnFirstInteraction() {
   if (autoFullscreenBound) return;
   if (!isMobileViewport()) return;
+  if (!shouldAutoFullscreenOnMobile()) return;
   if (!isFullscreenSupported()) return;
   autoFullscreenBound = true;
   const target = getFullscreenTarget();
   const attempt = () => {
+    if (fullscreenAutoBlocked) return;
     if (isFullscreen()) return;
     enterFullscreen(target);
   };
@@ -319,3 +361,4 @@ function wireFullscreen() {
 }
 
 window.wireFullscreen = wireFullscreen;
+window.adjustCanvasForFullscreen = adjustCanvasForFullscreen;

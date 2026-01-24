@@ -17,9 +17,9 @@ class Endboss extends MovableObject {
    * Initializes size, speed, and hitbox settings.
    */
   initDimensions() {
-    this.setSize(280, 280).setSpeed(1.0);
-    this.footOffset = 14;
-    this.setHitbox(22, 10, this.width - 44, this.height - 24);
+    this.setSize(358, 358).setSpeed(1.0);
+    this.footOffset = 16;
+    this.setHitbox(26, 12, this.width - 52, this.height - 28);
   }
 
   /**

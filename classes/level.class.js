@@ -110,8 +110,8 @@ const LEVEL1 = {
     smallSpeedMax: 1.3,
   },
   items: {
-    coins: 20,
-    bottles: 6,
+    coins: 37,
+    bottles: 30,
   },
   cloudsFlow: 0.4,
 };

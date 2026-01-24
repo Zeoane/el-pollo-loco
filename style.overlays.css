@@ -90,13 +90,13 @@ h1 {
   flex: 1 1 auto;
   overflow: auto;
   padding: 0 clamp(12px, 2.4vw, 18px) clamp(12px, 2.4vw, 18px);
-  font-size: clamp(12px, 2.2vw, 16px);
+  font-size: clamp(16px, 2.2vw, 18px);
   line-height: 1.45;
 }
 
 .modal-b h3 {
   margin: 0 0 8px;
-  font-size: clamp(14px, 3vw, 18px);
+  font-size: clamp(16px, 3vw, 20px);
 }
 
 .modal-b ul {
@@ -175,7 +175,7 @@ h1 {
   margin-top: 15px;
   color: rgb(14, 13, 13);
   text-decoration: none;
-  font-size: 12px;
+  font-size: 16px;
   transition: color 0.2s;
 }
 
@@ -189,7 +189,7 @@ h1 {
   color: #111;
   padding: 18px;
   border-radius: 12px;
-  font: 500 clamp(12px, 2.2vw, 14px) / 1.6 system-ui, sans-serif;
+  font: 500 clamp(16px, 2.2vw, 18px) / 1.6 system-ui, sans-serif;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
@@ -243,6 +243,48 @@ h1 {
   .hud-fab-container {
     display: none;
   }
+
+  .fullscreen-layout .hud-fab-container {
+    display: flex;
+    top: 10px;
+    bottom: auto;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 16px;
+    background: rgba(0, 0, 0, 0.35);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+  }
+
+  .fullscreen-layout #btnPause,
+  .fullscreen-layout #btnStop,
+  .fullscreen-layout #btnHowToFab {
+    display: none;
+  }
+
+  .fullscreen-layout .hud-fab-container {
+    display: flex;
+    top: 10px;
+    bottom: auto;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 16px;
+    background: rgba(0, 0, 0, 0.35);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+  }
+
+  .fullscreen-layout #btnPause,
+  .fullscreen-layout #btnStop,
+  .fullscreen-layout #btnHowToFab {
+    display: none;
+  }
 }
 
 @media (max-width: 600px), (max-height: 520px) {
@@ -271,6 +313,38 @@ h1 {
 
   .hud-fab-container {
     display: none;
+  }
+
+  #impressumModal {
+    padding: 0;
+  }
+
+  #impressumModal .modal {
+    width: 100vw;
+    height: 100vh;
+    min-height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  #impressumModal .impressum-content {
+    padding: 16px;
+    border-radius: 0;
+  }
+
+  .modal-b {
+    font-size: 16px;
+  }
+
+  .modal-b h3 {
+    font-size: 16px;
+  }
+
+  .modal-h .chip,
+  .modal-h .x,
+  .impressum-link,
+  .impressum-content {
+    font-size: 16px;
   }
 }
 

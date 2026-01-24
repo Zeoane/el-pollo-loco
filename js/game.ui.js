@@ -86,6 +86,9 @@ function setHowToLang(lang) {
   document.getElementById("howtoENCnt").hidden = isDE;
   document.getElementById("howtoDE")?.classList.toggle("active", isDE);
   document.getElementById("howtoEN")?.classList.toggle("active", !isDE);
+  try {
+    localStorage.setItem("howto.lang", isDE ? "de" : "en");
+  } catch (e) {}
 }
 
 /**
@@ -141,7 +144,12 @@ function wireHowTo() {
   bindHowToOpeners();
   bindHowToClosers();
   bindHowToLanguage();
-  setHowToLang("de");
+  let initialLang = "de";
+  try {
+    const saved = localStorage.getItem("howto.lang");
+    initialLang = saved === "en" ? "en" : "de";
+  } catch (e) {}
+  setHowToLang(initialLang);
 }
 
 /**

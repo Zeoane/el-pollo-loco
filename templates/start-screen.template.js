@@ -22,7 +22,7 @@ const START_SCREEN_HTML = `
       position: absolute;
       bottom: 16px;
       right: 20px;
-      font-size: 12px;
+      font-size: 16px;
       color: rgb(242, 148, 6);
       text-decoration: none;
       opacity: 0.9;

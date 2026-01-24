@@ -249,7 +249,7 @@ body {
 
 #volPct {
   color: #fff;
-  font: 700 14px system-ui, sans-serif;
+  font: 700 16px system-ui, sans-serif;
   text-shadow: 1px 1px 2px #000;
   width: 30px;
   text-align: center;
@@ -266,4 +266,5 @@ body {
   align-items: center;
   justify-content: center;
 }
+
 

@@ -291,6 +291,7 @@ async function restartGame() {
   disposeWorld();
   const assetsReady = window.ensureEssentialAssets?.();
   recreateWorld();
+  window.adjustCanvasForFullscreen?.();
   window.world?.pause?.(true);
   await assetsReady;
   window.world?.pause?.(false);

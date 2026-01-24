@@ -127,6 +127,7 @@ class World {
 
   /** @returns {void} */
   initSpawns() {
+    this.initItemBudget?.();
     this.spawnSmallChickens?.();
     this.spawnPickups?.();
   }
@@ -267,6 +268,7 @@ Object.assign(World.prototype, {
     this.maintainBottlesAhead?.(6);
     this.maintainCoinsAhead?.(6);
     this.maintainEnemies?.();
+    this.checkResourceExhaustion?.();
   },
 
   /** @returns {void} */
@@ -312,6 +314,8 @@ Object.assign(World.prototype, {
 
   /** @param {number} minAhead */
   maintainCoinsAhead(minAhead = 6) {
+    if (this.isBossFightActive?.()) return;
+    if ((this.itemBudget?.coins ?? 1) <= 0) return;
     const from = this.cameraX + this.canvas.width * 0.6;
     const to = from + 1000;
     const n = this.coins.filter((c) => c.x >= from && c.x <= to).length;
@@ -321,9 +325,11 @@ Object.assign(World.prototype, {
   /** @param {number} baseX */
   spawnCoinRow(baseX) {
     const cnt = 3 + Math.floor(Math.random() * 4);
+    const total = this.consumeItemBudget?.("coins", cnt) ?? cnt;
+    if (total <= 0) return;
     const dx = 34;
     const y = this.groundY - 120 - Math.random() * 60;
-    for (let i = 0; i < cnt; i++) {
+    for (let i = 0; i < total; i++) {
       const coin = new Coin(baseX + i * dx, y);
       if (
         this._originalGroundY !== undefined &&
