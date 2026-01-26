@@ -5,37 +5,6 @@
 const START_SCREEN_HTML = `
 <div id="startScreen" role="dialog" aria-modal="true" aria-label="Start screen">
 
-  <style>
-    #startScreen {
-      position: fixed;
-      inset: 0;
-      z-index: 1000;
-      display: grid;
-      place-items: center;
-      padding: var(--game-pad-top, 32px) 0 var(--game-pad-bottom, 24px);
-      box-sizing: border-box;
-      background: rgba(0, 0, 0, 0.8);
-      backdrop-filter: blur(4px);
-    }
-
-    #startScreen .impressum-link {
-      position: absolute;
-      bottom: 16px;
-      right: 20px;
-      font-size: 16px;
-      color: rgb(242, 148, 6);
-      text-decoration: none;
-      opacity: 0.9;
-      z-index: 1100;
-    }
-
-    #startScreen .impressum-link:hover {
-      color: #e6a944;
-      text-decoration: underline;
-      opacity: 1;
-    }
-  </style>
-
   <div class="start-inner">
     <img class="start-art"
          src="img/9_intro_outro_screens/start/startscreen_1.png"

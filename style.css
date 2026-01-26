@@ -10,7 +10,9 @@ html,
 body {
   --game-pad-top: clamp(28px, 6vh, 64px);
   --game-pad-bottom: clamp(20px, 4vh, 52px);
-  --game-max-h: calc(100vh - var(--game-pad-top) - var(--game-pad-bottom) - 180px);
+  --game-max-h: calc(
+    100vh - var(--game-pad-top) - var(--game-pad-bottom) - 180px
+  );
   --game-max-w: min(90vw, 800px);
   --game-max-w-from-h: calc(var(--game-max-h) * 1.5);
   --panel-w: min(var(--game-max-w), var(--game-max-w-from-h));
@@ -109,10 +111,9 @@ body {
   border-radius: 0 !important;
 }
 
-
 .btnprimary,
 .btn {
-  font-family: 'Rye', serif;
+  font-family: "Rye", serif;
   background-color: rgb(242, 148, 6);
   color: rgb(14, 14, 14);
   border: none;
@@ -170,7 +171,9 @@ body {
 
 #hud .label {
   color: #fff;
-  font: 700 16px system-ui, sans-serif;
+  font:
+    700 16px system-ui,
+    sans-serif;
   text-shadow: 1px 1px 2px #000;
 }
 
@@ -213,6 +216,50 @@ body {
   border-color: rgba(255, 255, 255, 0.4);
 }
 
+.touch-controls {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  pointer-events: none;
+  display: none;
+}
+
+.touch-controls-left,
+.touch-controls-right {
+  position: absolute;
+  bottom: max(0px, env(safe-area-inset-bottom, 0px));
+  display: flex;
+  gap: clamp(8px, 3vw, 16px);
+  pointer-events: auto;
+}
+
+.touch-controls-left {
+  left: max(4px, env(safe-area-inset-left, 0px));
+}
+
+.touch-controls-right {
+  right: max(4px, env(safe-area-inset-right, 0px));
+}
+
+.touch-btn {
+  width: clamp(52px, 14vw, 70px);
+  height: clamp(52px, 14vw, 70px);
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(58, 203, 14, 0.33);
+  color: #fff;
+  font-size: clamp(20px, 6vw, 28px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 #btnMute {
   color: black;
   padding: 0;
@@ -243,13 +290,17 @@ body {
 #volSlider {
   -webkit-appearance: slider-vertical;
   appearance: slider-vertical;
+  writing-mode: vertical-lr;
+  direction: rtl;
   width: 8px;
   height: 80px;
 }
 
 #volPct {
   color: #fff;
-  font: 700 16px system-ui, sans-serif;
+  font:
+    700 16px system-ui,
+    sans-serif;
   text-shadow: 1px 1px 2px #000;
   width: 30px;
   text-align: center;
@@ -267,4 +318,76 @@ body {
   justify-content: center;
 }
 
+@media (hover: none) and (pointer: coarse) {
+  .hud-fab-container {
+    display: none;
+  }
 
+  .touch-controls {
+    display: block;
+  }
+
+  .touch-btn.active {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-3px);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+
+  .fullscreen-layout .hud-fab-container {
+    display: flex;
+    top: 10px;
+    bottom: auto;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 16px;
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .fullscreen-layout #btnPause,
+  .fullscreen-layout #btnStop,
+  .fullscreen-layout #btnHowToFab {
+    display: none;
+  }
+}
+
+@media (max-width: 600px), (max-height: 520px) {
+  .touch-controls {
+    display: block;
+  }
+}
+
+@media (max-height: 480px) and (orientation: landscape) {
+  h1 {
+    font-size: 20px;
+    top: 4px;
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    color: rgb(242, 148, 6);
+    font-family: "Rye", serif;
+  }
+
+  #hud {
+    transform: scale(0.75);
+    transform-origin: top left;
+    top: 8px;
+    left: 8px;
+  }
+
+  .hud-bar {
+    transform: scale(0.85);
+    transform-origin: bottom right;
+    bottom: 8px;
+    right: 70px;
+  }
+
+  #bg .htp-fab {
+    width: 48px;
+    height: 48px;
+    bottom: 8px;
+    right: 8px;
+  }
+}

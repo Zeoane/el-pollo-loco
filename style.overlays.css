@@ -15,7 +15,9 @@ h1 {
   text-align: center;
   z-index: 5;
   pointer-events: none;
-  font: 700 clamp(24px, 5vw, 48px) "Rye", serif;
+  font:
+    700 clamp(24px, 5vw, 48px) "Rye",
+    serif;
   color: rgb(242, 148, 6);
   margin: 0;
   padding: 0;
@@ -142,6 +144,8 @@ h1 {
   z-index: 1000;
   display: grid;
   place-items: center;
+  padding: var(--game-pad-top, 32px) 0 var(--game-pad-bottom, 24px);
+  box-sizing: border-box;
   background: rgba(0, 0, 0, 0.8);
   -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
@@ -149,6 +153,23 @@ h1 {
 
 #startScreen.hidden {
   display: none;
+}
+
+#startScreen .impressum-link {
+  position: absolute;
+  bottom: 16px;
+  right: 20px;
+  font-size: 16px;
+  color: rgb(242, 148, 6);
+  text-decoration: none;
+  opacity: 0.9;
+  z-index: 1100;
+}
+
+#startScreen .impressum-link:hover {
+  color: #e6a944;
+  text-decoration: underline;
+  opacity: 1;
 }
 
 .startscreen-active #game,
@@ -189,7 +210,9 @@ h1 {
   color: #111;
   padding: 18px;
   border-radius: 12px;
-  font: 500 clamp(16px, 2.2vw, 18px) / 1.6 system-ui, sans-serif;
+  font:
+    500 clamp(16px, 2.2vw, 18px) / 1.6 system-ui,
+    sans-serif;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
@@ -254,30 +277,7 @@ h1 {
     gap: 8px;
     padding: 6px 10px;
     border-radius: 16px;
-    background: rgba(0, 0, 0, 0.35);
     -webkit-backdrop-filter: blur(4px);
-    backdrop-filter: blur(4px);
-  }
-
-  .fullscreen-layout #btnPause,
-  .fullscreen-layout #btnStop,
-  .fullscreen-layout #btnHowToFab {
-    display: none;
-  }
-
-  .fullscreen-layout .hud-fab-container {
-    display: flex;
-    top: 10px;
-    bottom: auto;
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
-    gap: 8px;
-    padding: 6px 10px;
-    border-radius: 16px;
-    background: rgba(0, 0, 0, 0.35);
-    -webkit-backdrop-filter: blur(4px);
-    backdrop-filter: blur(4px);
   }
 
   .fullscreen-layout #btnPause,
@@ -288,6 +288,10 @@ h1 {
 }
 
 @media (max-width: 600px), (max-height: 520px) {
+  #bg h1 {
+    display: none;
+  }
+
   #game {
     width: min(
       calc(var(--game-max-w) * 1.38),
@@ -320,6 +324,18 @@ h1 {
   }
 
   #impressumModal .modal {
+    width: 100vw;
+    height: 100vh;
+    min-height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  #howtoModal {
+    padding: 0;
+  }
+
+  #howtoModal .modal {
     width: 100vw;
     height: 100vh;
     min-height: 100vh;
@@ -373,35 +389,3 @@ h1 {
   }
 }
 
-@media (max-height: 480px) and (orientation: landscape) {
-  h1 {
-    font-size: 20px;
-    top: 4px;
-    position: absolute;
-    width: 100%;
-    text-align: center;
-    color: rgb(242, 148, 6);
-    font-family: "Rye", serif;
-  }
-
-  #hud {
-    transform: scale(0.75);
-    transform-origin: top left;
-    top: 8px;
-    left: 8px;
-  }
-
-  .hud-bar {
-    transform: scale(0.85);
-    transform-origin: bottom right;
-    bottom: 8px;
-    right: 70px;
-  }
-
-  #bg .htp-fab {
-    width: 48px;
-    height: 48px;
-    bottom: 8px;
-    right: 8px;
-  }
-}

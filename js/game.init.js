@@ -88,7 +88,7 @@ function createWorld() {
 /**
  * Initializes the game (entry point called from HTML or load event).
  */
-window.init = function init() {
+window.init = async function init() {
   window.keyboard = window.keyboard ?? createKeyboardState();
   bindKeyboard(window.keyboard);
 
@@ -99,6 +99,7 @@ window.init = function init() {
   wireImpressum?.();
   setupTouchControls?.();
 
+  await window.ensureEssentialAssets?.();
   window.world = createWorld();
   window.world.pause?.(true);
 

@@ -290,10 +290,9 @@ async function restartGame() {
   stopAllAudio();
   disposeWorld();
   const assetsReady = window.ensureEssentialAssets?.();
+  await assetsReady;
   recreateWorld();
   window.adjustCanvasForFullscreen?.();
-  window.world?.pause?.(true);
-  await assetsReady;
   window.world?.pause?.(false);
   rearmHudAndUi();
   window.endSoundPlayed = false;
