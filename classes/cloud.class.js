@@ -42,12 +42,9 @@ class Cloud extends MovableObject {
    * @param {CanvasRenderingContext2D} ctx
    */
   draw(ctx) {
-    if (this.imageLoaded && this.img && this.img.naturalWidth > 0) {
-      ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
-    } else {
-      ctx.fillStyle = "rgba(255,255,255,0.85)";
-      ctx.fillRect(this.x, this.y, this.width, this.height);
-    }
+    if (this.canDraw()) return super.draw(ctx);
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.fillRect(this.x, this.y, this.width, this.height);
   }
 }
 

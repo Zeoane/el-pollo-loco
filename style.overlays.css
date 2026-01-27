@@ -388,4 +388,3 @@ h1 {
     max-height: min(calc(var(--panel-h) * 1.38), 100vh);
   }
 }
-

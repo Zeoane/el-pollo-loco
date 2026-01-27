@@ -79,8 +79,7 @@ class StatusBar extends MovableObject {
     if (this.icon?.complete) {
       ctx.drawImage(this.icon, this.x - 36, this.y + 10, 28, 28);
     }
-    if (this.img)
-      ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
+    super.draw(ctx);
   }
 }
 

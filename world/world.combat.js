@@ -8,6 +8,8 @@ Object.assign(World.prototype, {
     const fire = KB.F || KB.G || KB.THROW;
     const ts = this.throwState;
 
+    ts.powerCdMs = Math.max(0, (ts.powerCdMs || 0) - dtMs);
+    if (ts.powerCdMs > 0 && !ts.charging) return;
     if (!fire && !ts.charging) return;
     if ((this.inventory.bottles || 0) <= 0 && !ts.charging) return;
 
@@ -39,6 +41,9 @@ Object.assign(World.prototype, {
     const pow = 1 + (ts.holdMs / ts.maxMs) * 1.5;
     const dir = this.character.facing === -1 ? -1 : 1;
     this.spawnProjectile(dir, pow);
+    if (this.isBossFightActive?.() && ts.holdMs >= ts.maxMs) {
+      ts.powerCdMs = Math.max(ts.powerCdMs || 0, 500);
+    }
   },
 
   /**
@@ -173,7 +178,7 @@ Object.assign(World.prototype, {
    * @param {Object} e
    * @returns {boolean}
    */
-  isStomp(c, e) {
+  getStompBounds(c, e) {
     const cb = c.getBounds?.() || c;
     const eb = e.getBounds?.() || e;
     const cbOffsetY = (cb.y ?? 0) - (c.y ?? cb.y ?? 0);
@@ -181,13 +186,24 @@ Object.assign(World.prototype, {
     const prevBottom = (c.prevY ?? c.y ?? 0) + cbOffsetY + cbHeight;
     const currBottom = (cb.y ?? c.y ?? 0) + cbHeight;
     const enemyTop = eb.y ?? e.y ?? 0;
-    const stompInsetX = 3;
-    const footLeft = (cb.x ?? c.x ?? 0) + stompInsetX;
-    const footRight =
-      (cb.x ?? c.x ?? 0) + (cb.width ?? c.width ?? 0) - stompInsetX;
+    return { cb, eb, prevBottom, currBottom, enemyTop };
+  },
+
+  hasStompOverlapX(c, e, cb, eb) {
+    const inset = 3;
+    const cbX = cb.x ?? c.x ?? 0;
+    const cbWidth = cb.width ?? c.width ?? 0;
+    const footLeft = cbX + inset;
+    const footRight = cbX + cbWidth - inset;
     const enemyLeft = eb.x ?? e.x ?? 0;
     const enemyRight = enemyLeft + (eb.width ?? e.width ?? 0);
-    const overlapX = footRight > enemyLeft && footLeft < enemyRight;
+    return footRight > enemyLeft && footLeft < enemyRight;
+  },
+
+  isStomp(c, e) {
+    const { cb, eb, prevBottom, currBottom, enemyTop } =
+      this.getStompBounds(c, e);
+    const overlapX = this.hasStompOverlapX(c, e, cb, eb);
     return (
       c.vy > 0 &&
       prevBottom <= enemyTop + 10 &&
