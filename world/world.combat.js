@@ -8,8 +8,12 @@ Object.assign(World.prototype, {
     const fire = KB.F || KB.G || KB.THROW;
     const ts = this.throwState;
 
+    ts.idleMs = (ts.idleMs || 0) + dtMs;
     ts.powerCdMs = Math.max(0, (ts.powerCdMs || 0) - dtMs);
+    ts.burstCdMs = Math.max(0, (ts.burstCdMs || 0) - dtMs);
+    if ((ts.idleMs || 0) >= (ts.burstResetMs || 0)) ts.burstCount = 0;
     if (ts.powerCdMs > 0 && !ts.charging) return;
+    if (ts.burstCdMs > 0 && !ts.charging) return;
     if (!fire && !ts.charging) return;
     if ((this.inventory.bottles || 0) <= 0 && !ts.charging) return;
 
@@ -37,10 +41,17 @@ Object.assign(World.prototype, {
     if (!ts.charging) return;
     ts.charging = false;
     if ((this.inventory.bottles || 0) <= 0) return;
+    if ((ts.burstCdMs || 0) > 0) return;
 
     const pow = 1 + (ts.holdMs / ts.maxMs) * 1.5;
     const dir = this.character.facing === -1 ? -1 : 1;
     this.spawnProjectile(dir, pow);
+    ts.idleMs = 0;
+    ts.burstCount = (ts.burstCount || 0) + 1;
+    if ((ts.burstCount || 0) >= (ts.burstMax || 0)) {
+      ts.burstCdMs = Math.max(ts.burstCdMs || 0, ts.burstCooldownMs || 0);
+      ts.burstCount = 0;
+    }
     if (this.isBossFightActive?.() && ts.holdMs >= ts.maxMs) {
       ts.powerCdMs = Math.max(ts.powerCdMs || 0, 500);
     }

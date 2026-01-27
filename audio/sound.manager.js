@@ -1,7 +1,6 @@
 /**
  * Manages all game sounds using the Web Audio API.
- * Handles loading, playing, looping, volume and mute state.
- */
+*/
 class SoundManager {
   /**
    * Create a new sound manager instance.
@@ -84,14 +83,11 @@ class SoundManager {
    */
   async _resumeContext() {
     try {
-      if (navigator.userActivation && !navigator.userActivation.isActive) return;
+      if (navigator.userActivation && !navigator.userActivation.isActive)
+        return;
       if (this.ctx.state === "suspended") await this.ctx.resume();
     } catch {}
   }
-
-  /**
-   * @returns {boolean}
-   */
   _isContextRunning() {
     return this.ctx?.state === "running";
   }
@@ -112,7 +108,7 @@ class SoundManager {
     window.addEventListener("click", handler, true);
     window.addEventListener("keydown", handler, true);
   }
-
+  
   /**
    * @param {(e: Event) => Promise<void>} handler
    */
@@ -147,9 +143,6 @@ class SoundManager {
     this._flushPending();
   }
 
-  /**
-   * @returns {boolean}
-   */
   _canPlay() {
     return !!this.ctx && this.ctx.state === "running" && !this.muted;
   }
@@ -184,11 +177,6 @@ class SoundManager {
       this._pending.splice(i, 1);
     }
   }
-
-  /**
-   * @param {PendingJob} job
-   * @returns {boolean}
-   */
   _canRunJob(job) {
     return !!this.buffers[job.name];
   }
@@ -225,28 +213,13 @@ class SoundManager {
     this._connectAndStart(src, gain, opt);
     return { src, gain };
   }
-
-  /**
-   * @param {string} name
-   * @returns {boolean}
-   */
   _isSoundReady(name) {
     return !!this.buffers[name] && this._canPlay();
   }
-
-  /**
-   * @param {string} name
-   * @param {SoundOptions} opt
-   * @returns {null}
-   */
   _queuePlay(name, opt) {
     this._queue({ type: "play", name, opt });
     return null;
   }
-
-  /**
-   * @returns {{src: AudioBufferSourceNode, gain: GainNode}}
-   */
   _createSourceNodes() {
     const src = this.ctx.createBufferSource();
     const gain = this.ctx.createGain();
@@ -311,27 +284,16 @@ class SoundManager {
       this.updateExistingLoop(key, name, opt);
       return this.loops[key];
     }
-    if (!this._isSoundReady(name)) return this._queueLoopAndReturn(name, key, opt);
+    if (!this._isSoundReady(name))
+      return this._queueLoopAndReturn(name, key, opt);
     const h = this.play(name, opt);
     if (!h) return null;
     this._registerLoop(key, name, opt, h);
     return h;
   }
-
-  /**
-   * @param {string} key
-   * @returns {boolean}
-   */
   _hasLoop(key) {
     return !!this.loops[key];
   }
-
-  /**
-   * @param {string} name
-   * @param {string} key
-   * @param {SoundOptions} opt
-   * @returns {null}
-   */
   _queueLoopAndReturn(name, key, opt) {
     this.queueLoop(name, key, opt);
     return null;
@@ -348,11 +310,6 @@ class SoundManager {
     this.loops[key] = h;
     this._loopSpecs[key] = { name, opt };
   }
-
-  /**
-   * @param {SoundOptions} opt
-   * @returns {number}
-   */
   _loopVolume(opt) {
     return this.muted ? 0 : (opt?.vol ?? 1) * this.vol;
   }
@@ -379,7 +336,7 @@ class SoundManager {
     if (!this.master) return;
     this.master.gain.value = this.muted ? 0 : this.vol;
   }
-
+  
   /**
    * Sets global volume.
    * @param {number} v - Volume (0–1).
@@ -389,11 +346,6 @@ class SoundManager {
     this._applyMasterGain();
     this._syncExistingLoopVolumes();
   }
-
-  /**
-   * @param {number} v
-   * @returns {number}
-   */
   _clampVolume(v) {
     return Math.max(0, Math.min(1, v));
   }

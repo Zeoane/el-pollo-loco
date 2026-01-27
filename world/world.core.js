@@ -30,7 +30,18 @@ class World {
   bottles = [];
   projectiles = [];
 
-  throwState = { charging: false, holdMs: 0, maxMs: 800, powerCdMs: 0 };
+  throwState = {
+    charging: false,
+    holdMs: 0,
+    maxMs: 800,
+    powerCdMs: 0,
+    burstCount: 0,
+    burstMax: 4,
+    burstCdMs: 0,
+    burstCooldownMs: 900,
+    burstResetMs: 700,
+    idleMs: 0,
+  };
   inventory = { coins: 0, bottles: 0 };
 
   cfg = {};

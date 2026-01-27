@@ -48,11 +48,11 @@ Object.assign(World.prototype, {
     const coinBounds =
       this.character.getPickupBounds?.(44) || base;
     const bottleBoundsBase =
-      this.character.getPickupBounds?.(34) || base;
+      this.character.getPickupBounds?.(41) || base;
     const bottleBounds = {
-      x: bottleBoundsBase.x + 6,
+      x: bottleBoundsBase.x + 11,
       y: bottleBoundsBase.y,
-      width: Math.max(0, bottleBoundsBase.width - 12),
+      width: Math.max(0, bottleBoundsBase.width - 22),
       height: bottleBoundsBase.height,
     };
     this.collectCoins(coinBounds);

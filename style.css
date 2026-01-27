@@ -368,9 +368,7 @@ body {
     text-align: center;
     color: rgb(242, 148, 6);
     font-family: "Rye", serif;
-  }
-
-  #hud {
+  }  #hud {
     transform: scale(0.75);
     transform-origin: top left;
     top: 8px;
