@@ -223,6 +223,7 @@ class World {
 Object.assign(World.prototype, {
   /** @param {number} dtMs */
   update(dtMs) {
+    if (this.gameOver) return;
     this.advanceTimers(dtMs);
     this.updatePrePhysics(dtMs);
     this.updatePhysicsAndCollisions(dtMs);

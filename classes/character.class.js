@@ -72,7 +72,7 @@ class Character extends MovableObject {
     this.x = 120;
     this.setSize(160, 320);
     this.footOffset = 16;
-    this.setHitbox(10, 6, this.width - 20, this.height - 12);
+    this.setHitbox(19, 6, this.width - 38, this.height - 12);
     this.vx = 0;
     this.vy = 0;
     this.onGround = false;

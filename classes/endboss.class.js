@@ -18,8 +18,8 @@ class Endboss extends MovableObject {
    */
   initDimensions() {
     this.setSize(358, 358).setSpeed(1.0);
-    this.footOffset = 16;
-    this.setHitbox(26, 12, this.width - 52, this.height - 28);
+    this.footOffset = 18;
+    this.setHitbox(40, 18, this.width - 80, this.height - 44);
   }
 
   /**
@@ -57,7 +57,7 @@ class Endboss extends MovableObject {
     this.attackTimer = 0;
     this.invT = 0;
     this.frameMs = { walk: 120, alert: 90, attack: 80, hurt: 110, dead: 160 };
-    this.stateMinMs = { walk: 2000, alert: 4000 };
+    this.stateMinMs = { walk: 1200, alert: 2500 };
   }
 
   /**
@@ -284,8 +284,8 @@ class Endboss extends MovableObject {
    */
   updateWalk(dist, dtMs, k) {
     const moveDir = dist >= 0 ? 1 : -1;
-    this.x += this.speed * moveDir * k * 2.5;
-    if (Math.abs(dist) < 400 && this.stateElapsedMs >= this.stateMinMs.walk)
+    this.x += this.speed * moveDir * k * 2.8;
+    if (Math.abs(dist) < 550 && this.stateElapsedMs >= this.stateMinMs.walk)
       this.setState("alert");
     this.attackCooldown = Math.max(0, this.attackCooldown - dtMs);
   }
@@ -302,9 +302,9 @@ class Endboss extends MovableObject {
       this.attackCooldown = 1200;
       return;
     }
-    this.x += this.speed * 0.8 * moveDir * k * 2.5;
+    this.x += this.speed * 1.0 * moveDir * k * 2.5;
     this.attackCooldown = Math.max(0, this.attackCooldown - dtMs);
-    if (Math.abs(dist) > 450) this.setState("walk");
+    if (Math.abs(dist) > 600) this.setState("walk");
   }
 
   /**

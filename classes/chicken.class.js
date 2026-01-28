@@ -5,7 +5,7 @@ class Chicken extends MovableObject {
     this.facing = 1;
     this.footOffset = 6;
     this.setSize(70, 60).setSpeed(1.2);
-    this.setHitbox(6, 4, 56, 50);
+    this.setHitbox(22, 10, 42, 38);
     this.dmg = 15;
 
     this.IMAGES_WALK = [

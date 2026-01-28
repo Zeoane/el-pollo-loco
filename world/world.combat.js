@@ -212,8 +212,10 @@ Object.assign(World.prototype, {
   },
 
   isStomp(c, e) {
-    const { cb, eb, prevBottom, currBottom, enemyTop } =
-      this.getStompBounds(c, e);
+    const { cb, eb, prevBottom, currBottom, enemyTop } = this.getStompBounds(
+      c,
+      e,
+    );
     const overlapX = this.hasStompOverlapX(c, e, cb, eb);
     return (
       c.vy > 0 &&
@@ -262,6 +264,7 @@ Object.assign(World.prototype, {
     this.gameOverReason = reason;
     this.gameOverAt = performance.now();
     this.pause(true);
+    SFX.stopAll?.();
     SFX.stop?.("menu");
     window.playEndSound?.(reason);
     window.showEndControls?.();

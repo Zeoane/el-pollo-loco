@@ -5,7 +5,7 @@ class SmallChicken extends MovableObject {
     this.facing = 1;
     this.footOffset = 4;
     this.setSize(46, 46).setSpeed(0.9);
-    this.setHitbox(5, 3, 36, 40);
+    this.setHitbox(24, 12, 6, 22);
     this.dmg = 8;
     this.bumpVX = 2.0;
     this.bumpVY = -6;
