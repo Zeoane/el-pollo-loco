@@ -65,9 +65,13 @@ Object.assign(World.prototype, {
   spawnProjectile(dir, pow) {
     const c = this.character;
     const spawnX = c.x + c.width / 2;
-    const spawnY = c.y + c.height * 0.45;
+    const bossFight = this.isBossFightActive?.();
+    const spawnY = c.y + c.height * (bossFight ? 0.38 : 0.45);
+    const bossThrowOpt = bossFight
+      ? { vyMul: 1.35, gravityMul: 0.92 }
+      : {};
     this.projectiles.push(
-      new Projectile(spawnX, spawnY, dir, { speedMul: pow }),
+      new Projectile(spawnX, spawnY, dir, { speedMul: pow, ...bossThrowOpt }),
     );
     this.inventory.bottles--;
     SFX.play?.("bottle_throw", { vol: 0.8 });
@@ -105,7 +109,7 @@ Object.assign(World.prototype, {
       if (!hit) return;
       this.applyHitDamage(hit);
       SFX.play?.("bottle_hit", { vol: 0.8 });
-      p.hitAndSplash();
+      p.hitAndSplash(null, hit);
     });
   },
 
@@ -152,10 +156,10 @@ Object.assign(World.prototype, {
     if (!this.canProcessCharHit(dtMs)) return;
 
     const c = this.character;
-    const cb = c.getBounds?.() || c;
 
     for (const e of this.opponents) {
       if (this.isDeadEnemy(e)) continue;
+      const cb = this.getCharEnemyBounds(c, e);
       if (!AABB(cb, e.getBounds?.() || e)) continue;
 
       this.isStomp(c, e) ? this.applyStomp(c, e) : this.applyEnemyHit(c, e);
@@ -181,6 +185,34 @@ Object.assign(World.prototype, {
    */
   isDeadEnemy(e) {
     return !!(e._dead || e.state === "dead");
+  },
+
+  /**
+   * Returns tightened character bounds for chicken collisions.
+   * @param {Object} c
+   * @param {Object} e
+   * @returns {{x:number,y:number,width:number,height:number}}
+   */
+  getCharEnemyBounds(c, e) {
+    const base = c.getBounds?.() || c;
+    if (e instanceof SmallChicken) return this.insetBounds(base, 20, 12);
+    if (e instanceof Chicken) return this.insetBounds(base, 18, 10);
+    return base;
+  },
+
+  /**
+   * Insets a bounds rectangle by given x/y amounts.
+   * @param {{x:number,y:number,width:number,height:number}} b
+   * @param {number} insetX
+   * @param {number} insetY
+   * @returns {{x:number,y:number,width:number,height:number}}
+   */
+  insetBounds(b, insetX = 0, insetY = 0) {
+    const ix = Math.max(0, insetX || 0);
+    const iy = Math.max(0, insetY || 0);
+    const w = Math.max(0, (b.width ?? 0) - ix * 2);
+    const h = Math.max(0, (b.height ?? 0) - iy * 2);
+    return { x: (b.x ?? 0) + ix, y: (b.y ?? 0) + iy, width: w, height: h };
   },
 
   /**
@@ -245,13 +277,33 @@ Object.assign(World.prototype, {
     c.hp = Math.max(0, (c.hp ?? 100) - (e.dmg ?? 20));
     c.invT = 600;
     c.hurtT = 400;
-    c.vx = c.facing === 1 ? -2.5 : 2.5;
+    if (e instanceof Endboss) this.applyBossPushback(c, e);
+    else c.vx = c.facing === 1 ? -2.5 : 2.5;
 
     SFX.play?.("hit", { vol: 0.9 });
     if ((c.hp ?? 0) > 0 || this.gameOver) return;
 
     const byBoss = e instanceof Endboss;
     this.triggerGameOver(byBoss ? "boss" : "enemy");
+  },
+
+  /**
+   * Pushes the character away from the boss to avoid passing through.
+   * @param {Object} c
+   * @param {Object} e
+   */
+  applyBossPushback(c, e) {
+    const cb = c.getBounds?.() || c;
+    const eb = e.getBounds?.() || e;
+    const cCenter = (cb.x ?? 0) + (cb.width ?? 0) / 2;
+    const eCenter = (eb.x ?? 0) + (eb.width ?? 0) / 2;
+    const dir = cCenter < eCenter ? -1 : 1;
+    const overlap =
+      dir < 0
+        ? (cb.x ?? 0) + (cb.width ?? 0) - (eb.x ?? 0)
+        : (eb.x ?? 0) + (eb.width ?? 0) - (cb.x ?? 0);
+    if (overlap > 0) c.x += (overlap + 18) * dir;
+    c.vx = 3.6 * dir;
   },
 
   /**

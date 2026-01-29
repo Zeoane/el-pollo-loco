@@ -253,8 +253,10 @@ class MovableObject {
     const hb = this.hb || {};
     const w = hb.w ?? this.width;
     const h = hb.h ?? this.height;
+    const flip = this.facing === -1 || this.otherDirection === true;
+    const ox = hb.ox || 0;
     return {
-      x: this.x + (hb.ox || 0),
+      x: this.x + (flip ? this.width - ox - w : ox),
       y: this.y + (hb.oy || 0),
       width: w,
       height: h,

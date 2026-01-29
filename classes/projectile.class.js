@@ -14,7 +14,7 @@ class Projectile extends MovableObject {
     super();
     this.initBody(x, y);
     const mul = this.getSpeedMul(opt);
-    this.initMotion(dir, mul);
+    this.initMotion(dir, mul, opt);
     this.initAnim();
     this.initTiming(mul);
     this.setStateFly();
@@ -48,11 +48,27 @@ class Projectile extends MovableObject {
    * @param {number} dir
    * @param {number} mul
    */
-  initMotion(dir, mul) {
+  initMotion(dir, mul, opt = {}) {
     const c = Projectile.CFG;
+    const vyMul = this.getMul(opt?.vyMul, 1, 0.2, 3);
+    const gravityMul = this.getMul(opt?.gravityMul, 1, 0.5, 2);
     this.vx = c.baseVX * dir * mul;
-    this.vy = c.baseVY * mul;
-    this.gravity = c.gravity;
+    this.vy = c.baseVY * mul * vyMul;
+    this.gravity = c.gravity * gravityMul;
+  }
+
+  /**
+   * Returns a clamped numeric multiplier.
+   * @param {number} raw
+   * @param {number} fallback
+   * @param {number} min
+   * @param {number} max
+   * @returns {number}
+   */
+  getMul(raw, fallback, min, max) {
+    const v = Number(raw);
+    if (!Number.isFinite(v)) return fallback;
+    return Math.max(min, Math.min(max, v));
   }
 
   /**
@@ -110,10 +126,34 @@ class Projectile extends MovableObject {
    * Triggers splash animation and stops movement.
    * @param {number|null} groundY
    */
-  hitAndSplash(groundY = null) {
+  hitAndSplash(groundY = null, target = null) {
     if (!this.canSplash()) return;
-    this.applySplash(groundY);
+    if (target) {
+      this.applySplashOnTarget(target);
+    } else {
+      this.applySplash(groundY);
+    }
     this.playSplashSfx();
+  }
+
+  /**
+   * Places splash on a target's bounds.
+   * @param {Object} target
+   */
+  applySplashOnTarget(target) {
+    const b = target.getBounds?.() || target;
+    if (b && b.x != null && b.y != null && b.width != null && b.height != null) {
+      this.state = "splash";
+      this.vx = 0;
+      this.vy = 0;
+      this.frameIndex = 0;
+      this.frameElapsedMs = 0;
+      this.x = b.x + b.width / 2 - this.width / 2;
+      this.y = b.y + b.height * 0.35 - this.height / 2;
+      this.img = this.framesSplash[0];
+      return;
+    }
+    this.applySplash(null);
   }
 
   /** @returns {boolean} */
