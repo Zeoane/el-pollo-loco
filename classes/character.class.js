@@ -128,9 +128,10 @@ class Character extends MovableObject {
   }
 
   updateAnimation(dtMs, moving, blockIdle = false) {
-    this.updateTimers(dtMs);
+    this.updateTimers(dtMs, blockIdle);
     this.determineState(moving, blockIdle);
     if (this.isDead()) return this.playCurrentAnimation(dtMs);
+    if (blockIdle && !moving && this.onGround) return this.lockIdlePose();
     this.playCurrentAnimation(dtMs);
   }
 
@@ -145,9 +146,9 @@ class Character extends MovableObject {
     return Math.max(0, Math.min(100, pct));
   }
 
-  updateTimers(dtMs) {
+  updateTimers(dtMs, blockIdle = false) {
     this.hurtT = Math.max(0, (this.hurtT || 0) - dtMs);
-    const isIdle = this.state === "idle" || this.state === "long_idle";
+    const isIdle = !blockIdle && (this.state === "idle" || this.state === "long_idle");
     this.idleElapsed = isIdle ? (this.idleElapsed || 0) + dtMs : 0;
     if (isIdle && !this.snoringStarted) {
       this.snoringTimer = (this.snoringTimer || 0) + dtMs;
@@ -170,6 +171,13 @@ class Character extends MovableObject {
     if (moving) return "walk";
     if (blockIdle) return "idle";
     return this.idleElapsed > 1500 ? "long_idle" : "idle";
+  }
+
+  lockIdlePose() {
+    if (this.state === "long_idle") this.resetFrame("idle");
+    if (this.state !== "idle") return;
+    const frame = this._idleFrames?.[0];
+    if (frame) this.img = frame;
   }
 
   resetFrame(next) {

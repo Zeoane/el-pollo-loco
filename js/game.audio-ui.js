@@ -14,6 +14,16 @@ const ESSENTIAL_IMAGE_PATHS = [
   "img/5_background/layers/1_first_layer/2.png",
   "img/5_background/layers/1_first_layer/full.png",
   "img/2_character_pepe/1_idle/idle/I-1.png",
+  "img/6_salsa_bottle/bottle_rotation/1_bottle_rotation.png",
+  "img/6_salsa_bottle/bottle_rotation/2_bottle_rotation.png",
+  "img/6_salsa_bottle/bottle_rotation/3_bottle_rotation.png",
+  "img/6_salsa_bottle/bottle_rotation/4_bottle_rotation.png",
+  "img/6_salsa_bottle/bottle_rotation/bottle_splash/1_bottle_splash.png",
+  "img/6_salsa_bottle/bottle_rotation/bottle_splash/2_bottle_splash.png",
+  "img/6_salsa_bottle/bottle_rotation/bottle_splash/3_bottle_splash.png",
+  "img/6_salsa_bottle/bottle_rotation/bottle_splash/4_bottle_splash.png",
+  "img/6_salsa_bottle/bottle_rotation/bottle_splash/5_bottle_splash.png",
+  "img/6_salsa_bottle/bottle_rotation/bottle_splash/6_bottle_splash.png",
 ];
 
 let essentialAssetsPromise = null;
@@ -384,7 +394,4 @@ function updateVolumeUI() {
   updateMuteIcon();
 }
 
-/**
- * Public functions used across scripts.
- */
 window.playEndSound = playEndSound;

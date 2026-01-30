@@ -105,6 +105,7 @@ Object.assign(World.prototype, {
   resolveProjectileHits() {
     this.projectiles.forEach((p) => {
       if (p.state !== "fly") return;
+      if (p.canHit && !p.canHit()) return;
       const hit = this.findProjectileHit(p);
       if (!hit) return;
       this.applyHitDamage(hit);
@@ -127,10 +128,13 @@ Object.assign(World.prototype, {
    * @returns {Object|null}
    */
   findProjectileHit(p) {
+    const pb = p?.getBounds?.() || p;
     return (
-      this.opponents.find(
-        (o) => !(o.state === "dead" || o._dead) && AABB(p, o),
-      ) || null
+      this.opponents.find((o) => {
+        if (o.state === "dead" || o._dead) return false;
+        const ob = o.getBounds?.() || o;
+        return AABB(pb, ob);
+      }) || null
     );
   },
 

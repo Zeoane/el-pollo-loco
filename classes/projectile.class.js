@@ -8,6 +8,7 @@ class Projectile extends MovableObject {
     flyFrameMs: 90,
     splashFrameMs: 60,
     minFlyFrameMs: 40,
+    hitDelayMs: 90,
   };
 
   constructor(x, y, dir, opt = {}) {
@@ -17,6 +18,7 @@ class Projectile extends MovableObject {
     this.initMotion(dir, mul, opt);
     this.initAnim();
     this.initTiming(mul);
+    this.ageMs = 0;
     this.setStateFly();
   }
 
@@ -185,9 +187,19 @@ class Projectile extends MovableObject {
    */
   update(dtMs = 16) {
     if (this.isDead()) return;
+    this.ageMs += dtMs;
     const k = dtMs / 16;
     if (this.state === "fly") return this.updateFly(dtMs, k);
     if (this.state === "splash") return this.updateSplash(dtMs);
+  }
+
+  /**
+   * Returns true once collision checks are allowed.
+   * @returns {boolean}
+   */
+  canHit() {
+    const delay = Projectile.CFG.hitDelayMs || 0;
+    return (this.ageMs || 0) >= delay;
   }
 
   /** @returns {boolean} */
